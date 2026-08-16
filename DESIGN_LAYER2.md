@@ -979,3 +979,154 @@ of the load here than it did on 20NG.
 
 **No transfer has been run on this substrate.** Intake and support audit
 only, so that the family proposal is frozen before any outcome is visible.
+
+## 20. H3 result (frozen)
+
+36 treatment units over 12 directed pairs x 3 seeds, against 12 common
+controls, run on `dsi-cpu-bench`. The complementary design was re-run in the
+**same environment** as the comparator, because the original matrix ran
+locally under a different jax version and OS; the local matrix is retained
+as a cross-environment check, never as the comparator.
+
+**1. The common-control invariant is verified.** All 12 target x seed groups
+pass, checked from the control-stream hashes recorded in the artifacts rather
+than trusted from the code path: 3 sources each, exactly 1 distinct hash.
+`N_j` provably did not vary with source.
+
+**2. Gross transfer structure survives, but AULC measurability is weak.**
+
+| metric | spread | median sd | max sd | S/N |
+|---|---|---|---|---|
+| `T_aulc` | 0.0416 | 0.0208 | 0.0757 | **2.002** |
+| `head_start` | 0.1392 | 0.0383 | 0.0612 | 3.64 |
+| `rate_only` | 0.1188 | 0.0259 | 0.0493 | 4.59 |
+| `endpoint` | 0.0292 | 0.0178 | 0.0919 | 1.65 |
+
+S/N fell from 2.31 to 2.002, clearing the prespecified 2.0 threshold by
+0.002. Reading 3 is excluded — the structure did not disappear — but the
+honest description is **effects survive, weakened**, and a margin of 0.002 is
+not a comfortable pass.
+
+**3. AULC relational prediction remains effectively absent.** 0.0428 against
+the global mean's 0.0434 is a **1.5%** gain, which is nothing. The failed
+primary AULC relational gate stays failed.
+
+**4. The component relational signal survives the control repair almost
+unchanged.**
+
+| metric | global | relational | gain | under complementary control |
+|---|---|---|---|---|
+| `head_start` | 0.1454 | 0.1167 | **19.8%** | 20.2% |
+| `rate_only` | 0.1241 | 0.1003 | **19.2%** | 18.7% |
+
+This is the informative result. The live alternative explanation was that the
+component signal came from the cosine/control confound; breaking that
+confound left it essentially where it was.
+
+**5. This promotes the component / state-space response to the leading
+hypothesis. It does not establish prospective relational structure.** The
+evidence is a LOPO advantage at n=12, and today's prospective pass
+demonstrated that this exact metric at this exact scale **inverts**: additive
+went from best LOPO to worst prospective. The component signal has survived a
+confound test, which is what it was asked to do. It has not survived a
+prospective test, which nothing here attempts.
+
+Reading 2 (H1 / ontology) is weakened but not eliminated: the AULC relational
+signal is still absent, and only the components carry any.
+
+## 21. WikiText v2 protocol (prespecified, no transfer outcome exists)
+
+### Outcome-blind audit, k=8
+
+| fam | train docs | audit tok | chunks | val chunks | UNK | med len |
+|---|---|---|---|---|---|---|
+| 0 | 997 | 3,010,425 | 23,526 | 4,611 | 0.112 | 2,400 |
+| 1 | 408 | 647,413 | 5,061 | 1,102 | 0.103 | 1,085 |
+| 2 | 629 | 2,568,054 | 20,067 | 6,032 | 0.116 | 3,047 |
+| 3 | 411 | 1,491,233 | 11,653 | 2,660 | 0.123 | 3,122 |
+| 4 | 719 | 1,751,525 | 13,689 | 2,725 | 0.117 | 2,084 |
+| 5 | 384 | 833,651 | 6,515 | 1,691 | 0.084 | 1,692 |
+| 6 | **6,126** | **23,942,169** | 187,096 | 37,843 | 0.136 | 2,992 |
+| 7 | 470 | 1,182,302 | 9,240 | 1,835 | 0.101 | 1,811 |
+
+**Nuisance, recorded not tuned.** Size imbalance is **37x**, far worse than
+20NG's 4x, and family 6 alone holds 60% of the training documents. A cluster
+that large is likely heterogeneous, and it should be treated as a suspected
+catch-all rather than assumed to be a coherent family. Vocabulary coverage is
+better than 20NG (UNK 0.084-0.136 against 0.16-0.26), as expected from
+encyclopedic prose.
+
+**Runtime.** Family 1 binds at 5,061 train chunks, so the largest single-pass
+phase budget every family can serve is **4,992 chunks = 638,976 LM tokens**,
+3.25x the 20NG budget. 56 directed pairs; the common-control design needs 56
+treatment plus 8 control arms per seed, so 64 trajectories per seed against
+the paired design's 112.
+
+### Response: a prospectively frozen multicomponent vector
+
+The primary response is the **2-vector** `(head_start, rate_only)`, frozen
+before any outcome. `T_aulc` and `endpoint` are recorded and reported as
+secondary.
+
+**Both components are observable proxies, not established latent-state
+variables.** They are functionals of the loss curve. Promoting them to
+coordinates of a developmental state is the hypothesis under test, not an
+assumption of the design, and two alternative readings remain open: a rate
+advantage mirroring a starting deficit may be mechanical regression toward a
+shared asymptote, and endpoint effects have been weak throughout (S/N 1.65
+under the common control). The protocol must not describe them as state
+variables in any output.
+
+### Material-improvement rule, prespecified
+
+Today a model "beat the global mean" by **1.5%** and triggered a
+relational-success reading. That must not be possible again.
+
+1. **LOPO is a selection device only.** It may choose at most one model to
+   freeze. It never constitutes success. Today's prospective pass showed LOPO
+   inverting outright at this scale.
+2. **Success is prospective**, on a pool frozen before any of it is run.
+3. **Material improvement** means prospective RMSE `<= 0.75 x` the global
+   mean's prospective RMSE, i.e. a **25% or greater** reduction.
+4. **Robust to jackknife**: the 25% must hold with any single held-out pair
+   removed, so no one cell can carry the result.
+5. **Above the noise floor**: the RMSE reduction must exceed the median
+   within-pair seed sd of that response. Predicting below the noise floor is
+   not prediction.
+6. **Both components**, under the **same** frozen model. Success on one
+   component only is reported as a negative with a note, never as success;
+   otherwise the vector response becomes two chances at a positive.
+7. Sign accuracy is reported and is **not** a criterion. Today additive
+   scored 3/3 on sign with the worst RMSE of any model.
+
+**Why 25%.** Today's non-signals sit at 0.5-1.5% and fall far below it.
+Today's component LOPO gains of 19-20% also fall below it — deliberately,
+because they are LOPO rather than prospective, and the threshold is meant to
+demand more than what is currently in hand. The synthetic pilot reached 59.8%
+where real structure existed, so the bar is clearable when there is something
+to clear.
+
+### Freeze list before any WikiText transfer launches
+
+No transfer runs until all of these are frozen to disk:
+
+* same-environment comparator complete and recorded;
+* family audit (above) frozen;
+* response definition, primary and secondary;
+* model ladder;
+* observed / held-out validation / untouched adaptive pools, disjoint;
+* success criterion (above).
+
+### A note on the forward rule and H3
+
+The material-improvement rule in section 21 was prespecified **after** H3 ran,
+for WikiText. It is **not applied retroactively to H3**, because re-gating a
+completed experiment on a criterion chosen after seeing its results is the
+move this project's invalidator/falsifier separation exists to prevent. The
+H3 verdict stands as recorded in section 20.
+
+It does sharpen what the leading hypothesis has yet to demonstrate. Under the
+forward rule the component gains of 19-20% would **not** qualify as material,
+so the component signal is: strong enough to survive the confound repair
+unchanged, and not yet strong enough to clear the bar the next experiment
+must clear. Both facts are part of the record.
