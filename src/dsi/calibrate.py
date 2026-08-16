@@ -121,9 +121,14 @@ class RegimeCriteria:
 class RegimeCandidate:
     """One measured point in the capacity sweep.
 
-    ``retention_worst`` is deliberately a minimum over both sources *and*
-    both orders. A statistic that distinguished the orders could encode an
-    order preference and would stop being neutral; a minimum over both cannot.
+    Retention is deliberately a minimum over both sources *and* both orders.
+    A statistic that distinguished the orders could encode an order
+    preference and would stop being neutral; a minimum over both cannot.
+
+    Every field is a worst case over ``seeds`` as well. A regime that is
+    adequate on one seed and not another is not adequate: the confirmatory
+    experiment runs many seeds, and a regime selected on a lucky one would
+    fail under the design it was chosen for.
     """
 
     label: str
@@ -135,10 +140,25 @@ class RegimeCandidate:
     learning_rate: float
     steps_per_phase: int
 
+    n_cues: int
+    seeds: tuple[int, ...]
+
     acc_w: float
     acc_p: float
     generalization_worst: float
-    retention_worst: float
+    retention_pre_washout: float
+    """Worst source, worst order, measured immediately after the second source.
+
+    This is the capacity-adequacy figure. Retention measured only after the
+    washout confounds two different things: whether the model had the
+    capacity to hold both sources through sequential exposure, and whether
+    the shared washout happened to restore one. Adequacy is a property of
+    the learner, so it is measured before the washout can mask it.
+    """
+
+    retention_post_washout: float
+    """The same worst case after MIX. Recorded, but not used for adequacy."""
+
     window_w: LearningWindow
     window_p: LearningWindow
 
@@ -153,9 +173,9 @@ class RegimeCandidate:
             reasons.append(
                 f"gen={self.generalization_worst:.3f}<{criteria.tau_generalization}"
             )
-        if self.retention_worst < criteria.tau_retention:
+        if self.retention_pre_washout < criteria.tau_retention:
             reasons.append(
-                f"retention={self.retention_worst:.3f}<{criteria.tau_retention}"
+                f"retention_pre={self.retention_pre_washout:.3f}<{criteria.tau_retention}"
             )
         for name, window in (("R_W", self.window_w), ("R_P", self.window_p)):
             if window.censored:
@@ -172,6 +192,42 @@ def evaluate_candidate(
     candidate: RegimeCandidate, criteria: RegimeCriteria
 ) -> tuple[bool, tuple[str, ...]]:
     return candidate.is_adequate(criteria), candidate.failures(criteria)
+
+
+def worst_case_over_seeds(replicates: list[RegimeCandidate]) -> RegimeCandidate:
+    """Collapse per-seed measurements of one regime into its worst case.
+
+    Adequacy must hold on every calibration seed, so each criterion takes
+    its least favourable value across replicates rather than its mean. A
+    mean would let one strong seed carry a regime that fails on another,
+    and the confirmatory experiment runs many seeds.
+    """
+    if not replicates:
+        raise ValueError("no replicates to aggregate")
+    labels = {c.label for c in replicates}
+    if len(labels) != 1:
+        raise ValueError(f"replicates must share a label, got {sorted(labels)}")
+
+    def worst_window(windows: list[LearningWindow]) -> LearningWindow:
+        if any(w.censored for w in windows):
+            return next(w for w in windows if w.censored)
+        return min(windows, key=lambda w: w.width)
+
+    first = replicates[0]
+    return RegimeCandidate(
+        label=first.label, params=first.params, tokens=first.tokens,
+        n_digits=first.n_digits, d_model=first.d_model, n_layers=first.n_layers,
+        learning_rate=first.learning_rate, steps_per_phase=first.steps_per_phase,
+        n_cues=first.n_cues,
+        seeds=tuple(sorted({s for c in replicates for s in c.seeds})),
+        acc_w=min(c.acc_w for c in replicates),
+        acc_p=min(c.acc_p for c in replicates),
+        generalization_worst=min(c.generalization_worst for c in replicates),
+        retention_pre_washout=min(c.retention_pre_washout for c in replicates),
+        retention_post_washout=min(c.retention_post_washout for c in replicates),
+        window_w=worst_window([c.window_w for c in replicates]),
+        window_p=worst_window([c.window_p for c in replicates]),
+    )
 
 
 def select_regime(

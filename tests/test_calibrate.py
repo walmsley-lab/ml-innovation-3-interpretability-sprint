@@ -32,8 +32,10 @@ CENSORED_WINDOW = LearningWindow(None, None, None, floor=0.25, ceiling=0.26, cen
 def _candidate(label="base", params=100_000, **overrides) -> RegimeCandidate:
     kwargs = dict(
         label=label, params=params, tokens=1_000_000, n_digits=3, d_model=64,
-        n_layers=2, learning_rate=1e-3, steps_per_phase=400,
-        acc_w=0.99, acc_p=0.99, generalization_worst=0.95, retention_worst=0.95,
+        n_layers=2, learning_rate=1e-3, steps_per_phase=400, n_cues=256,
+        seeds=(1000,),
+        acc_w=0.99, acc_p=0.99, generalization_worst=0.95,
+        retention_pre_washout=0.95, retention_post_washout=0.95,
         window_w=GOOD_WINDOW, window_p=GOOD_WINDOW,
     )
     kwargs.update(overrides)
@@ -102,7 +104,7 @@ def test_adequate_candidate_has_no_failures():
         ({"acc_w": 0.5}, "A_W"),
         ({"acc_p": 0.5}, "A_P"),
         ({"generalization_worst": 0.4}, "gen"),
-        ({"retention_worst": 0.3}, "retention"),
+        ({"retention_pre_washout": 0.3}, "retention_pre"),
         ({"window_w": NARROW_WINDOW}, "R_W"),
         ({"window_p": NARROW_WINDOW}, "R_P"),
         ({"window_w": CENSORED_WINDOW}, "R_W=censored"),
@@ -122,7 +124,7 @@ def test_memorizing_regime_is_rejected_by_generalization():
 
 def test_forgetting_regime_is_rejected_by_retention():
     """The smoke regime's failure mode, now a first-class rejection."""
-    forgetter = _candidate(acc_w=1.0, acc_p=1.0, retention_worst=0.25)
+    forgetter = _candidate(acc_w=1.0, acc_p=1.0, retention_pre_washout=0.25)
     assert not forgetter.is_adequate(CRITERIA)
 
 
@@ -184,5 +186,44 @@ def test_retention_is_symmetric_across_sources_and_orders():
     neutrality requirement forbids.
     """
     field_names = {f.name for f in dataclasses.fields(RegimeCandidate)}
-    assert "retention_worst" in field_names
+    assert {"retention_pre_washout", "retention_post_washout"} <= field_names
     assert not {"retention_w_then_p", "retention_p_then_w"} & field_names
+
+
+def test_post_washout_retention_is_recorded_but_not_used_for_adequacy():
+    """Adequacy is a property of the learner, not of what MIX restored."""
+    masked = _candidate(retention_pre_washout=0.2, retention_post_washout=0.99)
+    assert not masked.is_adequate(CRITERIA)
+    assert any("retention_pre" in f for f in masked.failures(CRITERIA))
+
+    held = _candidate(retention_pre_washout=0.95, retention_post_washout=0.2)
+    assert held.is_adequate(CRITERIA)
+
+
+def test_worst_case_over_seeds_takes_the_least_favourable_value():
+    """A regime adequate on one seed and not another is not adequate."""
+    from dsi.calibrate import worst_case_over_seeds
+
+    lucky = _candidate(acc_w=0.99, retention_pre_washout=0.95, seeds=(1000,))
+    unlucky = _candidate(acc_w=0.55, retention_pre_washout=0.30, seeds=(1001,))
+    worst = worst_case_over_seeds([lucky, unlucky])
+
+    assert worst.acc_w == 0.55
+    assert worst.retention_pre_washout == 0.30
+    assert worst.seeds == (1000, 1001)
+    assert not worst.is_adequate(CRITERIA)
+
+
+def test_worst_case_propagates_a_censored_window():
+    from dsi.calibrate import worst_case_over_seeds
+
+    ok = _candidate(window_p=GOOD_WINDOW, seeds=(1000,))
+    censored = _candidate(window_p=CENSORED_WINDOW, seeds=(1001,))
+    assert worst_case_over_seeds([ok, censored]).window_p.censored
+
+
+def test_worst_case_refuses_to_mix_different_regimes():
+    from dsi.calibrate import worst_case_over_seeds
+
+    with pytest.raises(ValueError, match="share a label"):
+        worst_case_over_seeds([_candidate("a"), _candidate("b")])
