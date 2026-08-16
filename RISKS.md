@@ -155,6 +155,58 @@ of hypothesis and gate definition, never a post-hoc threshold workaround.
 
 ---
 
+## 2b. New active blocker: the frozen regime is seed-fragile
+
+The overlap calibration over r in {.15,.20,.25,.30} x 3 seeds x 2 directions
+found **no robust ratio**:
+
+| r | worst | s1000 | s1001 | s1002 | robust |
+|---|---|---|---|---|---|
+| 0.15 | 0.250 | 0.680 | 0.869 | 0.250 | no |
+| 0.20 | 0.365 | 0.547 | 0.873 | 0.365 | no |
+| 0.25 | 0.369 | 0.988 | 0.883 | 0.369 | no |
+| 0.30 | 0.391 | 0.551 | 0.980 | 0.391 | no |
+
+In 11 of the 12 limiting cells the failing quantity is **A_W, the skill being
+acquired**, not the retained one. At r=0.15/s1002 the retained skill sits at
+A_P=0.996 while A_W is 0.250. That is not interference.
+
+The control settles it. Solo acquisition from initialization at d64/l4, 600
+steps, across the three calibration seeds:
+
+| seed | solo A_W | solo A_P |
+|---|---|---|
+| 1000 | 0.998 | 1.000 |
+| 1001 | **0.529** | 1.000 |
+| 1002 | 0.982 | 1.000 |
+
+**The regime does not reliably learn the rule at all.** Seed 1001 reaches
+0.529 solo, far below tau_w = 0.90, and its trace is still climbing at the
+final checkpoint, so it is under-trained rather than stuck. P is at ceiling on
+every seed; the variance is entirely in W.
+
+Two consequences.
+
+First, **the overlap calibration rests on an uncalibrated regime** and its
+numbers cannot be used to select r. A ratio cannot be chosen for its ability
+to preserve a skill the regime does not reliably acquire.
+
+Second, **a stage-ordering defect in the sweep**. Seed replication (B3) is
+gated behind retention (B2), so a regime that fails retention never has its
+*solo* competence replicated across seeds. Retention was failing for an
+apparatus reason unrelated to the regime, so B3 never ran and the seed
+fragility went unseen. Solo criteria are properties of the regime alone and
+should be replicated across seeds inside B1, before any retention measurement
+is attempted. The seed-replication requirement was correct; it was placed too
+late in the sequence to catch this.
+
+Remedy, not yet run: restore solo reliability first — the traces indicate
+under-training, so phase duration is the neutral variable to move — then
+re-run the overlap calibration on a regime whose solo competence holds across
+all calibration seeds.
+
+---
+
 ## 3. Execution and infrastructure constraints
 
 ### Tiny models are CPU-faster than the L4 at current scale
