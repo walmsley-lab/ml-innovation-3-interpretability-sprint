@@ -52,15 +52,95 @@ stays separate from confirmatory claims.
 running. Stage 5 was **not** reached; no adaptive intervention was selected
 or launched.
 
+**Against the four questions.**
+
+* *Phenomenon* — **yes, on WikiText.** Development S/N 5.95 and 6.09 on the
+  primary components, confirmatory 7.62 and 8.32, under a repaired control,
+  with matched composition and asserted exposure equality.
+* *Prediction* — **partial.** The relational model beat every simple baseline
+  prospectively on both components (30.0%, 37.7%) against frozen predictions,
+  and the 20NG inversion did not recur. It failed the frozen robustness
+  condition on one component. This is the closest the project has come, and
+  it is not a pass.
+* *Utility* — **untested.** No curriculum has been compiled or evaluated.
+* *Efficiency* — **unmeasured.** 26 development pairs were used to predict 10
+  held-out; the minimum sufficient fraction is unknown and is the target of a
+  later sample-efficiency program.
+
 ---
 
-## In flight
+---
 
-**Layer-2 ceiling scout**, manifest `1deb0ae83655d08d`, 15 units (3 arms x 5
-seeds), distributed across both C3 workers. Frozen stop rule: if
-`predicted_best` does not beat `exact_reverse` by more than between-seed
-noise, stop the expansion and diagnose. No curriculum, hyperparameter,
-threshold or seed may be adapted on partial results.
+## Barrier: Layer-2 ceiling scout — **FAIL** (2026-08-16)
+
+**Completed stage.** 15/15 units, manifest `1deb0ae83655d08d`, allocation
+identical across arms and families.
+
+**Gate result: FAIL.** `predicted_best` 0.3827 vs `exact_reverse` 0.3731 on
+final mean accuracy — a +0.0096 difference against pooled between-seed sd of
+0.0187, so effect/noise +0.51. Best does **not** beat balanced either: 0.383
+against **0.987**.
+
+**Scientific interpretation.** Sequential block curricula retain only the
+final family. Every family reaches ceiling at the end of its own phase and
+then collapses by 0.69-0.89; only the last survives. The two sequential arms
+differ in outcome only in *which* family is last, so their gap is recency,
+not order. The balanced arm reaching 0.951-0.998 on all four families shows
+the task is fully learnable at this dose — the failure is specific to
+block-sequential presentation, and reproduces the Layer-1 catastrophic
+interference finding that overlap `r = 0.20` was introduced to fix.
+
+A second failure mode survives even if forgetting is fixed: the pairwise
+matrix measured *immediate acquisition of the next family* over two phases,
+while the scout composed it into a four-phase ordering scored on *retention
+of all families*. Transitivity was never tested.
+
+**Current risks.** The pairwise-graph approach may not compose into
+multi-phase curricula at all; that is now an open and testable question
+rather than an assumption.
+
+**Next licensed action.** Proposed and **not run**: re-run the same three
+arms with Layer-1's validated overlap floor `r = 0.20`, changing that one
+thing only. It separates "forgetting swamped the effect" from "pairwise
+transfer does not compose". 15 units.
+
+**Against the four questions.**
+
+* *Phenomenon* — **no**, for block-sequential Layer-2 curricula at this dose.
+  The dominant effect is recency, not order.
+* *Prediction* — untested here; the scout never reached a prediction stage.
+* *Utility* — **no.** The compiled curriculum lost heavily to plain
+  interleaving (0.383 vs 0.987). Any curriculum claim must beat the balanced
+  control, and this one does not come close.
+* *Efficiency* — the scout cost 15 units to establish that the regime has no
+  headroom, which is the cheapest possible way to have learned it.
+
+---
+
+## Ontology programme — the north star, not yet licensed
+
+The four-question ladder is the **evidence ladder** for the ontology
+programme, not a replacement for it. The end state remains a **model-native
+developmental ontology**: units defined by how learning transfers,
+interferes, accelerates and changes representations, rather than by human
+semantic labels.
+
+Standing constraints, recorded now so they are not rediscovered later:
+
+* The current semantic families and any first recovered graph are
+  **provisional measurement units**, not the ontology.
+* Ontology optimization does **not** begin from partial or failed results.
+  Reliable interaction structure must exist first; as of this barrier it does
+  not.
+* Once stable non-additive, held-out-predictive structure exists, the next
+  question is which observables explain it — representation similarity,
+  gradient alignment, loss trajectories, learning speed, probe/activation
+  change, semantic structure, or combinations.
+* **Every ontology revision must make frozen prospective predictions before
+  being considered better.** This is the WikiText standard, applied to
+  ontologies.
+* The deliverable is a predictive and actionable developmental ontology. A
+  graph on its own is not the deliverable.
 
 ## Infrastructure
 
