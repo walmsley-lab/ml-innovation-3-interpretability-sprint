@@ -1,5 +1,9 @@
 # STATUS
 
+> **Resuming from another machine or session?** Start with
+> [HANDOFF.md](HANDOFF.md): what is running, how to restore state, what is
+> established, what has been controlled for, and where it can go next.
+
 ## Research objective
 
 **Discover measurable structure in how models acquire, transfer, retain, and
