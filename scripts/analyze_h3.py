@@ -23,7 +23,7 @@ becomes interpretable. If relational features predict here, the signal is
 relational; if they do not, the ontology hypothesis rises.
 
 The verdict is computed against the readings prespecified in
-`DESIGN_LAYER2.md` 18, not chosen after the numbers are seen.
+`docs/experiments/natural_corpus.md` 18, not chosen after the numbers are seen.
 """
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ MODELS = ("global", "source_only", "target_only", "additive", "cosine", "relatio
 SN_THRESHOLD = 2.0
 
 # A model counts as beating the global mean only by a MATERIAL margin.
-# Prespecified in DESIGN_LAYER2 21 before any WikiText outcome existed,
+# Prespecified in docs/experiments/natural_corpus.md 21 before any WikiText outcome existed,
 # because a 1.5% gain triggered a relational-success reading here once.
 # Today's non-signals sit at 0.5-1.5%; the synthetic pilot reached 59.8%
 # where real structure existed.
@@ -185,7 +185,7 @@ def main() -> None:
                          else f"{'-':>12s}" for k in MODELS)
         print(f"{metric:>18s} {cells}")
 
-    print("\n=== verdict, against the readings frozen in DESIGN_LAYER2 18 ===")
+    print("\n=== verdict, against the readings frozen in docs/experiments/natural_corpus.md 18 ===")
     aulc = survival["T_aulc"]["h3"]
     effects_survive = aulc["sn"] >= SN_THRESHOLD
 
@@ -209,7 +209,7 @@ def main() -> None:
     print(f"  relational materially better on BOTH components: {comp_relational}")
     print(f"  relational materially better on AULC: {aulc_relational}")
     print("  NOTE: LOPO is a selection device, never success. Success is "
-          "prospective on a frozen pool (DESIGN_LAYER2 21).")
+          "prospective on a frozen pool (docs/experiments/natural_corpus.md 21).")
     # The H3 reading is the one in force WHEN H3 RAN. The material-improvement
     # rule was prespecified afterwards, for WikiText, and applying it here
     # would re-gate a completed experiment on a criterion chosen after seeing

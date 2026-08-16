@@ -1,6 +1,6 @@
 """Layer 2: a six-family synthetic corpus over one shared world.
 
-Implements DESIGN_LAYER2.md. Six capability families composed from five
+Implements docs/experiments/layer2_synthetic.md. Six capability families composed from five
 overlapping latent primitives, so that developmental relationships between
 families can exist at all. The W/P pair of Layer 1 shares no mechanism, which
 is why its transfer structure was degenerate.

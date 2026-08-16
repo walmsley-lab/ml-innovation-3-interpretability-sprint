@@ -1,7 +1,7 @@
 """Intake and support audit for a larger natural corpus.
 
 The four-family 20NG universe cannot host disjoint observed, held-out and
-adaptive pools at once — `DESIGN_LAYER2.md` 15 records that as a structural
+adaptive pools at once — `docs/experiments/natural_corpus.md` 15 records that as a structural
 limit. A legitimate Stage-5 attempt needs enough automatically proposed
 families that the three roles can be separated, which means roughly 8 usable
 families and therefore 56 directed pairs.

@@ -11,6 +11,9 @@ models.
 
 - [research.md](research.md) — the scientific program and gates A–J
 - [technical.md](technical.md) — implementation plan
+- [report.md](report.md) — what has been measured, and when
+- [RISKS.md](RISKS.md) — threats to validity and known failure modes
+- [docs/experiments/](docs/experiments/) — per-experiment records
 
 Three objects stay distinct throughout: **intervention measurements**, the
 **developmental model** fitted to them, and the **derived curriculum**. A
@@ -28,18 +31,29 @@ written up as "no effect found".
 | Gate | Criterion | State |
 |---|---|---|
 | A | Estimator calibration | passing |
-| B | Minimal adequate model selected | in progress |
-| C | Null calibration and powered seed count | not started |
-| D | Persistent W/P differentiation after washout | not started |
+| B | Minimal adequate model selected | passing (regime frozen) |
+| C | Null calibration and powered seed count | **failed — statistical invalidator** |
+| D | Persistent W/P differentiation after washout | blocked by C |
 | E | Adjacent-scale replication | not started |
-| F | Directional transfer signal exceeds null and simple baselines | not started |
-| G | Held-out intervention prediction succeeds | not started |
+| F | Directional transfer signal exceeds null and simple baselines | synthetic: viability shown; natural: **failed** |
+| G | Held-out intervention prediction succeeds | **failed on natural corpus** |
 | H | Ontology revision improves predictive compression | not started |
 | I | Derived curriculum beats baselines and reverse | not started |
-| J | Pipeline transfers unchanged to unseen natural corpus | not started |
+| J | Pipeline transfers unchanged to unseen natural corpus | pipeline transfers; prediction does not |
 
 Gate A measures bias ≤ 7e-5 against a 2e-3 tolerance and interval coverage of
 0.947–0.951 against a nominal 0.95.
+
+Gate C is the live blocker. The apparatus calibrates cleanly through the
+common tail, but the frozen neutral-default *endpoint* has within-history
+variance too large for feasible confirmatory inference, so Claim 1 was never
+run. That is an invalidator, not a negative result. See
+[report.md](report.md).
+
+Gates F and G were attempted on a natural corpus and **failed** their frozen
+criteria: relational features lost to the global mean out of sample, and the
+fallback source-only explanation then failed prospectively on pairs frozen
+before they ran. Transfer itself is measurable; predicting it is what fails.
 
 ```bash
 uv venv && uv pip install -e ".[dev]" && .venv/bin/python -m pytest
@@ -57,11 +71,16 @@ src/dsi/
   train.py       functional training; constant LR by default
   eval.py        diagnostic suite: aligned, w_only, p_only, conflict
   artifacts.py   versioned Parquet
+  corpus.py      arbitrary-corpus intake: dedup, split-before-proposal, audit
+  layer2.py      synthetic compositional families over shared primitives
+  natural.py     train-only vocabulary and deterministic chunking
+  calibrate.py   Gate B adequacy criteria
+  power.py       null calibration and seed planning
 ```
 
-Deliberately absent until earned: Hydra and Orbax, the GCP executor and
-budget system, partial pooling, transfer/discovery/curriculum compilation,
-and any UI.
+Deliberately absent until earned: Hydra and Orbax, partial pooling,
+curriculum compilation, and any UI. The GCP executor exists in
+`scripts/gcp.py` and is used for wave execution.
 
 ## The paired experimental unit
 

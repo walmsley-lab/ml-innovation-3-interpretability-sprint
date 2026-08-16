@@ -48,7 +48,7 @@ def whitespace_tokens(text: str) -> list[str]:
     """The frozen audit tokenizer: exactly ``str.split()``.
 
     Committed as a named function because the support audit in
-    ``DESIGN_LAYER2.md`` 14 was computed with it, and an audit whose
+    ``docs/experiments/natural_corpus.md`` 14 was computed with it, and an audit whose
     tokenizer lives only in a notebook cannot be rechecked.
     """
     return text.split()

@@ -1,6 +1,6 @@
 """Stage-5 natural-corpus ingestion, frozen and re-checkable.
 
-The 20 Newsgroups pilot recorded in ``DESIGN_LAYER2.md`` 14 was run before
+The 20 Newsgroups pilot recorded in ``docs/experiments/natural_corpus.md`` 14 was run before
 this script existed, so its artifacts had no committed producer. This script
 is that producer. It reproduces the frozen pipeline exactly and **asserts**
 the reproduction rather than overwriting it: the document split, the family

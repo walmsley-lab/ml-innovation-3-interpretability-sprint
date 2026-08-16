@@ -606,7 +606,7 @@ sharpest competitor to the developmental claim, cannot even be fitted.
 overlapping latent primitives, matched acquisition difficulty, a persistent
 background distribution in every phase, and curricula expressed as
 time-varying mixture weights. The design proposal is in
-[`DESIGN_LAYER2.md`](DESIGN_LAYER2.md).
+[`docs/experiments/layer2_synthetic.md`](docs/experiments/layer2_synthetic.md).
 
 Layer 2 does not replace Layer 1 and does not begin until the Layer-1
 diagnostics conclude. A redesign is not a reason to abandon an unfinished

@@ -9,7 +9,7 @@ relational prediction of `T_aulc`, where the relational model (LOPO 0.1166)
 was beaten by the global mean (0.0709), and the provisional source-only
 explanation then failed prospectively (0.0711 against the global mean's
 0.0699) on 3 pairs frozen before the run. That failure stands as recorded in
-`DESIGN_LAYER2.md` 16-17 and is not reinterpreted by anything below. A
+`docs/experiments/natural_corpus.md` 16-17 and is not reinterpreted by anything below. A
 reframing that converted a failed test into a passed one by redescription
 would be the exact move this project's invalidator/falsifier separation
 exists to prevent.

@@ -143,7 +143,7 @@ def lopo_ladder(units: dict, observed: list, features: dict, metric: str) -> dic
     Model comparison happens entirely inside the observed pairs. With four
     families there are only 3 unobserved pairs in existence, and spending
     them on a batch test would leave the adaptive selector no candidate at
-    all; DESIGN_LAYER2 15 records that role conflict.
+    all; docs/experiments/natural_corpus.md 15 records that role conflict.
 
     The held-out unit is the **pair**: all of its seeds leave with it, so no
     seed of a predicted pair is ever in the fit.
@@ -181,7 +181,7 @@ def freeze_predictions(units: dict, observed: list, untouched: list, features: d
     Written before any untouched pair is run, so a prediction cannot be
     revised after its outcome is visible.
 
-    The acquisition score is the frozen rule from DESIGN_LAYER2 15:
+    The acquisition score is the frozen rule from docs/experiments/natural_corpus.md 15:
     ``U_e = s_lopo * sqrt(x0' (X'X)^-1 x0)``, the predictive standard error at
     the candidate's feature location with the residual scale taken from
     leave-one-pair-out rather than in-sample. Importance and cost are uniform

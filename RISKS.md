@@ -250,7 +250,7 @@ fraction, and at 1200 steps `min_window = 0.15` demands an absolute cue
 window of 180 steps. The two criteria are in direct tension **because W and P
 have very different intrinsic timescales**.
 
-This is the difficulty-mismatch problem that `DESIGN_LAYER2.md` §4 makes a
+This is the difficulty-mismatch problem that `docs/experiments/layer2_synthetic.md` 4 makes a
 gate for Layer 2, appearing in Layer 1. The neutral lever is task difficulty:
 `n_cues` sets how long the cue takes to acquire, and
 `scripts/probe_cue_window.py` already records the relationship (R_P rising

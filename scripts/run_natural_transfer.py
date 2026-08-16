@@ -132,6 +132,30 @@ def neutral_chunks(state: dict, source: int, target: int, n_chunks: int,
     return mixed[order], others
 
 
+def common_control_chunks(state: dict, target: int, n_chunks: int, seed: int) -> tuple:
+    """The H3 common control `N_j`: balanced over every family except the target.
+
+    **Its arguments are the target and the seed. The source is not among
+    them**, which is the invariant the whole H3 test rests on: every source
+    compared against a given target sees byte-identical control material.
+
+    With four families this necessarily includes source-family material --
+    one third of the chunks come from family `i` when `i` is the source.
+    docs/experiments/natural_corpus.md 18 records that plainly. The alternative would be a control
+    whose composition varies with the source, which is the property under
+    test, so the dilution is accepted and documented rather than engineered
+    around. It biases the effect toward zero, not toward apparent structure.
+    """
+    others = [f for f in USABLE_FAMILIES if f != target]
+    per = n_chunks // len(others)
+    parts = [family_chunks(state, f, per, seed + 100 + f) for f in others]
+    mixed = np.concatenate(parts, axis=0)
+    if len(mixed) != n_chunks:
+        raise ValueError(f"common control is {len(mixed)} chunks, not {n_chunks}")
+    order = np.random.default_rng(seed + 7).permutation(len(mixed))
+    return mixed[order], others
+
+
 def _train(model, opt_state, optimizer, chunks):
     """Run one source phase: every chunk once, in the order given."""
     for step in range(1, len(chunks) // BATCH + 1):
@@ -173,7 +197,8 @@ def run_unit(source: int, target: int, seed: int, out: Path, state: dict) -> dic
     n_steps = CHUNKS_PER_PHASE // BATCH
     marks = sorted({int(round(o * n_steps)) for o in OFFSETS})
     curves, fingerprints = {}, {}
-    for arm, prefix in (("treatment", source_stream), ("control", control_stream)):
+    arms = (("treatment", source_stream), ("control", control_stream))
+    for arm, prefix in arms:
         model = init_model(model_config, jr.fold_in(root, 1))       # shared init
         fingerprints[arm] = float(jnp.sum(model.embed.weight))
         opt_state = optimizer.init(eqx.filter(model, eqx.is_inexact_array))
