@@ -267,6 +267,49 @@ recalibration rather than a silent change.
 
 ---
 
+## 2c. GATE C FAILS: the neutral default is not stable under identity-null
+
+Gate C ran the full frozen apparatus as identity-null pairs — same history in
+both arms, differing only in an independent draw of the same source condition
+— 5 pairs x 2 histories, in the frozen estimand
+`s(x) = log P(W|x) - log P(P|x)`.
+
+**The null distribution is not usable.**
+
+| history | null sd of paired Delta (log-odds) | null sd (choice rate) |
+|---|---|---|
+| A, W-first | **12.87** (14.52 after the competence gate) | **0.636** |
+| B, P-first | 0.63 | 0.0024 |
+
+History B is essentially deterministic. History A is not: two runs differing
+**only** in an independent source draw produced neutral W-choice rates of
+0.000 and 0.996 at seed 2004, and 0.196 against 0.775 at seed 2003. The
+identity-null noise spans nearly the entire range of the metric.
+
+Pooled `sigma_pair` on the bounded choice rate is 0.424, so six pairs would
+detect only a 0.708 difference at 90% power — close to the maximum the metric
+can express. In log-odds, detecting `|Delta| = 1.0` would need ~780 pairs.
+
+This is not a metric artifact: the bounded secondary metric fails the same
+way, and removing the one competence-failing run makes it slightly worse.
+
+**Claim 1 as specified cannot be run at any feasible seed count**, and this is
+a genuine statistical invalidator rather than a negative result. It is also
+substantive: the W-first history does not produce a *stable* default at all.
+Which strategy the model falls back on is decided by something as small as an
+independent draw of the same source corpus.
+
+Not yet diagnosed, and not to be guessed at: whether this is bistability in
+the neutral read-out, sensitivity to where in the tail the run lands, or a
+genuine property of how the W-first history resolves. One competence failure
+also appeared in 20 null runs (A/2000/arm1, A_P = 0.236), so competence
+retention is itself not fully reliable on confirmatory seeds.
+
+**No frozen parameter has been reopened and Claim 1 has not been launched.**
+The cross-history contrast has never been computed.
+
+---
+
 ## 3. Execution and infrastructure constraints
 
 ### Current Layer-1 executor: C3, concurrency 22
