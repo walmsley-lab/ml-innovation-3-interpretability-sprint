@@ -70,7 +70,7 @@ def primitive_graph() -> dict:
 class Layer2Config:
     n_classes: int = 8
     n_fields: int = 4
-    n_values: int = 16          # multiple of n_classes, so residues are uniform
+    n_values: int = 64          # multiple of n_classes, so residues are uniform
     n_keys: int = 4
     heldout_fraction: float = 0.25
     split_seed: int = 0
@@ -144,22 +144,39 @@ def answer_for(family: str, values: jnp.ndarray, config: Layer2Config) -> jnp.nd
     raise ValueError(f"unknown family {family!r}; expected one of {FAMILIES}")
 
 
-@lru_cache(maxsize=None)
-def value_table(config: Layer2Config, split: str) -> jnp.ndarray:
-    """Held-out compositional structures: a split over field-value tuples."""
+def _heldout_mask(values: jnp.ndarray, config: Layer2Config) -> jnp.ndarray:
+    """Deterministic hash split over value tuples.
+
+    The value space is too large to enumerate once n_values grows, so the
+    train/held-out partition is defined by a hash of the tuple rather than by
+    materializing it. Same guarantee as enumeration — a given tuple is always
+    on the same side — without the memory.
+    """
+    weights = jnp.asarray(
+        [(2654435761 * (k + 1) + 40503) % (2**32) for k in range(config.n_fields)],
+        dtype=jnp.uint32)
+    mixed = jnp.sum(values.astype(jnp.uint32) * weights, axis=1)
+    mixed = mixed ^ (mixed >> 15)
+    mixed = mixed * jnp.uint32(2246822519) + jnp.uint32(config.split_seed)
+    mixed = mixed ^ (mixed >> 13)
+    return (mixed % jnp.uint32(1000)) < jnp.uint32(round(config.heldout_fraction * 1000))
+
+
+def _sample_values(key, config: Layer2Config, batch_size: int, split: str) -> jnp.ndarray:
+    """Uniform value tuples restricted to one side of the hash split.
+
+    Oversamples and reorders so the accepted tuples come first. With a 25%
+    held-out fraction an 8x pool leaves the chance of underfilling
+    negligible, and the operation stays vectorized and deterministic.
+    """
     if split not in ("train", "heldout"):
         raise ValueError(f"split must be train or heldout, got {split!r}")
-    total = config.n_values ** config.n_fields
-    if total > 200_000:
-        raise ValueError("value space too large to enumerate; reduce n_fields")
-    index = np.arange(total)
-    values = np.stack([(index // config.n_values**k) % config.n_values
-                       for k in range(config.n_fields)], axis=1)
-    rng = np.random.default_rng(config.split_seed)
-    rows = rng.permutation(total)
-    cut = int(round(config.heldout_fraction * total))
-    chosen = rows[:cut] if split == "heldout" else rows[cut:]
-    return jnp.asarray(values[np.sort(chosen)], dtype=jnp.int32)
+    pool = batch_size * 8
+    candidates = jr.randint(key, (pool, config.n_fields), 0, config.n_values)
+    heldout = _heldout_mask(candidates, config)
+    wanted = heldout if split == "heldout" else ~heldout
+    order = jnp.argsort(~wanted)          # accepted first, stable
+    return candidates[order[:batch_size]].astype(jnp.int32)
 
 
 def sample_layer2_batch(key, family: str, config: Layer2Config, batch_size: int,
@@ -167,9 +184,7 @@ def sample_layer2_batch(key, family: str, config: Layer2Config, batch_size: int,
     """One batch. Record bodies come from a single shared generator."""
     if family not in FAMILIES:
         raise ValueError(f"unknown family {family!r}")
-    table = value_table(config, split)
-    rows = jr.randint(key, (batch_size,), 0, table.shape[0])
-    values = table[rows]
+    values = _sample_values(key, config, batch_size, split)
     answer = answer_for(family, values, config)
 
     keys_row = jnp.arange(config.n_fields, dtype=jnp.int32)
