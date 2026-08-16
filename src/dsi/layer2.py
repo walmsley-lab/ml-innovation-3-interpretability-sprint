@@ -72,11 +72,30 @@ class Layer2Config:
     n_fields: int = 4
     n_values: int = 64          # multiple of n_classes, so residues are uniform
     n_keys: int = 4
+    agg_range: int = 16
+    """Effective arithmetic range for the AGGREGATE families.
+
+    Decouples computational difficulty from surface vocabulary size. At the
+    shared n_values=64 the modular sum became unlearnable while the lookup and
+    chain families were still speeding up, because one global knob was pulling
+    the two groups in opposite directions. Reducing the domain the aggregate
+    families compute over leaves the record bodies, vocabulary and answer
+    space untouched.
+    """
+
     heldout_fraction: float = 0.25
     split_seed: int = 0
     map_seed: int = 0
 
     def __post_init__(self) -> None:
+        if self.agg_range % self.n_classes:
+            raise ValueError(
+                f"agg_range ({self.agg_range}) must be a multiple of n_classes "
+                f"({self.n_classes}) so aggregate residues stay exactly uniform")
+        if self.n_values % self.agg_range:
+            raise ValueError(
+                f"n_values ({self.n_values}) must be a multiple of agg_range "
+                f"({self.agg_range}) so the reduced domain is unbiased")
         if self.n_values % self.n_classes:
             raise ValueError(
                 f"n_values ({self.n_values}) must be a multiple of n_classes "
@@ -126,9 +145,13 @@ def answer_for(family: str, values: jnp.ndarray, config: Layer2Config) -> jnp.nd
     if family == "F1_SELECT_MAP":
         return lookup[v0]
     if family == "F2_SELECT_AGG":
-        return (v0 + v1) % config.n_classes
+        r = config.agg_range
+        return ((v0 % r) + (v1 % r)) % config.n_classes
     if family == "F3_MAP_AGG":
-        return (lookup[v0] + lookup[v1]) % config.n_classes
+        # The reduced domain also shrinks this family's memorization load,
+        # which is the other half of why it stalled at n_values=64.
+        r = config.agg_range
+        return (lookup[v0 % r] + lookup[v1 % r]) % config.n_classes
     if family == "F4_SELECT_CMP":
         # Select the larger of two fields, then bucket it. A bare order
         # relation would emit only three classes and leave this family with a

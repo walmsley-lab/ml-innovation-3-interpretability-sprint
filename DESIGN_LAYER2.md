@@ -263,3 +263,65 @@ neither Layer 1 nor Layer 2 licenses claims about it. Sections of the plan
 describing generic corpus abstraction, family proposal from arbitrary text,
 and compiled sampling schedules for large corpora are **later portability and
 system-identification targets**, not results.
+
+
+## 10. Frozen Layer-2 family set (today)
+
+`n_values = 64`, `agg_range = 16`. Four families frozen, two dropped.
+
+| family | median t90 | train | held-out | status |
+|---|---|---|---|---|
+| F1 SELECT∘MAP | 99 | 1.000 | 1.000 | frozen |
+| F4 SELECT∘COMPARE | 119 | 0.979 | 0.971 | frozen |
+| F6 CHAIN∘MAP | 225 | 1.000 | 1.000 | frozen |
+| F5 CHAIN∘SELECT | 232 | 1.000 | 1.000 | frozen |
+| F2 SELECT∘AGGREGATE | — | 0.173 | 0.167 | **dropped** |
+| F3 MAP∘AGGREGATE | 684 | 0.718 | 0.709 | **dropped** |
+
+Difficulty spread over the frozen four is **2.34x**, inside the adequacy
+band. Twelve ordered pairs remain, enough to fit the baseline ladder.
+
+Reducing `agg_range` helped F3 substantially (0.208 to 0.718) by shrinking
+its lookup domain, and did not help F2 at all. The reason is that the input
+tokens still span 64 values, so F2 must learn a 64-to-16 residue reduction
+*before* the modular sum — harder than the original 16-value task even though
+the arithmetic range now matches it. AGGREGATE is not reachable from a
+shared-vocabulary knob at this model scale, and reopening that is rigor-pass
+work rather than today's.
+
+The remaining four still share primitives: SELECT appears in F1, F4 and F5;
+MAP in F1 and F6; CHAIN in F5 and F6. Ten of twelve ordered pairs share at
+least one primitive, so the structure the design exists to test survives the
+drop.
+
+Pre-existing nuisance note, not introduced by this change: F5's answer
+marginal deviates more than the others (0.096), because the chain index is
+derived from the same value that can be selected. Recorded for the rigor pass.
+
+## 11. Held-out prediction: what may and may not be used
+
+**Pair-ID interaction coefficients cannot predict an unseen pair.** A
+coefficient `gamma_ij` fitted per pair has no value for a pair never
+observed, so a model built on them is descriptive only and belongs in the
+ladder as an **in-sample upper bound**, never as the held-out predictor.
+
+Held-out prediction must use features that exist for unseen pairs:
+
+* frozen source and target primitive indicators;
+* primitive-sharing features (count and identity of shared primitives,
+  whether sharing is in the first or second composition slot);
+* source and target solo difficulty (`t90`), which is the honest form of the
+  additive `beta_j` term rather than something to hide.
+
+The ladder therefore reads:
+
+    global mean
+      -> source-only / target-only
+      -> additive source + target
+      -> primitive-sharing / relationship features
+      -> [pair-ID interaction: in-sample upper bound, descriptive]
+
+Developmental structure counts as established only if the relationship
+features beat the additive baseline **on truly held-out pairs**. Sharing a
+primitive is a feature, not a prediction: it may correspond to positive
+transfer, interference, or nothing.
