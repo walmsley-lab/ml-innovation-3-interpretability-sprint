@@ -70,14 +70,47 @@ So of the four candidate explanations:
 3. **abrupt phase-transition / task-switch dynamics** — *live*. The first
    skill collapses within the first 10% of phase 2, before the second begins
    to rise, in every regime and both orders.
-4. **design mismatch** — *live, and the most consequential*. Shared
-   integration does not restore the lost skill (0.246-0.277), so it is
-   erased rather than merely inaccessible. If a developmental history
-   destroys rather than layers, the phenomenon this project set out to study
-   may not survive its own operationalization.
+4. **design mismatch** — *live, and the most consequential*. The lost skill
+   was **not behaviourally recovered by the tested identical
+   NEUTRAL_ALIGNED integration phase** (0.246-0.277). That is what the
+   evidence directly supports; whether the skill is destroyed or merely
+   unrecovered by *this* intervention is not settled by it. If a
+   developmental history overwrites rather than layers, the phenomenon this
+   project set out to study may not survive its own operationalization.
 
-Diagnostic C, a minimal protected-learning control, is now licensed by the
-A-succeeds/sequential-fails pattern. It remains diagnostic only.
+### Continuity-threshold diagnostic, and a confound in it
+
+Mixing a fraction r of the first family into phase 2, branching every ratio
+from one shared phase-1 checkpoint, at d64/l4:
+
+| r | W->P coexistence | P->W coexistence |
+|---|---|---|
+| 0.00 | 0.229 | 0.236 |
+| 0.01 | 0.299 | 0.240 |
+| 0.05 | 0.289 | 0.492 |
+| 0.10 | 0.510 | 0.520 |
+| 0.25 | **0.994** | 0.727 |
+| 0.50 | **1.000** | 0.479 |
+
+**W->P is rescued by continuity**: 25% mixing takes coexistence from 0.229 to
+0.994. **P->W is not**, and is non-monotone, peaking at r=0.25 and falling at
+r=0.50.
+
+The asymmetry is a confound in the protocol, not a property of the phenomenon.
+The phase-2 *total* budget was held fixed, so higher r leaves the new skill
+proportionally fewer of its own tokens: 600 steps at r=0, 300 at r=0.5. W is
+the slow skill and P the fast one, so in the P->W direction high r starves
+the very skill being acquired. Every P->W arm has A_W **still rising at the
+final checkpoint**, which is the signature of an unfinished acquisition
+rather than of forgetting.
+
+The diagnostic therefore does not license Diagnostic C. The controlled
+version holds the *new skill's* token count fixed and lets the phase total
+grow with r, separating continuity from acquisition budget.
+
+Diagnostic C remains licensed in principle by the A-succeeds/sequential-fails
+pattern, and remains diagnostic only, but should wait for the
+budget-corrected continuity curve.
 
 Constraint carried forward: replay, EWC, OGD, adapters, separate heads and
 parameter isolation are **diagnostics only**. None enters the primary design

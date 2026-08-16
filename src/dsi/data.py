@@ -288,6 +288,26 @@ def _assemble(config: TaskConfig, mode, cue: jax.Array,
     )
 
 
+def _parse_mixture(kind: str):
+    """Split a mixture family name into (primary, secondary, ratio).
+
+    Mixtures are written into the family string itself, e.g.
+
+        "P_EXPLICIT+W_EXPLICIT@0.05"   95% P_EXPLICIT, 5% W_EXPLICIT
+
+    rather than passed as a separate argument, so the mixture is part of the
+    PhaseSpec and therefore part of the content-addressed run identity. Two
+    runs differing in continuity ratio must hash differently, and encoding it
+    in the family is what guarantees that without touching RunSpec.
+    """
+    families, ratio = kind.rsplit("@", 1)
+    primary, secondary = families.split("+")
+    fraction = float(ratio)
+    if not 0.0 <= fraction <= 1.0:
+        raise ValueError(f"mixture ratio must lie in [0, 1], got {fraction}")
+    return primary, secondary, fraction
+
+
 def sample_batch(
     key: jax.Array,
     kind: str,
@@ -314,6 +334,20 @@ def sample_batch(
     """
     if batch_size < 1:
         raise ValueError(f"batch_size must be positive, got {batch_size}")
+
+    if "@" in kind:
+        primary, secondary, fraction = _parse_mixture(kind)
+        k_primary, k_secondary, k_mask = jr.split(key, 3)
+        a = sample_batch(k_primary, primary, config, batch_size, split=split)
+        b = sample_batch(k_secondary, secondary, config, batch_size, split=split)
+        take_secondary = jr.bernoulli(k_mask, fraction, (batch_size,))
+        mixed = Batch()
+        for field in ("tokens", "w_answer", "p_answer", "mode"):
+            mask = take_secondary
+            if a[field].ndim == 2:
+                mask = take_secondary[:, None]
+            mixed[field] = jnp.where(mask, b[field], a[field])
+        return mixed
 
     k_digits, k_cue = jr.split(key)
     table = digit_table(config, split)
