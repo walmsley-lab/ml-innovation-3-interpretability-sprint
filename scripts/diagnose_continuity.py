@@ -27,6 +27,7 @@ it does not move tau_retention, and it does not evaluate NEUTRAL_CONFLICT.
 
 from __future__ import annotations
 
+import argparse
 import json
 import time
 from pathlib import Path
@@ -44,7 +45,7 @@ from dsi.train import TrainConfig, init_state, offset_steps, phase_steps, train_
 D_MODEL, N_LAYERS, LR = 64, 4, 3e-3
 STEPS = 600
 SEED = 1000
-RATIOS = (0.0, 0.01, 0.05, 0.10, 0.25, 0.50)
+RATIOS = (0.0, 0.05, 0.10, 0.25, 0.50)
 OFFSETS = tuple(round(0.1 * i, 1) for i in range(11))
 EVAL_BATCH = 512
 TAU = RegimeCriteria().tau_retention
@@ -61,7 +62,37 @@ def setup():
     return task, model_config, TrainConfig(learning_rate=LR, loss_positions="all")
 
 
+def phase2_steps(ratio: float, *, budget_corrected: bool) -> int:
+    """Length of phase 2 at continuity ratio `ratio`.
+
+    Budget-corrected: the *new* skill keeps a fixed exposure of STEPS pure
+    steps and the old-skill samples are added on top, so the phase runs
+    STEPS/(1-r) steps in total. Fixed-total instead holds the phase length
+    constant, which silently reduces new-skill exposure as r rises and
+    starves the slower incoming skill.
+    """
+    return STEPS if not budget_corrected else int(round(STEPS / (1.0 - ratio)))
+
+
+def classify(trace, old_key: str, tau: float) -> str:
+    """How the prior capability behaved across phase 2."""
+    values = [t[old_key] for t in trace]
+    final, lowest = values[-1], min(values[1:]) if len(values) > 1 else values[-1]
+    if final < tau:
+        return "remains lost"
+    if lowest >= tau:
+        return "continuously preserved"
+    return f"collapses to {lowest:.2f} then recovers"
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--fixed-total", action="store_true",
+                        help="hold phase-2 length constant (the confounded variant)")
+    parser.add_argument("--out", type=Path, default=Path("artifacts/continuity_corrected"))
+    args = parser.parse_args()
+    budget_corrected = not args.fixed_total
+
     task, model_config, train_config = setup()
     tokens = STEPS * train_config.batch_size * task.seq_len
     keys = run_keys(SEED, n_phases=2, n_eval_points=len(OFFSETS))
@@ -69,7 +100,14 @@ def main() -> None:
 
     print("=== continuity-threshold diagnostic ===")
     print(f"regime d{D_MODEL}/l{N_LAYERS} lr={LR} steps/phase={STEPS} seed={SEED}")
-    print(f"ratios {RATIOS}   phase-2 token budget held fixed")
+    if budget_corrected:
+        print("phase 2: new-skill exposure held at "
+              f"{STEPS} pure steps; old-skill samples added on top")
+        print("  " + "  ".join(
+            f"r={r}: {STEPS} new + {phase2_steps(r, budget_corrected=True)-STEPS} old"
+            for r in RATIOS))
+    else:
+        print(f"phase 2: total length held fixed at {STEPS} steps (confounded)")
     print(f"conditions {GATE_B_CONDITIONS}  (NEUTRAL_CONFLICT not evaluated)\n")
 
     for first, second in DIRECTIONS:
@@ -90,7 +128,9 @@ def main() -> None:
 
         for ratio in RATIOS:
             family = f"{second}+{first}@{ratio}"
-            phase = PhaseSpec(family, tokens, "target")
+            steps2 = phase2_steps(ratio, budget_corrected=budget_corrected)
+            phase = PhaseSpec(
+                family, steps2 * train_config.batch_size * task.seq_len, "target")
             started = time.time()
 
             def eval_fn(model, point):
@@ -111,16 +151,20 @@ def main() -> None:
                      for o, r in zip(OFFSETS, phase2)]
             final = trace[-1]
             coexistence = min(final["acc_w"], final["acc_p"])
+            old_key = "acc_w" if first.startswith("W") else "acc_p"
+            behaviour = classify(trace, old_key, TAU)
             results.append({
                 "direction": f"{first}->{second}", "ratio": ratio,
+                "phase2_steps": steps2, "new_skill_steps": STEPS,
+                "budget_corrected": budget_corrected,
                 "acc_w": final["acc_w"], "acc_p": final["acc_p"],
-                "coexistence": coexistence, "trace": trace,
-                "seconds": time.time() - started,
+                "coexistence": coexistence, "prior_capability": behaviour,
+                "trace": trace, "seconds": time.time() - started,
             })
-            print(f"  r={ratio:<5} A_W={final['acc_w']:.3f} A_P={final['acc_p']:.3f} "
-                  f"coexistence={coexistence:.3f} "
-                  f"{'>= tau' if coexistence >= TAU else ''} "
-                  f"({time.time()-started:.0f}s)")
+            print(f"  r={ratio:<5} steps={steps2:<5} A_W={final['acc_w']:.3f} "
+                  f"A_P={final['acc_p']:.3f} coexistence={coexistence:.3f} "
+                  f"{'>= tau' if coexistence >= TAU else '      '} "
+                  f"| prior: {behaviour} ({time.time()-started:.0f}s)")
 
     print("\n--- phase-2 competence traces ---")
     for r in results:
@@ -129,28 +173,35 @@ def main() -> None:
         print(f"  {'':26s} {'':7s} "
               f"A_P " + " ".join(f"{t['acc_p']:5.2f}" for t in r["trace"]))
 
-    print("\n--- worst-direction coexistence by ratio ---")
-    passing = []
-    for ratio in RATIOS:
-        worst = min(r["coexistence"] for r in results if r["ratio"] == ratio)
-        flag = "PASS" if worst >= TAU else ""
-        if worst >= TAU:
-            passing.append(ratio)
-        print(f"  r={ratio:<5} worst={worst:.3f}  {flag}")
+    print("\n--- smallest continuity clearing tau, per direction ---")
+    print("  (directional thresholds are kept separate; an asymmetry here "
+          "would be a finding, not noise to average away)")
+    thresholds = {}
+    for first, second in DIRECTIONS:
+        name = f"{first}->{second}"
+        clearing = sorted(r["ratio"] for r in results
+                          if r["direction"] == name and r["coexistence"] >= TAU)
+        thresholds[name] = clearing[0] if clearing else None
+        print(f"  {name:26s} " +
+              (f"r={clearing[0]}" if clearing else f"none up to r={max(RATIOS)}"))
 
-    if passing:
-        print(f"\nSmallest continuity reaching tau={TAU}: r={min(passing)}")
-        if min(passing) <= 0.05:
-            print("Very small continuity rescues coexistence. The abrupt task "
-                  "boundary is the likely blocker, and continual-learning "
-                  "methods are not yet warranted.")
+    both = [t for t in thresholds.values() if t is not None]
+    if len(both) == len(DIRECTIONS):
+        print(f"\nBoth directions clear tau={TAU}. Observed threshold "
+              f"r={max(both)} in THIS architecture, task and seed regime; not a "
+              "universal threshold pending replication across seeds and scales.")
+        print("Stop before EWC/OGD. The question is now whether controlled "
+              "overlapping curricula should become the primary developmental "
+              "operationalization, which is a decision about the hypothesis.")
+    elif both:
+        print("\nDirections differ under matched new-task exposure. This is a "
+              "genuine directional interference asymmetry, recorded as such.")
     else:
-        print(f"\nNo tested ratio reaches tau={TAU}, up to r=0.50. "
-              "Continuity alone does not rescue coexistence; Diagnostic C "
-              "(layer freeze, then EWC-style consolidation) is the next step.")
+        print(f"\nNeither direction reaches tau={TAU} with matched new-task "
+              "exposure. Diagnostic C is licensed.")
 
     print("\nDiagnostic only. Gate B and tau_retention are unchanged.")
-    ArtifactWriter(Path("artifacts/continuity")).write("continuity", [
+    ArtifactWriter(args.out).write("continuity", [
         {k: (json.dumps(v) if isinstance(v, list) else v) for k, v in r.items()}
         | {"seed": SEED, "d_model": D_MODEL, "n_layers": N_LAYERS,
            "learning_rate": LR, "code_version": code_version(),

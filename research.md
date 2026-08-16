@@ -392,6 +392,32 @@ Competence failure is an **invalidator**, not a negative result.
 
 ---
 
+# 8a. Two Layers of Experimental Environment
+
+The W/P task is **Layer 1**: the causal primitive, and the environment in
+which blocker diagnostics are run. It is the smallest setting in which
+training order can be manipulated at all, and it is where the catastrophic
+interference described in `RISKS.md` was found.
+
+It is not sufficient for the program. With two families the transfer matrix
+has a single off-diagonal pair, so Claims 2 through 5 are untestable in
+principle, not merely in practice: there is no interaction degree of freedom
+for `gamma_ij` to occupy, nothing to merge or split, and no allocation to hold
+fixed while ordering varies. The additive `alpha_i + beta_j` baseline, the
+sharpest competitor to the developmental claim, cannot even be fitted.
+
+**Layer 2** is a six-family synthetic corpus over one shared world, with
+overlapping latent primitives, matched acquisition difficulty, a persistent
+background distribution in every phase, and curricula expressed as
+time-varying mixture weights. The design proposal is in
+[`DESIGN_LAYER2.md`](DESIGN_LAYER2.md).
+
+Layer 2 does not replace Layer 1 and does not begin until the Layer-1
+diagnostics conclude. A redesign is not a reason to abandon an unfinished
+diagnostic.
+
+---
+
 # 8b. Invalidated Task Construction, and the Capability/Preference Separation
 
 The first implementation of the W/P task was **unidentifiable**, and the
