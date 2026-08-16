@@ -1,402 +1,647 @@
 #!/usr/bin/env python3
-"""gcp.py — run this project's experiments on a GPU VM without leaving it burning money.
+"""gcp.py — run GPU jobs on GCP without leaving a VM burning money.
 
-    python scripts/gcp.py plan   --runs 240 --seconds-per-run 90   dry run, launches nothing
-    python scripts/gcp.py up     --yes                             create/reuse a GPU VM
-    python scripts/gcp.py submit --yes -- python scripts/x.py      sync, run detached, auto-poweroff
-    python scripts/gcp.py logs                                     tail the running job
-    python scripts/gcp.py status                                   am I being billed right now?
-    python scripts/gcp.py fetch  artifacts/                        copy results back
-    python scripts/gcp.py down   --yes                             DELETE the VM and its disk
+    python gcp.py plan                  who/what/where/cost, launches nothing
+    python gcp.py up                    create/reuse a GPU VM, install driver
+    python gcp.py run "python train.py" sync code, run detached, auto-poweroff
+    python gcp.py logs                  tail the running job
+    python gcp.py status                am I being billed right now?
+    python gcp.py fetch out             copy results back
+    python gcp.py down                  DELETE the VM and its disk
 
-Needs only ``gcloud``, authenticated, with a billing-enabled project set.
+Needs only `gcloud`, authenticated, with a billing-enabled project set:
+    gcloud config set project YOUR_PROJECT
 
-Everything in here is something that went wrong once, in the predecessor
-project. It is carried forward deliberately.
+`run_pool` at the bottom is importable and meant to run ON the VM, for
+fanning out many jobs across one box.
 
-Bill protection is three layers, not one
-----------------------------------------
-A hung job bills until you notice; assume you will not notice.
+Everything below is something that went wrong once.
 
-    (a) A deadman timer armed BEFORE the job starts, so it survives the job
-        hanging, the job crashing, or this orchestrator dying.
-    (b) Poweroff chained with ``;`` and not ``&&``, so a FAILED job still
-        shuts the machine down.
-    (c) ``status``, run afterwards, by hand.
+BILL PROTECTION IS THREE LAYERS, NOT ONE. A hung job bills until you
+notice; assume you will not notice. (a) A deadman timer armed BEFORE the
+job starts — survives the job hanging, crashing, or the orchestrator
+dying. (b) Poweroff chained with `;` not `&&`, so a FAILED job still shuts
+the machine down. (c) `status` afterwards, by hand. Note that a stopped VM
+still bills for its disk, ~$10/month for a 100GB boot disk, so `down`
+deletes rather than stops.
 
-``down`` deletes rather than stops. A stopped VM still bills for its disk,
-roughly $10/month for a 100 GB boot disk.
+A FRESH PROJECT HAS ZERO GPU QUOTA, and the failure reads like a capacity
+error. `up` prints the exact quota request when it sees one.
 
-A fresh project has zero GPU quota
-----------------------------------
-The failure reads like a capacity error. ``up`` prints the exact quota
-request when it sees one.
+L4 CAPACITY IS SCARCE. ZONE_RESOURCE_POOL_EXHAUSTED is the normal
+response, not the exception, so `up` walks nine zones and caches the one
+that worked. GPU VMs also require --maintenance-policy=TERMINATE; they
+cannot live migrate and creation fails without it.
 
-L4 capacity is scarce
----------------------
-``ZONE_RESOURCE_POOL_EXHAUSTED`` is routine rather than exceptional, so
-``up`` walks a candidate zone list instead of failing on the first zone.
+THE DRIVER NEEDS A REBOOT, AND STARTUP SCRIPTS RUN ON EVERY BOOT. Install,
+touch a sentinel, reboot once, exit early forever after. Without the
+sentinel you get a reboot loop. Budget 3-5 minutes and poll for
+nvidia-smi rather than sleeping a fixed amount.
 
-Durable intermediate artifacts
-------------------------------
-The VM disk is a cache, never the source of truth. ``submit`` starts a
-background sync that pushes artifacts to GCS while the job runs, so a
-preempted, killed, or crashed run leaves behind everything it had finished.
-The predecessor project lost work to a fetch-before-delete workflow; this
-does not repeat it.
+OOM: GATE, STAGGER, RETRY. Peak RSS while loading data is far above
+steady-state training. Three 5GB corpus loads landed at once on a 15GB
+host, the kernel killed one, and the pool treated that non-zero exit as
+fatal and took the healthy runs down too. run_pool gates on MemAvailable,
+staggers launches so only one process is in its allocation peak, and
+retries once — an OOM kill is an environmental death, not a bug.
 
-Nothing here launches a paid resource without ``--yes``, and every command
-that would spend money prints its estimate first.
+PGREP MATCHES THE COMMAND YOU ARE TYPING. `pgrep -f train.py` matches the
+SSH command containing that string; this deadlocked a wait loop for an
+hour. Bracket the first character: `pgrep -f "[t]rain.py"`.
+
+SSH DROPS KILL YOUR JOB. Run detached under tmux and tee to a file. You
+will use the log file far more than you reattach.
+
+FETCH BEFORE SHUTDOWN. The poweroff means anything not on disk and copied
+off is gone. `run` leaves results on the VM's disk, so `fetch` before
+`down`, or write to GCS as you go.
+
+NEVER LAUNCH WITHOUT PRICING IT FIRST. `plan` is the only command that
+spends nothing: it names the account and project being billed, the machine
+and zone, and the estimated cost. Run it, read it, and get a human's
+agreement before `up` or `run`.
 """
 
-from __future__ import annotations
-
-import argparse
-import json
-import shlex
+import os
 import subprocess
 import sys
-from dataclasses import dataclass
+import time
 from pathlib import Path
 
-# --- Configuration ---------------------------------------------------------
 
-VM_NAME = "dsi-gpu"
-NETWORK = "research-net"
-MACHINE_TYPE = "g2-standard-4"  # one NVIDIA L4
-DISK_SIZE_GB = 100
-IMAGE_FAMILY = "ubuntu-2404-lts-amd64"
-IMAGE_PROJECT = "ubuntu-os-cloud"
+VM = os.environ.get("VM", "gpu")
+MACHINE = os.environ.get("MACHINE", "g2-standard-4")   # 1x NVIDIA L4
+DISK = os.environ.get("DISK", "100GB")
+REMOTE = os.environ.get("REMOTE", "work")
+MAXHOURS = int(os.environ.get("MAXHOURS", "8"))
+ZONE_CACHE = Path(".gcp-zone")
 
-CANDIDATE_ZONES = (
-    "us-west1-a", "us-west1-b", "us-west1-c",
-    "us-east1-b", "us-east1-c", "us-east1-d",
-    "us-central1-a", "us-central1-b", "us-central1-c",
-)
+ZONES = [
+    "us-west1-a",
+    "us-west1-b",
+    "us-west1-c",
+    "us-east1-b",
+    "us-east1-c",
+    "us-east1-d",
+    "us-central1-a",
+    "us-central1-b",
+    "us-central1-c",
+]
 
-# $/hour, list-price approximations for us regions. These are for situational
-# awareness; the authoritative figure is the billing console.
-RATES = {"g2-standard-4": 0.85, "g2-standard-4-spot": 0.29}
+# $/hour list-price approximations, us regions, on-demand. For situational
+# awareness only; the billing console is authoritative.
+RATES = {"g2-standard-4": 0.85}
 DISK_USD_PER_GB_HOUR = 0.10 / 730
 
-STATE_DIR = Path(".gcp")
-ZONE_FILE = STATE_DIR / "zone"
-BUCKET_FILE = STATE_DIR / "bucket"
 
-DEADMAN_MARGIN = 2.0
-"""Deadman timer as a multiple of the estimated runtime.
+DRIVER_STARTUP = r"""#!/usr/bin/env bash
+set -euo pipefail
+exec > >(tee -a /var/log/driver-startup.log | logger -t driver) 2>&1
 
-Too tight kills real work; too loose is the thing being protected against.
-Twice the estimate has survived both in practice.
+if command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi >/dev/null 2>&1; then
+    echo "driver already up"
+    exit 0
+fi
+
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y \
+    nvidia-driver-580 \
+    git \
+    curl \
+    tmux \
+    htop \
+    build-essential \
+    python3 \
+    python3-pip \
+    python3-venv \
+    rsync
+
+mkdir -p /var/lib/bootstrap
+
+if [[ ! -f /var/lib/bootstrap/rebooted ]]; then
+    touch /var/lib/bootstrap/rebooted
+    echo "driver installed, rebooting once"
+    shutdown -r now
+fi
 """
 
-SYNC_INTERVAL_SECONDS = 120
+
+# ---------------------------------------------------------------------------
+# plumbing
+# ---------------------------------------------------------------------------
+
+def project():
+    p = os.environ.get("PROJECT") or sh(
+        "gcloud config get-value project",
+        capture=True,
+    ).strip()
+
+    if not p or p == "(unset)":
+        die("no project. run: gcloud config set project YOUR_PROJECT")
+
+    return p
 
 
-# --- Cost ------------------------------------------------------------------
+def sh(cmd, capture=False, check=True):
+    r = subprocess.run(
+        cmd,
+        shell=True,
+        text=True,
+        stdout=subprocess.PIPE if capture else None,
+        stderr=subprocess.STDOUT if capture else None,
+    )
+
+    if check and r.returncode != 0 and not capture:
+        sys.exit(r.returncode)
+
+    return r.stdout if capture else ""
 
 
-@dataclass(frozen=True)
-class Estimate:
-    runs: int
-    seconds_per_run: float
-    parallel: int
-    machine: str
-    spot: bool
-    wall_hours: float
-    compute_usd: float
-    disk_usd: float
-
-    @property
-    def total_usd(self) -> float:
-        return self.compute_usd + self.disk_usd
-
-    @property
-    def deadman_minutes(self) -> int:
-        return max(10, int(self.wall_hours * 60 * DEADMAN_MARGIN))
-
-    def render(self) -> str:
-        rate = RATES.get(self.machine + ("-spot" if self.spot else ""), 0.9)
-        return "\n".join([
-            f"runs                {self.runs}",
-            f"seconds per run     {self.seconds_per_run:,.0f}",
-            f"parallel workers    {self.parallel}",
-            f"machine             {self.machine}{' (spot)' if self.spot else ''}",
-            f"rate                ${rate:.2f}/hour",
-            f"projected wall      {self.wall_hours:.2f} hours",
-            f"compute             ${self.compute_usd:,.2f}",
-            f"disk ({DISK_SIZE_GB} GB)      ${self.disk_usd:,.2f}",
-            f"ESTIMATED TOTAL     ${self.total_usd:,.2f}",
-            f"deadman timer       {self.deadman_minutes} minutes",
-        ])
+def die(msg):
+    print(f"ERROR: {msg}", file=sys.stderr)
+    sys.exit(1)
 
 
-def estimate(runs: int, seconds_per_run: float, *, parallel: int = 1,
-             machine: str = MACHINE_TYPE, spot: bool = False) -> Estimate:
-    if runs < 1 or seconds_per_run <= 0 or parallel < 1:
-        raise ValueError("runs, seconds_per_run and parallel must all be positive")
-    rate = RATES.get(machine + ("-spot" if spot else ""), RATES.get(machine, 0.9))
-    wall_hours = runs * seconds_per_run / parallel / 3600.0
-    return Estimate(
-        runs=runs, seconds_per_run=seconds_per_run, parallel=parallel,
-        machine=machine, spot=spot, wall_hours=wall_hours,
-        compute_usd=wall_hours * rate,
-        disk_usd=wall_hours * DISK_SIZE_GB * DISK_USD_PER_GB_HOUR,
+def zone():
+    z = (
+        os.environ.get("ZONE")
+        or (
+            ZONE_CACHE.read_text().strip()
+            if ZONE_CACHE.exists()
+            else ""
+        )
+    )
+
+    return z or die("no zone known — run `python gcp.py up` first")
+
+
+def ssh(cmd, zone_=None, check=True):
+    return sh(
+        f"gcloud compute ssh {VM} "
+        f"--project={project()} "
+        f"--zone={zone_ or zone()} "
+        f"--quiet "
+        f"--command={quote(cmd)}",
+        check=check,
     )
 
 
-# --- gcloud plumbing -------------------------------------------------------
+def quote(s):
+    return "'" + s.replace("'", "'\\''") + "'"
 
 
-def gcloud(*args: str, check: bool = True, capture: bool = True) -> subprocess.CompletedProcess:
-    return subprocess.run(
-        ["gcloud", *args], check=check, text=True,
-        capture_output=capture,
-    )
+# ---------------------------------------------------------------------------
+# commands
+# ---------------------------------------------------------------------------
+
+def estimate(hours):
+    """Cost of holding the VM for `hours`. Pure arithmetic, spends nothing."""
+
+    hours = float(hours)
+
+    if hours <= 0:
+        die("hours must be positive")
+
+    rate = RATES.get(MACHINE, 0.9)
+    disk_gb = float(DISK.rstrip("GB") or 0)
+
+    compute = hours * rate
+    disk = hours * disk_gb * DISK_USD_PER_GB_HOUR
+
+    return {
+        "hours": hours,
+        "rate": rate,
+        "compute_usd": compute,
+        "disk_usd": disk,
+        "total_usd": compute + disk,
+    }
 
 
-def project() -> str:
-    result = gcloud("config", "get-value", "project", check=False)
-    name = (result.stdout or "").strip()
-    if not name or name == "(unset)":
-        sys.exit("No project set. Run: gcloud config set project YOUR_PROJECT")
-    return name
+def plan(hours="1"):
+    """Pre-launch check. Names who is billed, for what, where, and how much.
 
+    The only command that spends nothing. Run it, read it, and get a
+    human's agreement before `up` or `run`.
+    """
 
-def zone() -> str:
-    if not ZONE_FILE.exists():
-        sys.exit("No VM recorded. Run `up` first.")
-    return ZONE_FILE.read_text().strip()
-
-
-def bucket() -> str:
-    if BUCKET_FILE.exists():
-        return BUCKET_FILE.read_text().strip()
-    name = f"gs://{project()}-dsi-artifacts"
-    STATE_DIR.mkdir(exist_ok=True)
-    BUCKET_FILE.write_text(name + "\n")
-    return name
-
-
-def instance_exists() -> bool:
-    result = gcloud("compute", "instances", "describe", VM_NAME,
-                    "--zone", zone(), "--format", "value(name)", check=False)
-    return result.returncode == 0
-
-
-# --- Commands --------------------------------------------------------------
-
-
-def cmd_plan(args) -> None:
-    """Dry run. Prints what it would cost and launches nothing."""
-    est = estimate(args.runs, args.seconds_per_run,
-                   parallel=args.parallel, spot=args.spot)
-    print("--- dry run: nothing is launched by this command ---\n")
-    print(est.render())
-    if args.max_usd and est.total_usd > args.max_usd:
-        print(f"\nOVER BUDGET: ${est.total_usd:,.2f} exceeds the "
-              f"${args.max_usd:,.2f} ceiling. `submit` will refuse this.")
-        sys.exit(1)
-    if args.max_usd:
-        print(f"\nwithin the ${args.max_usd:,.2f} ceiling")
-    print("\nTo run it:  python scripts/gcp.py up --yes"
-          "  &&  python scripts/gcp.py submit --yes -- <command>")
-
-
-def cmd_up(args) -> None:
-    """Create or reuse a GPU VM, walking zones for L4 capacity."""
     proj = project()
-    STATE_DIR.mkdir(exist_ok=True)
+    account = sh("gcloud config get-value account", capture=True).strip()
 
-    if ZONE_FILE.exists() and instance_exists():
-        print(f"Reusing existing {VM_NAME} in {zone()}")
-        return
+    cached = (
+        os.environ.get("ZONE")
+        or (
+            ZONE_CACHE.read_text().strip()
+            if ZONE_CACHE.exists()
+            else ""
+        )
+    )
 
-    print(f"project {proj}\nmachine {MACHINE_TYPE} (NVIDIA L4)\n")
-    if not args.yes:
-        sys.exit("Refusing to create a billable VM without --yes.")
+    est = estimate(hours)
 
-    for candidate in CANDIDATE_ZONES:
-        print(f"trying {candidate} ...")
-        result = gcloud(
-            "compute", "instances", "create", VM_NAME,
-            "--project", proj, "--zone", candidate,
-            "--machine-type", MACHINE_TYPE,
-            "--maintenance-policy", "TERMINATE", "--restart-on-failure",
-            "--image-family", IMAGE_FAMILY, "--image-project", IMAGE_PROJECT,
-            "--boot-disk-size", f"{DISK_SIZE_GB}GB", "--boot-disk-type", "pd-balanced",
-            "--scopes", "https://www.googleapis.com/auth/cloud-platform",
-            *(["--provisioning-model", "SPOT"] if args.spot else []),
+    print("--- dry run: this command launches nothing ---\n")
+    print(f"account         {account}")
+    print(f"project         {proj}")
+    print(f"machine         {MACHINE} (1x NVIDIA L4), {DISK} pd-balanced")
+    print(
+        f"zone            {cached or 'none cached; up will walk ' + str(len(ZONES)) + ' zones'}"
+    )
+    print(f"deadman         {MAXHOURS}h")
+    print()
+    print(f"assumed runtime {est['hours']:.2f} hours at ${est['rate']:.2f}/hour")
+    print(f"compute         ${est['compute_usd']:,.2f}")
+    print(f"disk            ${est['disk_usd']:,.2f}")
+    print(f"ESTIMATED TOTAL ${est['total_usd']:,.2f}")
+    print()
+    print("Nothing has been created. Get agreement, then: python gcp.py up")
+
+
+def up():
+    """Create or reuse a GPU VM and wait until nvidia-smi works."""
+
+    proj = project()
+
+    startup = Path("/tmp/gcp_driver.sh")
+    startup.write_text(DRIVER_STARTUP)
+
+    selected = ""
+
+    cached = (
+        os.environ.get("ZONE")
+        or (
+            ZONE_CACHE.read_text().strip()
+            if ZONE_CACHE.exists()
+            else ""
+        )
+    )
+
+    if cached:
+        r = subprocess.run(
+            f"gcloud compute instances describe {VM} "
+            f"--zone={cached} "
+            f"--project={proj}",
+            shell=True,
+            capture_output=True,
+        )
+
+        if r.returncode == 0:
+            selected = cached
+            print(f"==> reusing {VM} in {cached}")
+
+    for z in ([] if selected else ZONES):
+        print(f"==> trying {MACHINE} in {z}")
+
+        out = sh(
+            f"gcloud compute instances create {VM} "
+            f"--project={proj} "
+            f"--zone={z} "
+            f"--machine-type={MACHINE} "
+            f"--maintenance-policy=TERMINATE "
+            f"--image-family=ubuntu-2404-lts-amd64 "
+            f"--image-project=ubuntu-os-cloud "
+            f"--boot-disk-size={DISK} "
+            f"--boot-disk-type=pd-balanced "
+            f"--metadata-from-file=startup-script={startup}",
+            capture=True,
             check=False,
         )
-        output = (result.stdout or "") + (result.stderr or "")
-        if result.returncode == 0:
-            ZONE_FILE.write_text(candidate + "\n")
-            print(f"\ncreated {VM_NAME} in {candidate}")
-            print("Driver install runs on first `submit`.")
+
+        print(out.strip()[:400])
+
+        if "RUNNING" in out or "Created" in out:
+            selected = z
+            ZONE_CACHE.write_text(z)
+            break
+
+        if "quota" in out.lower():
+            print(
+                f"\nA fresh project has 0 GPU quota. Request it:\n"
+                f"  gcloud beta quotas preferences create "
+                f"--project={proj} "
+                f"--billing-project={proj} \\\n"
+                f"    --service=compute.googleapis.com \\\n"
+                f"    --quota-id=GPUS-ALL-REGIONS-per-project "
+                f"--preferred-value=1 \\\n"
+                f"    --email=$(gcloud config get-value account) \\\n"
+                f"    --justification='ML research' "
+                f"--preference-id=gpu1\n"
+            )
+
+    if not selected:
+        die("no capacity in any zone (and/or no GPU quota)")
+
+    print("==> waiting for nvidia-smi (driver installs + reboots once)")
+
+    for _ in range(120):
+        r = subprocess.run(
+            f"gcloud compute ssh {VM} "
+            f"--project={proj} "
+            f"--zone={selected} "
+            f"--quiet "
+            f"--command='nvidia-smi'",
+            shell=True,
+            capture_output=True,
+        )
+
+        if r.returncode == 0:
+            print(f"==> GPU ready in {selected}")
             return
 
-        print(output.strip()[:400])
-        if "ZONE_RESOURCE_POOL_EXHAUSTED" in output:
-            print(f"no L4 capacity in {candidate}; next zone")
-            continue
-        if "quota" in output.lower():
-            sys.exit(
-                "\nThis is a QUOTA error, which reads like a capacity error but is not.\n"
-                "A fresh project has zero GPU quota. Request it here:\n"
-                f"  https://console.cloud.google.com/iam-admin/quotas?project={proj}\n"
-                "  Filter: 'NVIDIA_L4_GPUS'. Request at least 1 in one of:\n"
-                f"  {', '.join(sorted({z.rsplit('-', 1)[0] for z in CANDIDATE_ZONES}))}"
-            )
-    sys.exit("No L4 capacity in any candidate zone. Try again later or add zones.")
+        time.sleep(5)
+
+    die(
+        f"VM up but nvidia-smi never succeeded. Check:\n"
+        f"  gcloud compute ssh {VM} "
+        f"--zone={selected} "
+        f"--command='sudo cat /var/log/driver-startup.log'"
+    )
 
 
-def _remote_script(command: str, deadman_minutes: int, gcs: str) -> str:
-    """The wrapper that actually runs on the VM.
+def run(cmd):
+    """Sync code, arm the deadman timer, run detached, poweroff after."""
 
-    Order matters. The deadman is armed first so that it survives everything
-    after it, and the poweroff is chained with `;` so a failing job still
-    shuts the machine down.
-    """
-    return f"""set -x
-# (a) deadman armed BEFORE the job, so a hang cannot outlive it
-sudo shutdown -P +{deadman_minutes} || true
+    proj, z = project(), zone()
 
-cd ~/dsi
-# durable intermediate artifacts: push while the job runs, not after it
-( while true; do
-    gcloud storage rsync -r artifacts {gcs}/artifacts >/dev/null 2>&1 || true
-    sleep {SYNC_INTERVAL_SECONDS}
-  done ) &
-SYNC_PID=$!
+    print(f"==> syncing to {VM}:~/{REMOTE}")
 
-# (b) poweroff chained with ';' not '&&' — a FAILED job still shuts down
-nohup bash -c '{command} ; \
-  kill '"$SYNC_PID"' 2>/dev/null ; \
-  gcloud storage rsync -r ~/dsi/artifacts {gcs}/artifacts ; \
-  sudo poweroff' > ~/dsi/job.log 2>&1 &
-echo "job started; deadman set for {deadman_minutes} minutes"
+    ssh(f"mkdir -p ~/{REMOTE}", z)
+
+    sh(
+        f"gcloud compute scp "
+        f"--project={proj} "
+        f"--zone={z} "
+        f"--quiet "
+        f"--recurse "
+        f"--compress "
+        f"./ {VM}:~/{REMOTE}/",
+        check=False,
+    )
+
+    # Armed BEFORE the job, so a hang cannot outlive it.
+    print(f"==> arming {MAXHOURS}h deadman timer")
+
+    ssh(
+        f"sudo shutdown -c 2>/dev/null || true; "
+        f"sudo shutdown -h +{MAXHOURS * 60} "
+        f"deadman 2>/dev/null || true",
+        z,
+    )
+
+    # `;` not `&&` — a failed job must still power the machine off.
+    print(f"==> launching: {cmd}")
+
+    inner = (
+        f"set -o pipefail; "
+        f"{cmd} 2>&1 | tee -a run.log; "
+        f"echo EXIT=$? >> run.log; "
+        f"sudo poweroff"
+    )
+
+    ssh(
+        f"cd ~/{REMOTE} && "
+        f"tmux new-session -d -s job {quote(inner)}",
+        z,
+    )
+
+    print(
+        f"""
+==> detached. next:
+  python gcp.py logs                 # tail
+  python gcp.py status               # still billing?
+  python gcp.py fetch out            # results (BEFORE `down`)
+  python gcp.py down                 # delete VM + disk
 """
+    )
 
 
-def cmd_submit(args) -> None:
-    """Sync code, arm the deadman, run detached, stream artifacts to GCS."""
-    command = " ".join(args.command)
-    if not command:
-        sys.exit("Nothing to run. Pass the command after `--`.")
-
-    est = estimate(args.runs, args.seconds_per_run,
-                   parallel=args.parallel, spot=args.spot)
-    print(est.render())
-    if args.max_usd and est.total_usd > args.max_usd:
-        sys.exit(f"\nREFUSING: ${est.total_usd:,.2f} exceeds the "
-                 f"${args.max_usd:,.2f} ceiling.")
-    if not args.yes:
-        sys.exit("\nRefusing to spend without --yes. This estimate is a dry run.")
-
-    proj, z, gcs = project(), zone(), bucket()
-    gcloud("storage", "buckets", "create", gcs, "--project", proj, check=False)
-
-    print(f"\nsyncing code to {VM_NAME}:{z}")
-    gcloud("compute", "scp", "--recurse", "--zone", z,
-           "src", "scripts", "pyproject.toml", f"{VM_NAME}:~/dsi/",
-           capture=False)
-
-    script = _remote_script(command, est.deadman_minutes, gcs)
-    gcloud("compute", "ssh", VM_NAME, "--zone", z, "--command", script, capture=False)
-    print(f"\nartifacts stream to {gcs}/artifacts every {SYNC_INTERVAL_SECONDS}s")
-    print("Check billing yourself afterwards:  python scripts/gcp.py status")
+def logs():
+    ssh(
+        f"tail -f ~/{REMOTE}/run.log",
+        check=False,
+    )
 
 
-def cmd_logs(args) -> None:
-    gcloud("compute", "ssh", VM_NAME, "--zone", zone(),
-           "--command", "tail -f ~/dsi/job.log", capture=False)
+def status():
+    print(
+        sh(
+            f"gcloud compute instances list "
+            f"--project={project()} "
+            f"--format='table(name,zone,status,machineType)'",
+            capture=True,
+        )
+    )
+
+    print(
+        "TERMINATED = not billing compute "
+        "(disk still bills ~$10/mo/100GB)"
+    )
 
 
-def cmd_status(args) -> None:
-    """Am I being billed right now?"""
-    proj = project()
-    result = gcloud("compute", "instances", "list", "--project", proj,
-                    "--format", "json", check=False)
-    instances = json.loads(result.stdout or "[]")
-    if not instances:
-        print(f"No instances in {proj}. Not being billed for compute.")
-        return
-    print(f"{'instance':20s} {'type':18s} {'status':12s} {'billing'}")
-    for item in instances:
-        machine = item["machineType"].rsplit("/", 1)[-1]
-        spot = item.get("scheduling", {}).get("provisioningModel") == "SPOT"
-        rate = RATES.get(machine + ("-spot" if spot else ""), RATES.get(machine, 0.9))
-        running = item["status"] == "RUNNING"
-        note = f"${rate:.2f}/hr" if running else f"disk only (~${DISK_SIZE_GB * DISK_USD_PER_GB_HOUR:.3f}/hr)"
-        print(f"{item['name']:20s} {machine:18s} {item['status']:12s} {note}")
-    print("\nA STOPPED instance still bills for its disk. Use `down` to delete it.")
+def fetch(remote_path="out", local="."):
+    sh(
+        f"gcloud compute scp "
+        f"--project={project()} "
+        f"--zone={zone()} "
+        f"--quiet "
+        f"--recurse "
+        f"{VM}:~/{REMOTE}/{remote_path} "
+        f"{local}",
+        check=False,
+    )
 
 
-def cmd_fetch(args) -> None:
-    """Pull artifacts from GCS, which is the source of truth, not the VM."""
-    destination = Path(args.dest)
-    destination.mkdir(parents=True, exist_ok=True)
-    gcloud("storage", "rsync", "-r", f"{bucket()}/artifacts", str(destination),
-           capture=False)
-    print(f"fetched {bucket()}/artifacts -> {destination}")
-
-
-def cmd_down(args) -> None:
-    """DELETE the VM and its disk. Stopping is not enough; the disk still bills."""
-    if not args.yes:
-        sys.exit("Refusing to delete without --yes.")
+def down():
     z = zone()
-    gcloud("compute", "instances", "delete", VM_NAME, "--zone", z, "--quiet",
-           check=False, capture=False)
-    ZONE_FILE.unlink(missing_ok=True)
-    print(f"deleted {VM_NAME}. Artifacts remain in {bucket()}.")
-    print("Verify for yourself:  python scripts/gcp.py status")
+
+    sh(
+        f"gcloud compute instances delete {VM} "
+        f"--project={project()} "
+        f"--zone={z} "
+        f"--quiet",
+        check=False,
+    )
+
+    ZONE_CACHE.unlink(missing_ok=True)
+
+    status()
 
 
-# --- CLI -------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# on-VM: many jobs, one box
+# ---------------------------------------------------------------------------
+
+MIN_AVAIL_GB = 7
+STAGGER_SEC = 90
+POLL_SEC = 60
+MAX_WAIT_SEC = 1800
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    subparsers = parser.add_subparsers(dest="command", required=True)
+def mem_available_gb():
+    """Free RAM in GB; infinity off Linux, which disables the gate."""
 
-    def add_cost_args(sub):
-        sub.add_argument("--runs", type=int, default=1)
-        sub.add_argument("--seconds-per-run", type=float, default=60.0)
-        sub.add_argument("--parallel", type=int, default=1)
-        sub.add_argument("--spot", action="store_true")
-        sub.add_argument("--max-usd", type=float, default=75.0)
+    try:
+        with open("/proc/meminfo") as f:
+            for line in f:
+                if line.startswith("MemAvailable"):
+                    return int(line.split()[1]) / 1e6
+    except OSError:
+        pass
 
-    plan = subparsers.add_parser("plan", help="dry run; launches nothing")
-    add_cost_args(plan)
-    plan.set_defaults(func=cmd_plan)
+    return float("inf")
 
-    up = subparsers.add_parser("up", help="create or reuse a GPU VM")
-    up.add_argument("--yes", action="store_true")
-    up.add_argument("--spot", action="store_true")
-    up.set_defaults(func=cmd_up)
 
-    submit = subparsers.add_parser("submit", help="run a command on the VM")
-    add_cost_args(submit)
-    submit.add_argument("--yes", action="store_true")
-    submit.add_argument("command", nargs=argparse.REMAINDER)
-    submit.set_defaults(func=cmd_submit)
+def run_pool(cmds_with_env, parallel=2):
+    """Run commands at most `parallel` at a time, memory-gated.
 
-    subparsers.add_parser("logs", help="tail the running job").set_defaults(func=cmd_logs)
-    subparsers.add_parser("status", help="am I being billed?").set_defaults(func=cmd_status)
+    `cmds_with_env` is [(argv_list, env_dict_or_None), ...].
 
-    fetch = subparsers.add_parser("fetch", help="copy artifacts back")
-    fetch.add_argument("dest", nargs="?", default="artifacts")
-    fetch.set_defaults(func=cmd_fetch)
+    Each command is retried once on failure; a second failure lets
+    active jobs finish and then exits non-zero rather than orphaning them.
 
-    down = subparsers.add_parser("down", help="DELETE the VM and its disk")
-    down.add_argument("--yes", action="store_true")
-    down.set_defaults(func=cmd_down)
+    Waits on the Popen handles it created. It never matches process names,
+    because `pgrep -f` matches the command you are typing.
+    """
 
-    args = parser.parse_args()
-    args.func(args)
+    pending = [(c, e, 0) for c, e in cmds_with_env]
 
+    active = []
+    failed = []
+
+    while pending or active:
+
+        while pending and len(active) < parallel and not failed:
+
+            waited = 0
+
+            while (
+                mem_available_gb() < MIN_AVAIL_GB
+                and waited < MAX_WAIT_SEC
+            ):
+                time.sleep(30)
+                waited += 30
+
+            cmd, extra, tries = pending.pop(0)
+
+            print(
+                "+",
+                " ".join(cmd),
+                f"(retry {tries})" if tries else "",
+                flush=True,
+            )
+
+            active.append(
+                (
+                    subprocess.Popen(
+                        cmd,
+                        env={
+                            **os.environ,
+                            **(extra or {}),
+                        },
+                    ),
+                    cmd,
+                    extra,
+                    tries,
+                )
+            )
+
+            time.sleep(STAGGER_SEC)
+
+        done = [
+            t
+            for t in active
+            if t[0].poll() is not None
+        ]
+
+        active = [
+            t
+            for t in active
+            if t[0].poll() is None
+        ]
+
+        for proc, cmd, extra, tries in done:
+
+            if proc.returncode != 0:
+                print(
+                    f"EXIT {proc.returncode}: {' '.join(cmd)}",
+                    flush=True,
+                )
+
+                if tries == 0:
+                    pending.insert(
+                        0,
+                        (cmd, extra, 1),
+                    )
+                else:
+                    failed.append(cmd)
+
+        if active:
+            time.sleep(POLL_SEC)
+
+    if failed:
+        sys.exit(
+            "failed twice: "
+            + "; ".join(
+                " ".join(c)
+                for c in failed
+            )
+        )
+
+
+def gpu_env(i, gpus):
+    """Pin job i to a GPU, round-robin.
+
+    `gpus` is e.g. ['0', '1'].
+    """
+
+    return (
+        {"CUDA_VISIBLE_DEVICES": gpus[i % len(gpus)]}
+        if gpus
+        else None
+    )
+
+
+# ---------------------------------------------------------------------------
+# cli
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    main()
+
+    args = sys.argv[1:]
+
+    if not args or args[0] in ("-h", "--help"):
+        print(__doc__)
+        sys.exit(0)
+
+    cmd, rest = args[0], args[1:]
+
+    if cmd == "plan":
+        plan(*(rest or ["1"]))
+
+    elif cmd == "up":
+        up()
+
+    elif cmd == "run":
+        run(
+            rest[0]
+            if rest
+            else die(
+                'usage: gcp.py run "python train.py"'
+            )
+        )
+
+    elif cmd == "logs":
+        logs()
+
+    elif cmd == "status":
+        status()
+
+    elif cmd == "fetch":
+        fetch(*(rest or ["out"]))
+
+    elif cmd == "down":
+        down()
+
+    else:
+        die(
+            f"unknown command {cmd!r}; try --help"
+        )

@@ -220,6 +220,23 @@ def sweep(grid, out: Path) -> None:
             f for f in provisional.failures(CRITERIA) if not f.startswith("retention")
         )
         stage1.append(record)
+        # Persisted as each configuration lands. Holding Stage B1 in memory
+        # until Stage B2 begins meant a sweep killed during B1 left nothing,
+        # which is how the first full sweep lost 25 minutes of work.
+        ArtifactWriter(out).write("capacity_stage_b1", [
+            {
+                "label": r["label"], "params": r["params"],
+                "acc_w": r["acc_w"], "acc_p": r["acc_p"],
+                "generalization_worst": r["generalization_worst"],
+                "window_w": r["window_w"].width, "window_p": r["window_p"].width,
+                "window_w_censored": r["window_w"].censored,
+                "window_p_censored": r["window_p"].censored,
+                "seconds_b1": r["seconds_b1"],
+                "solo_failures": "; ".join(r["solo_failures"]),
+                "code_version": version, "recorded_at": utc_now(),
+            }
+            for r in stage1
+        ])
         print(f"{label:30s} p={params:>7,} A_W={record['acc_w']:.2f} A_P={record['acc_p']:.2f} "
               f"gen={record['generalization_worst']:.2f} "
               f"R_W={_fmt(record['window_w'])} R_P={_fmt(record['window_p'])} "
