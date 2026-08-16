@@ -62,12 +62,20 @@ class TaskConfig:
     machinery quickly and has too small an input space to test
     generalization meaningfully. Task difficulty is a neutral adequacy
     variable selected by the Gate B sweep, not a constant.
+
+    ``n_cues`` is a **calibrated task-complexity parameter**, fixed at Gate B
+    by ``scripts/probe_cue_window.py`` on the cue in isolation. It is not a
+    knob to revisit once confirmatory results are visible. Changing it after
+    seeing a conflict or order effect would make the task difficulty a
+    function of the outcome, which is exactly the contamination the neutral
+    calibration exists to prevent. If it has to change, the regime is no
+    longer frozen and Gates B and C are rerun from the start.
     """
 
     n_classes: int = 4
     n_digits: int = 4
     n_digit_values: int = 8
-    n_cues: int = 16
+    n_cues: int = 256
     heldout_fraction: float = 0.25
     split_seed: int = 0
     cue_map_seed: int = 0

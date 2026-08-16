@@ -46,6 +46,7 @@ from __future__ import annotations
 import argparse
 import itertools
 import json
+import sys
 import time
 from pathlib import Path
 
@@ -71,6 +72,11 @@ CRITERIA = RegimeCriteria(
 
 # Calibration seed families, disjoint from the confirmatory experiment's.
 CALIBRATION_SEED_FAMILY = 1000
+
+# Line-buffered, so a long sweep can be observed while it runs rather than
+# only after it finishes. Redirecting to a file otherwise buffers in 8 KiB
+# blocks, which made the first full sweep unobservable for its entire run.
+sys.stdout.reconfigure(line_buffering=True)
 
 OFFSETS = tuple(round(0.1 * i, 1) for i in range(11))
 EVAL_BATCH = 256
@@ -223,6 +229,7 @@ def sweep(grid, out: Path) -> None:
         print("  none; skipping")
 
     candidates, rows = [], []
+    writer = ArtifactWriter(out)
     for record in stage1:
         retention = float("nan")
         if not record["solo_failures"]:
@@ -253,8 +260,11 @@ def sweep(grid, out: Path) -> None:
             "adequate": not failures, "failures": "; ".join(failures),
             "code_version": version, "recorded_at": utc_now(),
         })
+        # Written after every config so that a killed sweep leaves the
+        # configurations it already finished, rather than nothing.
+        writer.write("capacity_sweep", rows)
 
-    ArtifactWriter(out).write("capacity_sweep", rows)
+    writer.write("capacity_sweep", rows)
     print(f"\nswept {len(combos)} configs in {time.time()-started:.0f}s "
           f"-> {out}/capacity_sweep.parquet")
 

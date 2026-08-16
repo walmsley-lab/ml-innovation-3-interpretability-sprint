@@ -51,10 +51,34 @@ SPEC_SCHEMA_VERSION = 1
 PHASE_ROLES = frozenset({"source", "target", "washout", "mixture"})
 """Roles a phase may play in a controlled comparison.
 
-``source``   exposure whose effect is being measured
-``target``   the phase whose acquisition is measured; at most one per run
-``washout``  identical post-curriculum training shared by both arms
-``mixture``  an uncontrolled phase, for curriculum and baseline runs
+A role states what a phase is *for* in the measurement, not where it sits in
+the sequence.
+
+``source``
+    Exposure whose effect on later learning is being measured. A source
+    phase is the thing an intervention varies.
+
+``target``
+    **The phase whose acquisition is being measured.** This is the
+    definition, and position is not part of it. The target phase is the one
+    the learning curve is drawn from, the one whose zero-token evaluation
+    the transfer estimand depends on, and the one whose token budget defines
+    the integration window. At most one per run.
+
+``washout``
+    Identical post-curriculum training given to both arms, so that final
+    diagnostics follow shared experience.
+
+``mixture``
+    An uncontrolled phase, for curriculum and baseline runs where no single
+    phase is the object of measurement.
+
+A solo control such as W-only or P-only is a single ``target`` phase. That
+is the definition applied directly, not a workaround for the ordering rule:
+the run exists to measure how that one family is acquired from
+initialization, so that family's phase is exactly the phase whose
+acquisition is being measured. Labelling it ``source`` would be the error,
+because nothing downstream measures the effect of that exposure.
 """
 
 _ABSOLUTE_PATH = re.compile(r"^(/|~|[A-Za-z]:[\\/]|\\\\)")
@@ -188,6 +212,10 @@ class RunSpec:
     that is what makes them paired. ``arm`` forces stochastic divergence and
     is used only by identity-null pairs, where two independent draws of the
     same condition are the measurement.
+
+    Phases carry roles rather than positions. See :data:`PHASE_ROLES`:
+    ``target`` means the phase whose acquisition is being measured, so a
+    solo control is a single ``target`` phase rather than a lone ``source``.
     """
 
     parent_id: str | None
@@ -244,6 +272,11 @@ class RunSpec:
         mixture run with no target at all. Anything else, such as two target
         phases or a source after the target, is not a comparison this
         project knows how to interpret.
+
+        ``source*`` admits zero sources, which is what makes a solo control
+        a well-formed run: a single ``target`` phase measures acquisition
+        from initialization with no prior exposure. A run made only of
+        source phases is refused because nothing in it is measured.
         """
         roles = [p.role for p in self.phases]
         n_target = roles.count("target")
