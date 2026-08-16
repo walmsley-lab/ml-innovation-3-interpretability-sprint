@@ -269,7 +269,32 @@ recalibration rather than a silent change.
 
 ## 3. Execution and infrastructure constraints
 
-### Tiny models are CPU-faster than the L4 at current scale
+### Current Layer-1 executor: C3, concurrency 22
+
+`c3-standard-22` (Intel Sapphire Rapids Xeon 8481C, 22 vCPU, us-west1-a),
+benchmarked on the frozen trajectory (d64/l4, n_cues=512, 1200 steps):
+
+| concurrency | runs/hour | throughput-equivalent s/result |
+|---|---|---|
+| 1 | 52.1 | 69 |
+| 2 | 90.0 | 40 |
+| 4 | 158.2 | 22.7 |
+| 8 | 242.0 | 14.8 |
+| 12 | 268.3 | 13.4 |
+| 16 | 278.2 | 12.9 |
+| 22 | **285.9** | 12.5 |
+
+All runs succeeded at every level. Throughput flattens between 16 and 22
+(+2.8%), so **concurrency 22 is frozen** for this workload and infrastructure
+benchmarking is closed for the session. Single-run wall time is 69s against
+138s locally uncontended, a 2.0x per-run speedup.
+
+C4 (Granite Rapids) has zero `CPUS_PER_VM_FAMILY` quota in us-west1; a quota
+request is outstanding but is not being waited on. Backend, machine type,
+concurrency and allocator settings are runtime metadata and never enter
+`RunSpec` identity.
+
+### Historical: tiny models are CPU-faster than the L4 at current scale
 
 Measured: ~235 effective runs/hour locally at 3 workers against 71.6 on the
 L4 at concurrency 4, with mean GPU utilization never exceeding 10%. At 133k

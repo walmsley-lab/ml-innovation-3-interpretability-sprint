@@ -70,11 +70,22 @@ The W/P pair shares nothing — a trivial associative lookup against a
 substantially harder modular rule — which is precisely why its transfer
 structure was degenerate.
 
-The primitive-sharing graph is the **planted ground truth**, and is
-quarantined under `data/hidden_ground_truth/`. Discovery must never see it;
-it exists to evaluate whether the inferred developmental graph recovers
-mechanism sharing, and to give the semantic-similarity baseline something
-real to be compared against.
+The primitive-sharing graph is **known latent mechanistic structure**, not
+developmental ground truth. It records which families are built from which
+primitives, and nothing more.
+
+Sharing a primitive does **not** entail positive transfer, and does not imply
+a developmental edge in either direction. Two families over the same
+primitive may help each other, interfere with each other, or be
+developmentally unrelated; which of those holds is the empirical question the
+transfer and interference matrices exist to answer. Treating the composition
+graph as the answer would assume exactly what the project sets out to
+measure.
+
+It is quarantined under `data/hidden_ground_truth/`, invisible to discovery,
+and used only as a **comparison object**: a structure against which inferred
+developmental relationships can be contrasted, and a real signal for the
+semantic-similarity baseline to be built from.
 
 ## 3. Example records
 
@@ -238,3 +249,17 @@ developmental corpus *is*, not about how to optimize on one.
 2. Whether `F_ij` is co-primary with `T_ij` or secondary.
 3. The value of `alpha_bg`, which should itself be calibrated rather than
    guessed.
+
+
+## 9. Scope: what Layer 2 does and does not establish
+
+Layer 2 is a synthetic corpus with exact ground truth and deterministic
+generation. It can establish whether developmental structure exists and is
+predictable **in that corpus**.
+
+It does not establish arbitrary-corpus optimization. Applying the frozen
+pipeline to an unseen natural corpus is Gate J, a separate later stage, and
+neither Layer 1 nor Layer 2 licenses claims about it. Sections of the plan
+describing generic corpus abstraction, family proposal from arbitrary text,
+and compiled sampling schedules for large corpora are **later portability and
+system-identification targets**, not results.

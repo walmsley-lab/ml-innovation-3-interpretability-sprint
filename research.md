@@ -331,7 +331,15 @@ Failure is an **invalidator**.
 
 ---
 
-# 7. Stage 3 — Controlled W/P Experiment
+# 7. Stage 3 — Controlled W/P Experiment (HISTORICAL / ORIGINAL)
+
+> **Status: historical.** The pure block-sequential protocol described in this
+> section is a **completed negative apparatus result**, not an active
+> protocol. Abrupt isolated phases destroy the prior capability at every
+> capacity tested. The current proposed operationalization is the overlapping
+> curriculum of section 8c, and the task construction described here was
+> additionally invalidated and replaced per section 8b. This section is
+> retained as the original design and as provenance.
 
 The first causal experiment uses two independently learnable signals.
 
@@ -389,6 +397,42 @@ A_P\ge\tau_P.
 A model that follows (P) because it failed to learn (W) is not evidence of path dependence.
 
 Competence failure is an **invalidator**, not a negative result.
+
+---
+
+# 8b2. Frozen Layer-1 Apparatus Record
+
+The replicated-B1 regime, frozen after calibration and not to be reopened:
+
+| parameter | value |
+|---|---|
+| `d_model` | 64 |
+| `n_layers` | 4 |
+| learning rate | 3e-3 |
+| `steps_per_phase` | 1200 |
+| `n_cues` | 512 |
+| loss | full-token |
+| calibration seeds | 1000, 1001, 1002 |
+| thresholds | unchanged: `tau_W = tau_P = 0.90`, `tau_gen = 0.80`, `tau_retention = 0.80`, `min_window = 0.15` |
+| overlap floor `r` | 0.20 |
+
+**Why 1200 steps.** 600 and 900 under-trained the rule on seed 1001 (A_W =
+0.480 and 0.711, traces still climbing). 1200 made rule competence and
+held-out generalization robust across all three seeds.
+
+**Why `n_cues = 512`.** At 1200 steps, `n_cues = 256` failed the fractional
+cue learning-window criterion on seed 1002 (`R_P = 0.115 < 0.150`). The cue's
+acquisition is roughly fixed in absolute steps, so lengthening the phase to
+fix the rule shrank `R_P` as a fraction. Raising `n_cues` lengthens cue
+acquisition in absolute terms. 512 is the **smallest** value passing
+replicated B1 on every seed; 1024 also passes.
+
+**Why `r = 0.20`.** Overlap calibration over {0.20, 0.25, 0.30} x 3 seeds x 2
+directions at the frozen regime: worst-case coexistence 0.969, 0.971 and
+0.986. All three are robust; 0.20 is the smallest.
+
+Seed replication is permanent in B1 and precedes any retention or history
+experiment.
 
 ---
 
@@ -520,6 +564,22 @@ neutral-aligned examples, which put NEUTRAL in-distribution, plus balanced
 explicit W and P maintenance at the calibrated overlap floor, which keeps
 both capabilities above threshold without favouring either. Balance across
 the two explicit families is what satisfies requirement 4.
+
+## Exact realized exposure, required before Claim 1
+
+Compared histories must have **exactly matched realized per-family exposure**,
+not merely equal expected mixture weights. Independent Bernoulli sampling
+gives equal expectations and unequal realizations, and a difference in
+realized counts between arms is a difference in what the arms saw — precisely
+the confound holding allocation fixed is meant to remove.
+
+Before Claim 1, family choice becomes a **deterministic precomputed schedule**
+with exact counts, with matched RNG and ordering structure across arms, or
+realized counts are recorded and enforced arm by arm.
+
+Exploratory overlap calibration may continue to use the stochastic sampler;
+the distinction matters for confirmatory comparison, not for locating a
+threshold.
 
 Gate ordering is strict. The overlap regime is frozen, then the common tail
 is frozen, and only then do Gate C null and power calibration and the
