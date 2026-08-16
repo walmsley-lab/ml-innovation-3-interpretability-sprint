@@ -439,3 +439,58 @@ It does **not** establish primitive-level developmental structure. Only 2 of
 almost no contrast and could reflect those two pairs rather than a general
 relationship. A broader substrate with deliberately primitive-disjoint
 families is required before any such claim, and that is rigor-pass work.
+
+
+## 14. Natural-corpus pilot: 20 Newsgroups, proposal frozen
+
+Pipeline run in the required order, with official newsgroup labels excluded
+from every step that could influence discovery.
+
+    fetch 18,846 -> dedup 559 (3.0%) -> 18,287 unique
+      -> document split BEFORE proposal: train 12,801 / val 2,743 / test 2,743
+      -> TF-IDF + LSA + k-means (k=6) fitted on TRAIN ONLY -> frozen
+      -> val and test assigned by the frozen proposer
+      -> support audit
+
+### Support audit
+
+| family | train docs | train tokens | held-out docs | usable |
+|---|---|---|---|---|
+| 0 | 319 | 49,841 | 80 | **no** — 49,841 < 200,000 |
+| 1 | 6,910 | 788,953 | 1,489 | yes |
+| 2 | 2,328 | 755,419 | 462 | yes |
+| 3 | 508 | 204,445 | 89 | yes |
+| 4 | 2,005 | 387,654 | 454 | yes |
+| 5 | 731 | 148,045 | 169 | **no** — 148,045 < 200,000 |
+
+**Four usable families** of six proposed. The audit did its job: families 0
+and 5 lack the training tokens to serve as a source, and running transfer on
+them would have produced cells measuring corpus scarcity rather than
+developmental effect.
+
+Family sizes are also highly unequal — family 1 holds 6,910 documents against
+family 3's 508 — which is a real property of k-means on this corpus and
+becomes a nuisance variable the exposure matching must absorb.
+
+### Frozen pair split
+
+12 directed pairs over the four usable families: **9 observed, 3 held out**,
+frozen to `artifacts/natural_pilot/frozen_pairs.json` **before any transfer
+run**, so held-out prediction cannot be evaluated against pairs chosen after
+seeing results.
+
+### Descriptive sanity check (labels never used in proposal)
+
+| proposed family | top official groups | purity |
+|---|---|---|
+| 1 | 8, 7, 12 | 0.09 |
+| 2 | 17, 11, 16 | 0.18 |
+| 3 | 15, 0, 19 | **0.62** |
+| 4 | 2, 5, 1 | 0.23 |
+
+Only family 3 aligns strongly with an official group. The rest are **not**
+topic clusters in the newsgroup sense, which is the honest reading: the
+proposer found lexical structure that cuts across the official taxonomy.
+That is neither good nor bad for the developmental question — the families
+only need to be distinguishable and learnable — but it does mean these are
+not "topics" and should not be described as such.
