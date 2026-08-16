@@ -1278,20 +1278,58 @@ Every stage requires explicit exit criteria before additional compute is authori
 
 Build:
 
+* estimator simulation;
+* RNG role discipline;
+* RunSpec and canonical hashing;
 * model;
 * optimizer;
 * synthetic W/P generator;
 * functional trainer;
 * eval;
-* RunSpec;
 * artifact writer.
+
+Estimator simulation belongs here, not in Milestone B.
+
+Research plan Stage 0 places estimator validation before any other work
+precisely because it gates everything downstream and costs approximately
+nothing. The estimators operate on learning curves as arrays and have no
+dependency on model code, so there is no engineering reason to defer them.
+Clearing Gate A before the first training run rather than after is the
+whole point of the stage.
+
+### Milestone A exit criteria
+
+Milestone A is complete only when all of the following hold:
+
+1. `test_stats` recovers known synthetic effects within prespecified
+   tolerance and demonstrates calibrated interval coverage. This is Gate A.
+
+2. `test_rng` verifies the sharing and divergence contracts:
+
+   * a transfer pair shares init, target-data, and eval streams and differs
+     only on the source-phase corpus;
+   * an identity-null pair shares the same streams and diverges on the
+     source draw alone, via the branch role;
+   * no key is ever reused.
+
+3. `RunSpec` canonicalization is stable. The same specification produces the
+   same `run_id` regardless of field construction order, float
+   representation, or host machine.
+
+4. The target-phase (t=0) evaluation is wired into the interface. Evaluation
+   at zero target tokens is mandatory in `EvalSpec` and is refused if
+   absent. It need not yet be used analytically, but it must be measured,
+   because the offset/rate decomposition of AULC is unrecoverable after the
+   fact.
+
+5. One local (W\rightarrow P) / (P\rightarrow W) paired experiment runs end
+   to end and writes versioned Parquet artifacts.
 
 ## Milestone B — Capacity + statistics
 
 Build:
 
 * capacity sweep;
-* estimator simulation;
 * null calibration;
 * power planner.
 
