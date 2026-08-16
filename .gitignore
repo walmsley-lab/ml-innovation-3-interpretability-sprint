@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.python-version
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+.hypothesis/
+
+# Experiment outputs — artifacts are content-addressed and live in GCS
+artifacts/
+outputs/
+multirun/
+checkpoints/
+*.parquet
+*.orbax-checkpoint*
+
+# Hidden generator ground truth must never be committed alongside public data
+data/hidden_ground_truth/
+
+# Local env / credentials
+.env
+*.pem
+*-key.json
+
+# OS
+.DS_Store
