@@ -1,5 +1,66 @@
 # STATUS
 
+## Research objective
+
+**Discover measurable structure in how models acquire, transfer, retain, and
+interfere with information, then use that structure to organize or represent
+training data so models reach greater capability with fewer tokens, less
+corpus, and less compute.**
+
+Stage 5 and developmental ontology discovery remain central. But pairwise
+transfer matrices, DAGs, semantic families, overlap schedules and static
+curricula are **candidate mechanisms and representations, not objectives we
+are obligated to vindicate**. Any of them may be discarded without loss if a
+cheaper or better-performing representation appears.
+
+### From curriculum ordering to developmental scheduling
+
+The ceiling scout already taught us something the original framing did not
+anticipate: **presentation structure alone produced an enormous effect at
+identical compute and identical corpus allocation** — interleaved 0.9867 mean
+and 0.9510 min accuracy against block-sequential 0.3827 and 0.1062.
+
+That means retention, recurrence, interference and timing are part of the
+developmental problem, not merely prerequisites to an ordering. The eventual
+intervention may not look like `A -> B -> C -> D` at all. It may be a
+time-varying mixture, rehearsal, recurrence, selective exposure, or
+state-dependent allocation.
+
+The hypothesis is therefore broadened from **curriculum ordering** to
+**developmental scheduling**.
+
+### The Stage-5 target, stated as an outcome
+
+Given a natural corpus and a model state: infer useful developmental units
+and relationships from limited measurements, predict which training exposures
+or representations carry the highest marginal learning value, organize
+training accordingly, and **prospectively demonstrate higher capability at
+equal compute, or equal capability with fewer tokens**.
+
+### Ontology, kept alive but grounded
+
+Current families are **provisional measurement units**. A model-native
+developmental ontology should be inferred from how examples or families
+behave during learning — what they prepare for, interfere with, reinforce,
+require, or change representationally. Semantic similarity is one candidate
+explanatory signal among several.
+
+If reliable interactions emerge, the question becomes whether **cheap
+observables** predict them: gradient alignment, representation similarity,
+loss trajectories, learning-speed signatures, probes, activation changes. The
+long-run method needs a small calibration set, not exhaustive pairwise
+training.
+
+### Rule for experiment selection
+
+> Before proposing a substantial new run: **if this succeeds, does it
+> materially improve our ability to predict or control useful learning per
+> token?**
+
+If not, it is diagnostic-only or deprioritized.
+
+---
+
 Updated at each frozen barrier. Completed stage, hashes, gate result,
 interpretation, risks, next licensed action. Nothing else.
 
@@ -123,6 +184,35 @@ recorded per unit.
   headroom, which is the cheapest possible way to have learned it.
 
 ---
+
+## Post-barrier branches for the running overlap diagnostic
+
+Fixed before the result is visible:
+
+* **Retention not restored** — diagnose retention. Do **not** expand the graph
+  programme.
+* **Retention restored, predicted-best ~ reverse** — evidence that local
+  pairwise transfer does **not** straightforwardly compose into useful
+  multi-stage orderings. Do **not** keep patching the static ordering
+  construction to make it work.
+* **Retention restored, predicted-best > reverse beyond noise** — pairwise
+  developmental information has some compositional value. This is **not** yet
+  practical utility.
+
+In the latter two cases the next major experiment orients to useful learning
+per token, in a **deliberately resource-constrained regime where strong
+interleaving is below ceiling**, comparing at equal budget on the already
+frozen metrics with primary emphasis on min-across-families and joint
+steps/tokens-to-threshold. Candidate methods: uniform interleaving,
+randomized interleaving, simple heuristic schedules, any pairwise-derived
+schedule that survives this diagnostic, and a **crude adaptive/closed-loop
+scheduler** that periodically observes competence, learning rate and
+forgetting across families and allocates the next window toward underlearned,
+high-value or endangered families.
+
+The scheduler is not to be optimized for sophistication. The first question is
+only whether **state-dependent allocation** yields measurable sample- or
+compute-efficiency gains over strong interleaving.
 
 ## Ontology programme — the north star, not yet licensed
 
