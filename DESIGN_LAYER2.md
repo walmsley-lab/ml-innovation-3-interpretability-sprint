@@ -494,3 +494,398 @@ proposer found lexical structure that cuts across the official taxonomy.
 That is neither good nor bad for the developmental question — the families
 only need to be distinguishable and learnable — but it does mean these are
 not "topics" and should not be described as such.
+
+## 15. Natural-corpus transfer path (prespecified before results)
+
+Written before any natural transfer result was inspected. One unit — the
+`f2 -> f1` smoke — had been run at this point, which fixes no between-pair or
+seed quantity.
+
+### Recovered provenance
+
+The 20NG pilot had no committed producer. `scripts/run_natural_pilot.py` is
+now that producer, and it **verifies rather than regenerates**: the frozen
+document split, family assignment and pair split are frozen scientific
+objects, so the script asserts reproduction and refuses to overwrite.
+
+The historical ingestion path was recovered exactly:
+
+    fetch_20newsgroups(subset="all", remove=("headers", "footers", "quotes"))
+      -> sklearn's own defaults, shuffle=True and random_state=42, which fix
+         the document order the split permutation consumes
+      -> deduplicate 18,846 -> 18,287 (559 removed)
+      -> split_documents(seed=0, fractions=(0.7, 0.15, 0.15))
+
+Thirteen assertions pass: dedup statistics, id-set equality, no remaining
+content duplicates, exactly one split per document, exact train/val/test
+membership, and all six per-family support-audit token counts.
+
+### Two token units, kept apart
+
+* **Support-audit tokens** — plain `str.split()`, committed as
+  `dsi.natural.whitespace_tokens`. The unit the frozen 200,000-token
+  source-support gate was computed in. **Not redefined.**
+* **LM training tokens** — ids from a train-only vocabulary, one per
+  whitespace piece plus one `EOS` per document. The unit the transfer
+  intervention matches exposure in, asserted equal per unit.
+
+Because ids are assigned per whitespace piece, the two units differ only by
+one token per document, and vocabulary size cannot change how much text an
+arm was exposed to.
+
+### Regime
+
+| quantity | value | why |
+|---|---|---|
+| vocabulary | 8,192 types, train-only, `min_count=2` | UNK rate 0.16-0.26 by family, recorded not optimized |
+| `seq_len` | 128 | |
+| chunks per phase | 1,536 (196,608 LM tokens) | family 3 supplies 1,601 train chunks; the largest round budget every usable family serves in a **single pass** |
+| batch | 16, so 96 steps per phase | |
+| model | d64 / l4 / h4, lr 3e-3 | the Layer-1 shape, reused rather than recalibrated |
+| eval | 256 val chunks of the target family, fixed across arms and seeds | |
+| seeds | 3000-3002 | minimum viable replication |
+
+Single-pass exposure is deliberate. The usable families differ in supply by
+nearly 4x (788,953 against 204,445 audit tokens), and cycling a small family
+would make the transfer estimate partly a measurement of how many times its
+documents were seen.
+
+### The control, and a deliberate strengthening
+
+The neutral control excludes the target **and the source**: it is a balanced
+mixture of the two families that are neither. Excluding only the target would
+leave source material in the control arm and dilute the very contrast the
+unit exists to measure. Its chunks are **interleaved, not blocked**, because
+a blocked mixture is itself a two-phase curriculum and Layer 1 established
+that abrupt isolated phases produce catastrophic interference.
+
+**What this makes the estimand, recorded before results.** Because `N_ij`
+excludes both source and target, the control background is **specific to the
+pair `(i, j)`**, not common to the target. The measured quantity is therefore
+the effect of source `i` *relative to the complementary background for that
+pair*, and not the effect of source `i` relative to a common target-specific
+control.
+
+This is internally valid for the pilot and is the choice that avoids source
+contamination of the control arm. It carries one cost that must not be
+forgotten when the matrix is read: a pair-dependent control can itself
+contribute relational structure, because the background differs across cells
+in a way that depends on which families the cell leaves out. A predictive
+feature could in principle be reading the control's composition rather than
+the source's effect.
+
+**Rigor-pass debt: a common-control comparison.** Re-running a subset against
+a single target-specific control `N_j` shared across sources would separate
+the two readings. Not run today, and the pilot's conclusions are stated
+against the pair-specific estimand only.
+
+### Prespecified measurability gate
+
+Between-pair spread of mean `T_aulc` against median within-pair seed sd, the
+same quantity the synthetic pilot reported as 4.37.
+
+* **S/N >= 2.0** — proceed to the predictive ladder.
+* **S/N < 2.0** — stop before prediction. The ladder is not fitted on noise
+  as ceremony.
+
+A failure below the threshold is **not automatically an invalidator**, and
+the two cases it can mean are diagnosed rather than assumed:
+
+* **excessive within-pair variance** — cells do not reproduce across seeds.
+  That is a measurement or statistical invalidator, and it licenses no
+  conclusion about natural developmental structure in either direction.
+* **small between-pair spread with reproducible cells** — the apparatus
+  works and the effects are simply close together. That is a **valid
+  negative result**: weak or absent relational structure *at this scale*,
+  reportable as such.
+
+The numeric threshold is fixed at 2.0 and is not revised after results are
+seen.
+
+### Predictive ladder, three parameters at most
+
+Nine observed pairs, so:
+
+    global mean (1)
+      -> additive source + target (7)
+      -> intercept + centroid cosine (2)
+      -> intercept + cosine + KL(target || source) (3)
+
+Cosine is symmetric and cannot by itself express direction; the unigram KL is
+asymmetric, which is what allows `i->j` to differ from `j->i` at all. Both are
+computed from **train documents only** under the frozen family assignment;
+nothing is refitted or reclustered. Pair-identity coefficients are excluded by
+construction, since they cannot predict a pair never run.
+
+The split unit is the **pair**: all three seeds of a held-out pair are held
+out with it. The three held-out pairs were frozen before any natural transfer
+run.
+
+### The four-family role conflict, recorded
+
+With four usable families there are exactly **12 directed pairs**, frozen as 9
+observed and 3 untouched. Those 3 are the only source-to-target pairs the
+apparatus has never seen, and they cannot serve two roles at once:
+
+* as an **independent batch test set**, all 3 are spent at once on validating
+  the predictor, leaving no unobserved pair for adaptive selection;
+* as an **adaptive candidate pool**, they are consumed one at a time by the
+  selector, and no clean 3-pair batch test remains.
+
+**The pilot cannot support both.** This is a structural limit of a four-family
+universe, not a choice between analyses, and it is recorded rather than
+resolved: the rigor pass needs a larger family substrate so the batch test set
+and the adaptive candidate pool can be disjoint. The same enlargement is
+already owed for primitive-disjoint contrast on the synthetic side.
+
+**Resolution for this pilot: the 3 untouched pairs are the adaptive pool.**
+Model comparison happens entirely inside the 9 observed identities, by
+leave-one-pair-out. The frozen 9/3 identities are unchanged and no untouched
+pair is run for batch validation.
+
+### Adaptive protocol, frozen before any untouched pair is observed
+
+1. **Model comparison by LOPO** within the 9 observed pairs only. Each
+   observed pair is held out in turn, with all its seeds, and the ladder is
+   refitted on the remaining 8. This is what decides whether the relational
+   predictor beats global and additive baselines.
+2. **Fit the selected predictor on all 9** observed pairs.
+3. **Freeze predictions and acquisition scores for all 3 untouched pairs**,
+   written to disk *before* any of them is run, so a prediction cannot be
+   revised after seeing an outcome.
+4. **The selector chooses one** by the acquisition rule below.
+5. **Run the selected pair.** That is the Stage-5 pilot milestone: a
+   previously unobserved natural intervention chosen by the fitted
+   developmental model rather than by the experimenter.
+6. **Compare observed against the frozen prediction**, update the model, and
+   choose among the remaining two for a first sequential closed loop.
+
+**Acquisition rule, frozen now.** Research plan 30 version 1, `e* = argmax
+U_e`, with `U_e` the predictor's leave-one-pair-out standard error at the
+candidate's feature location — the pair the model is least able to predict.
+Importance `I_e` and cost `C_e` are uniform across the three candidates: all
+three are one directed pair over the same families at the same budget, so the
+budget-aware form reduces to version 1 exactly. Ties broken by the lower
+`(source, target)` in sorted order, so the rule is total and cannot be
+steered after the fact.
+
+## 16. Natural transfer pilot result
+
+27 units, 9 observed pairs x 3 seeds, single-pass exposure, 196,608 LM tokens
+per phase per arm, exposure equality asserted per unit.
+
+### Measurability: the gate passes, and the components pass far more clearly
+
+| metric | between-pair spread | median seed sd | max seed sd | S/N |
+|---|---|---|---|---|
+| `T_aulc` | 0.0669 | 0.0289 | 0.0698 (`f1->f3`) | **2.31** |
+| `T_aulc_rate_only` | 0.1593 | 0.0222 | 0.0446 | **7.18** |
+| `head_start` | 0.2080 | 0.0237 | 0.0807 | **8.79** |
+| `endpoint` | 0.0393 | 0.0291 | 0.0648 | 1.35 |
+
+`T_aulc` clears the prespecified 2.0 threshold. No cell is anomalously
+unstable — the worst is 2.4x the median, against the synthetic pilot's 8x
+outlier at `F6->F5` — so this is not a case of one hot cell carrying the
+noise.
+
+**The composite is by far the weakest of the four.** Head start and rate-only
+carry **opposite signs in 7 of 9 pairs**, and both are three to four times
+more reproducible than their sum. `f3->f4` is the clearest case: a head start
+of -0.3474 and a rate-only effect of +0.2864 cancelling into an AULC of
+-0.0609. A single AULC number would have reported a marginal effect at
+S/N 2.31 while concealing two strongly measurable opposing mechanisms. This
+is the sharpest vindication yet of making the `t=0` evaluation mandatory back
+in Milestone A.
+
+The consistent shape: prior exposure to one family leaves the model **worse
+at the target immediately** and **faster to acquire it afterwards**.
+
+**Caveat against over-reading that.** Endpoint effects are small and barely
+reproducible (S/N 1.35), so the arms largely converge by the end of the
+phase. A rate advantage that mirrors a starting deficit is partly mechanical
+— an arm that starts further away has more room to descend toward a shared
+asymptote. A second confound: the treatment prefix is a **single** family
+while the control prefix is a **two-family mixture**, so the arms differ in
+source diversity as well as source identity. Both belong to the rigor pass.
+
+### Prediction: the relational features fail, and the structure is a source main effect
+
+Leave-one-pair-out over the 9 observed identities, pair as split unit:
+
+| model | params | in-sample | LOPO RMSE | MAE |
+|---|---|---|---|---|
+| global mean | 1 | 0.0630 | 0.0709 | 0.0530 |
+| **source-only** | 4 | 0.0316 | **0.0498** | 0.0408 |
+| target-only | 4 | 0.0567 | 0.0878 | 0.0620 |
+| additive source + target | 7 | 0.0039 | **0.0483** | 0.0292 |
+| intercept + centroid cosine | 2 | 0.0625 | 0.0884 | 0.0642 |
+| + KL(target \|\| source) | 3 | 0.0565 | 0.1166 | 0.0895 |
+
+**This is the opposite of the synthetic pilot's result.** There, additive was
+worse than the global mean and structural features beat it by 59.8%. Here the
+relational features are worse than the global mean, and the additive family
+wins.
+
+Within the additive family, the signal is **entirely in the source**.
+`source_only` reaches 0.0498 with four parameters; `target_only` is worse than
+the global mean; the full additive model buys 3% more RMSE for three more
+parameters, fitting 7 parameters on 8 points under LOPO with an in-sample
+RMSE of 0.0039 that is near interpolation. The parsimonious reading is
+`source_only`: **which family you train on first matters, and it matters
+about equally whatever you train on next.**
+
+That is a real and reproducible effect. It is a **main effect, not relational
+developmental structure**, and it does not distinguish this result from
+"some corpora are simply worse to train on first".
+
+### Gate verdict
+
+* **Measurability — PASS.** Not an invalidator and not a weak-structure
+  negative: effects are reproducible and separated.
+* **Prediction — FAIL.** The criterion is held-out signal meaningfully useful
+  over the *simple baselines*, and the winning model is itself a simple
+  baseline. The relational predictor is beaten by the global mean.
+* **Adaptive step — not licensed.** Selection driven by this predictor would
+  exercise the machinery on main effects while testing nothing about
+  developmental structure.
+
+Predictions and acquisition scores for the 3 untouched pairs were frozen to
+`artifacts/natural_transfer/frozen_predictions.json` before the verdict and
+are annotated with it. **No untouched pair has been run**, so the adaptive
+candidate pool is intact.
+
+## 17. Prospective validation on the 3 untouched pairs
+
+36 units total. Predictions for all 6 rungs on all 4 metrics were frozen,
+hashed (`e60bc265d76e...`) and timestamped `2026-08-16T21:16:32Z` before any
+untouched pair ran; the scorer re-derives the hash before comparing. The 3
+pairs differ from the first 9 in pair identity alone.
+
+### Primary: does the source-only AULC pattern generalize? **No.**
+
+Observed: `1->4` -0.0453 +- 0.0541, `3->2` +0.0457 +- 0.0051, `4->1` -0.0867 +- 0.0213.
+
+| model | LOPO (frozen) | prospective RMSE | MAE | sign |
+|---|---|---|---|---|
+| global mean | 0.0709 | 0.0699 | 0.0529 | 2/3 |
+| **source-only** | **0.0498** | **0.0711** | 0.0682 | 2/3 |
+| target-only | 0.0878 | 0.0984 | 0.0782 | 2/3 |
+| **additive** | **0.0483** | **0.1434** | 0.1283 | 3/3 |
+| cosine | 0.0884 | 0.0634 | 0.0485 | 2/3 |
+| cosine + KL | 0.1166 | 0.0394 | 0.0362 | 2/3 |
+
+**The source-only pattern does not generalize.** At 0.0711 it is worse than
+the global mean (0.0699). The provisional explanation carried out of the
+9-pair analysis fails its own prospective test.
+
+**Additive was an interpolation artifact, decisively.** Best LOPO (0.0483),
+worst prospective (0.1434) — three times worse than the global mean. The
+diagnostic cells the divergence was flagged on settle it:
+
+| pair | observed | source-only | additive |
+|---|---|---|---|
+| `1->4` | -0.0453 | -0.0859 (err -0.0406) | -0.2173 (err **-0.1720**) |
+| `4->1` | -0.0867 | -0.1633 (err -0.0766) | -0.2620 (err **-0.1753**) |
+
+7 parameters on 8 LOPO points with an in-sample RMSE of 0.0039 was
+interpolation, and it extrapolated to roughly three times the true magnitude.
+Its 3/3 sign accuracy against the worst RMSE is the signature: direction
+captured, magnitude fabricated.
+
+**The LOPO ranking inverted prospectively.** The two best LOPO models are the
+two worst prospectively; the worst LOPO model scores best. At this scale
+**model selection itself is unreliable**, which is a stronger and more
+uncomfortable finding than any individual model's failure. No conclusion is
+drawn from the relational model's 0.0394: it is three points, its advantage
+comes mostly from shrinking toward the mean, and it still gets `3->2`'s sign
+wrong.
+
+**`3->2` is the informative cell.** Observed +0.0457, and every model except
+additive predicts negative. It pairs with `f2->f3` (+0.0493) from the
+observed nine: families 2 and 3 help each other in **both** directions, the
+only mutually positive pair in the matrix.
+
+### Exploratory: 12-pair component LOPO
+
+Hypothesis generation only. **Cannot rescue the failed primary AULC gate.**
+
+| metric | global | source-only | target-only | additive | cosine | cosine+KL |
+|---|---|---|---|---|---|---|
+| `T_aulc` | 0.0697 | **0.0598** | 0.0951 | 0.0889 | 0.0745 | 0.0668 |
+| `head_start` | 0.2213 | 0.2385 | 0.3040 | 0.3642 | 0.2470 | **0.1766** |
+| `rate_only` | 0.1741 | 0.1795 | 0.2381 | 0.2758 | 0.1927 | **0.1415** |
+| `endpoint` | 0.0442 | 0.0263 | 0.0604 | 0.0330 | 0.0464 | **0.0263** |
+
+Relational features do best on the two **components** (+20.2%, +18.7% over
+global) and worst on the composite. Additive collapses below global on every
+metric once 12 pairs constrain it.
+
+### A confound that undermines the one exploratory signal
+
+With four families, `N_ij` is the complement of `{i, j}`, and the centroid
+cosine is symmetric, so **both are functions of the unordered pair**. Checked
+directly: 6 distinct cosine values, 6 distinct control compositions, a
+one-to-one mapping.
+
+**The cosine feature is perfectly confounded with the identity of the two
+families in the control arm.** Any predictive value it shows may be a
+control-composition effect rather than a source-target relationship. This
+converts the common-control comparison from rigor-pass debt into the
+load-bearing next test. Directionality is unaffected — `N_ij = N_ji`, so
+`i->j` against `j->i` is clean.
+
+### 1. What the experiment demonstrated
+
+* Natural-corpus transfer is **measurable and reproducible** at this scale:
+  `T_aulc` S/N 2.31, components 7.18 and 8.79, no anomalous cell.
+* The `t=0` decomposition is **load-bearing**: head start and rate-only
+  oppose in 7 of 9 observed pairs and are 3-4x more reproducible than their
+  sum.
+* **No model predicts held-out natural transfer.** Source-only and additive
+  both fail prospectively; additive is a demonstrated interpolation artifact.
+* **LOPO does not select models reliably at n=9-12.** The ranking inverted.
+* The apparatus is sound: frozen provenance, asserted exposure matching,
+  shared initialization, sealed test split.
+
+### 2. What remains a hypothesis
+
+* That the **component vector** carries structure the composite destroys.
+  Suggested by S/N and by the exploratory table, never tested confirmatorily.
+* That **semantic families are not developmental families**. Not concluded —
+  the semantic features are confounded with the control, so their failure on
+  AULC and their modest success on components are both uninterpretable as
+  evidence about ontology.
+* That families 2 and 3 are **mutually facilitating**. Two cells.
+* That the negative head start / positive rate pattern is developmental
+  rather than mechanical regression toward a shared asymptote. Endpoint
+  effects are small (S/N 1.35), which is consistent with either.
+
+### 3. Proposed next experiment: **H3, common control**
+
+Re-run the 12 directed pairs against a **common target-specific control
+`N_j`**, shared across all sources of a given target, holding tokenizer,
+budgets, architecture, seeds and schedule fixed.
+
+It is recommended over H2 and H1 because it is the only one that is currently
+**blocking**: the cosine/control confound means the exploratory component
+signal — the sole surviving lead, and the entire evidential basis for H2 —
+cannot be interpreted until the control no longer varies with the unordered
+pair. Running H2's vector-response test first would build a confirmatory
+design on a feature whose meaning is unresolved, and H1 would rebuild the
+ontology using relational evidence that is currently uninterpretable.
+
+It also costs less than it appears: a common control is computed **once per
+target**, so 12 pairs need 12 treatment arms and 4 control arms rather than
+24 arms — 16 trajectories per seed against 24, cheaper than the wave already
+run.
+
+And it yields fresh data. The component hypothesis (H2) has been examined
+exploratorily on these 36 units and cannot be confirmed on them; the
+common-control wave produces an independent 12-pair matrix on which the
+component vector can be prespecified as the primary response and tested
+confirmatorily.
+
+**What it primarily tests:** whether the apparent relational structure is a
+property of the source-target relationship or of the background composition —
+that is, whether the control design (H3) was generating the structure. It
+secondarily supplies the clean dataset H2 requires.
