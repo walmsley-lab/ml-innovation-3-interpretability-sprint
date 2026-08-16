@@ -299,11 +299,45 @@ substantive: the W-first history does not produce a *stable* default at all.
 Which strategy the model falls back on is decided by something as small as an
 independent draw of the same source corpus.
 
-Not yet diagnosed, and not to be guessed at: whether this is bistability in
-the neutral read-out, sensitivity to where in the tail the run lands, or a
-genuine property of how the W-first history resolves. One competence failure
-also appeared in 20 null runs (A/2000/arm1, A_P = 0.236), so competence
-retention is itself not fully reliable on confirmatory seeds.
+### Exploratory characterization (one wave, 11 fresh seeds per history)
+
+**Requires independent replication. Not confirmatory, and no parameter was
+tuned on it.**
+
+W-first neutral W-choice rate across 11 seeds:
+
+    0.00 0.04 0.05 0.08 0.31 0.35 0.65 0.71 0.72 0.85 0.94
+    mean 0.428, sd 0.357
+
+P-first:
+
+    0.00 x9, 0.04, 0.71
+    mean 0.069, sd 0.214
+
+The W-first distribution is **broad and spread across the whole range**, not
+bimodal in the clean sense: 5 of 11 seeds are extreme (<0.1 or >0.9) but 3
+sit in the middle (0.3-0.7), so it is not a clean two-state switch. P-first is
+concentrated at zero, with a single outlier at 0.71.
+
+So the asymmetry is real in this exploratory sample: the P-first history
+almost always defaults to the cue, while the W-first history lands anywhere.
+Whether that is a stable property or an artifact of this one frozen regime is
+**not** established by 11 seeds and one wave.
+
+Correlations against pre-conflict quantities are weak. The strongest is
+`corr(follows_w, acc_w) = +0.57` in the W-first history, which is suggestive
+but far from an explanation; `corr(follows_w, neutral_loss) = +0.39` and
+`+0.61`. Nothing already recorded predicts the outcome well enough to be a
+control variable.
+
+### Rigor-pass debt
+
+Post-tail competence failures on fresh seeds: 1 of 20 in Gate C, and 2 of 11
+in the P-first exploratory arm (seeds 4004, 4008). The frozen tail T1 keeps
+competence on calibration seeds but not reliably on confirmatory ones. **T1 is
+not reopened today.** This is recorded as debt for the rigor pass, alongside
+larger seed counts, adjacent scales, and independent replication of the
+instability finding.
 
 **No frozen parameter has been reopened and Claim 1 has not been launched.**
 The cross-history contrast has never been computed.
