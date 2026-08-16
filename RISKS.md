@@ -35,7 +35,7 @@ which is what the per-unit persistence was added for.
 
 ---
 
-## 2. Active blocker under test
+## 2. Active blocker, diagnosed and with a demonstrated remedy
 
 ### Catastrophic forgetting under corrected explicit-mode sequential training
 
@@ -104,13 +104,37 @@ the very skill being acquired. Every P->W arm has A_W **still rising at the
 final checkpoint**, which is the signature of an unfinished acquisition
 rather than of forgetting.
 
-The diagnostic therefore does not license Diagnostic C. The controlled
-version holds the *new skill's* token count fixed and lets the phase total
-grow with r, separating continuity from acquisition budget.
+### Budget-corrected continuity curve — the confound was real
 
-Diagnostic C remains licensed in principle by the A-succeeds/sequential-fails
-pattern, and remains diagnostic only, but should wait for the
-budget-corrected continuity curve.
+Holding the *new* skill's exposure fixed at 600 pure steps and adding
+old-skill samples on top (phase 2 runs 600, 632, 667, 800, 1200 steps):
+
+| r | W->P | P->W | prior capability |
+|---|---|---|---|
+| 0.00 | 0.229 | 0.236 | remains lost, both |
+| 0.05 | 0.293 | 0.467 | remains lost, both |
+| 0.10 | 0.627 | 0.531 | lost (W->P) / recovers (P->W) |
+| 0.25 | **0.988** | **0.996** | collapses then recovers, both |
+| 0.50 | **1.000** | **0.965** | recovers (W->P) / continuously preserved (P->W) |
+
+**Both directions clear tau at r=0.25**, and the directional asymmetry
+disappeared: P->W at r=0.5 moved from 0.479 under the confounded protocol to
+0.965 under matched exposure. The asymmetry was an artifact of starving the
+slower incoming skill, exactly as diagnosed, and is **not** recorded as a
+genuine interference asymmetry.
+
+Diagnostic C is **not** run. The A-succeeds/sequential-fails pattern licensed
+it, but continuity rescues coexistence without any protection method, so
+EWC/OGD would answer a question that is no longer open.
+
+The threshold is r=0.25 **in this architecture, task and seed regime**. It is
+not a universal constant and is unreplicated across seeds and scales.
+
+The open question is now about the hypothesis, not the apparatus: whether the
+primary developmental operationalization stays pure block-sequential or moves
+to controlled overlapping curricula. Gate B, tau_retention and the
+preregistered block-sequential result stand unchanged until that is decided
+explicitly.
 
 Constraint carried forward: replay, EWC, OGD, adapters, separate heads and
 parameter isolation are **diagnostics only**. None enters the primary design
