@@ -961,3 +961,78 @@ The seven-family proposal, equal-family control weighting, the fixed
 (`497b9c3fc66e8adbca96ac2eef41e9e2ada14ffcdc0d78bb4cbbf589c42b3c27`) are
 frozen. None of them may be revised once any developmental outcome exists on
 this substrate.
+
+## 24. WikiText Stage-5 result: the gate fails, narrowly, and there is no inversion
+
+108 units. Development 78 (26 directed pairs x 3 seeds), confirmatory 30
+(10 pairs x 3 seeds), 21 shared controls serving both. All valid, control
+invariant PASS on every target x seed group.
+
+### Measurability
+
+| response | dev spread | dev med sd | dev S/N | conf S/N |
+|---|---|---|---|---|
+| `head_start` | 0.2459 | 0.0413 | **5.95** | 7.62 |
+| `rate_only` | 0.2142 | 0.0352 | **6.09** | 8.32 |
+| `T_aulc` | 0.0719 | 0.0259 | 2.77 | 4.84 |
+| `endpoint` | 0.0471 | 0.0235 | 2.01 | 3.32 |
+
+Far stronger than 20NG, where the components reached 8.79 and 7.18 but the
+composite sat at 2.31. Branch A is excluded.
+
+### The prospective result — continuous, reported ahead of the gate
+
+Predictions frozen at `2ff3cf08f744dc9a` before any confirmatory unit ran;
+hash re-verified at scoring.
+
+| response | global | source_only | target_only | additive | cosine | **relational** |
+|---|---|---|---|---|---|---|
+| `head_start` | 0.4304 | 0.3989 | 0.4342 | 0.4036 | 0.3436 | **0.2794** |
+| `rate_only` | 0.3528 | 0.3033 | 0.3525 | 0.3066 | 0.2944 | **0.1890** |
+
+**There is no inversion.** The relational model was best in development LOPO
+and is best prospectively on both components, beating every simpler model:
+30.0% better than the best simpler model on head start, 37.7% on rate-only.
+This is the sharpest contrast with the 20NG pilot, where the development-best
+model became the prospective **worst** (additive: best LOPO at 0.0483, worst
+prospective at 0.1434) and the ranking inverted outright. It did not happen
+here.
+
+That is a real and reportable finding, and it was obtained under a control
+design whose confound was repaired, on pools frozen before they ran.
+
+### The gate: FAIL
+
+| condition | `head_start` | `rate_only` |
+|---|---|---|
+| material (>= 25% vs best simpler) | **yes** (30.0%) | **yes** (37.7%) |
+| above seed-noise floor | yes | yes |
+| **jackknife-robust** | **NO** | yes |
+
+`rate_only` passes everything, robust across all ten leave-one-pair-out
+subsets (29.3% to 60.6%). `head_start` fails on **3 of 10** drops: removing
+`0->4` (21.8%), `4->0` (18.8%) or `4->3` (22.8%) pushes it under threshold.
+
+**Every failing drop involves family 4.** The head-start margin depends on
+that family more than a robust result should.
+
+The criterion required all conditions on **both** components under one model.
+It does not pass. **The adaptive step is not licensed and was not run. The
+untouched adaptive pool remains untouched.**
+
+### What this establishes and what it does not
+
+It establishes that on this substrate, with a repaired control, a relational
+model **generalized prospectively** to unseen pairs and beat every simple
+baseline by a material margin on both primary components — and that the
+20NG inversion did not recur.
+
+It does **not** establish the prespecified claim. One component's advantage
+rests too heavily on one family to be called robust at n=10 confirmatory
+pairs. Under Branch B this is the first sub-reading: *the effect may well be
+real and the confirmatory pool underpowered*, and the honest statement is
+that a jackknife-robust 25% improvement was not demonstrated.
+
+**No re-selection on a secondary metric, no ladder extension, no refit.** The
+rule was frozen before the outcome and is applied as written. What the result
+licenses is a **larger confirmatory pool**, not a different criterion.
