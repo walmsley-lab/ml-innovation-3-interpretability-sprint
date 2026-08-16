@@ -1130,3 +1130,82 @@ forward rule the component gains of 19-20% would **not** qualify as material,
 so the component signal is: strong enough to survive the confound repair
 unchanged, and not yet strong enough to clear the bar the next experiment
 must clear. Both facts are part of the record.
+
+### Frozen pair pools
+
+`sha256 548460a776c4aa716cada7d93acf6a29ebc1eb37147231150c6f5eb25e2b3bac`,
+seed 20260816, written before any WikiText transfer.
+
+| pool | unordered | directed | role |
+|---|---|---|---|
+| development | 18 | 36 | fitting and model selection; LOPO lives here only |
+| confirmatory | 6 | 12 | batch held-out, never fitted on, scored once |
+| adaptive | 4 | 8 | untouched candidates for model-selected execution |
+
+**The partition unit is the unordered pair.** Both directions move together.
+Holding out `i->j` while `j->i` sits in development leaks the pair's identity
+— the two share families, features and the same unordered-pair nuisance, so a
+model fitted on one has effectively seen the other. The 20NG universe could
+not provide three disjoint pools at all; this is the structural reason for the
+larger substrate.
+
+### Regularized ladder, sized to 36 observed relationships
+
+Ridge throughout, penalty chosen by inner LOPO **inside development only**:
+
+    global mean                                     1
+      -> source main effects                        8
+      -> target main effects                        8
+      -> additive source + target                  15
+      -> additive + cosine + KL(target || source)  17
+
+17 parameters against 36 development pairs, regularized, is the ceiling. No
+composition-slot interactions, no pair-identity terms, no neural transition
+model, no full-trajectory model. Those are responses to specific failure
+modes, not prerequisites, and adding them before a clean test would repeat
+the additive lesson: 7 parameters on 8 points scored best by LOPO and worst
+prospectively.
+
+### Acquisition diagnostics, so the selector cannot pick an extrapolation
+
+Every candidate is scored with, and the frozen record retains:
+
+* **leverage** `x0' (X'X)^-1 x0` at the candidate's feature location;
+* **Mahalanobis distance** from the development feature cloud;
+* **predicted value against the observed range**, flagged when outside.
+
+**A candidate whose leverage exceeds the 95th percentile of development
+leverages is ineligible**, whatever its acquisition score. Today every frozen
+additive prediction fell outside the observed range and all three were wrong
+by roughly 3x; an uncapped `argmax U_e` selects exactly those points.
+
+### Stopping rules, exact
+
+* **Measurability.** If S/N < 2.0 on **both** components, stop before
+  prediction. Diagnose as before: excessive within-pair variance is a
+  measurement invalidator; small spread with reproducible cells is a valid
+  weak-structure negative.
+* **Cell reproducibility.** Any cell with within-pair sd > 4x the median is
+  flagged, excluded from fitting, and reported. `F6->F5` in the synthetic
+  pilot sat at 8x and should not have been silently carried.
+* **Prediction.** If no model meets the material criterion on the
+  confirmatory pool, **stop**. No adaptive step, no ladder extension, no
+  re-selection on a secondary metric.
+* **Adaptive.** If every candidate is leverage-ineligible, stop and report
+  that the model cannot select a defensible intervention.
+
+### Curve preservation
+
+The primary response is a pair of summaries, but **complete acquisition
+curves for both arms are retained per unit**, as they already are for every
+unit run today. The summaries are a projection, the projection is what the
+present hypothesis is about, and the projection is exactly what a later
+state-space analysis would need to revisit. Discarding curves would make that
+revisit impossible.
+
+### The Stage-5 claim, kept narrow
+
+Validated prediction of unseen natural-data developmental interventions,
+followed by model-selected execution of **one** untouched intervention.
+Nothing about latent state, nothing about causal ontology, nothing about
+curriculum control.
