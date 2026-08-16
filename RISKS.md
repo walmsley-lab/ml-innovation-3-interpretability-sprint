@@ -43,22 +43,41 @@ At the fixed d64/l2 regime on the corrected task, worst-order coexistence is
 0.238 against 0.80. The first capability collapses to chance within the first
 10% of phase 2, before the second begins to rise, in both orders.
 
-This is a valid measurement, not an apparatus fault, and it is **not yet
-diagnosed**. Four candidate explanations, to be discriminated rather than
-assumed:
+This is a valid measurement, not an apparatus fault. It is now **diagnosed
+as genuine catastrophic interference**, not a capacity limit.
 
-1. **optimization stability** — the update rule destroys the first solution
-   even though the parameters could hold both;
-2. **representational capacity** — no parameter setting of this architecture
-   holds both;
-3. **abrupt phase-transition / task-switch dynamics** — the model switches
-   solution wholesale rather than accumulating;
-4. **design mismatch** — isolated sequential acquisition may not be the right
-   operationalization of the developmental phenomenon the project studies.
+The eight-regime sweep found coexistence flat at 0.195-0.250 across a 6.4x
+parameter range, two depths and two learning rates, while solo competence
+varied enormously over the same range. A quantity that does not move when
+capacity moves is not limited by capacity.
 
-Discriminating suite: (A) joint-training upper bound, (B) recovery under
-common integration, and (C) a minimal protected-learning control, run only if
-A succeeds while sequential training fails.
+Diagnostics settled it:
+
+| diagnostic | result |
+|---|---|
+| A: joint training, same total budget, d64/l2 | **coexistence 0.982** |
+| A: joint training, d64/l4 | **coexistence 0.986** |
+| sequential, best of eight regimes | 0.250 |
+| B: after identical NEUTRAL_ALIGNED integration | 0.246-0.277 |
+
+So of the four candidate explanations:
+
+1. **optimization stability** — *live*. The same architecture reaches 0.98
+   when the two skills arrive together and 0.23 when they arrive in
+   sequence. The difference is the order of the updates, nothing else.
+2. **representational capacity** — **ruled out**. d64/l2 holds both skills
+   simultaneously at 0.982.
+3. **abrupt phase-transition / task-switch dynamics** — *live*. The first
+   skill collapses within the first 10% of phase 2, before the second begins
+   to rise, in every regime and both orders.
+4. **design mismatch** — *live, and the most consequential*. Shared
+   integration does not restore the lost skill (0.246-0.277), so it is
+   erased rather than merely inaccessible. If a developmental history
+   destroys rather than layers, the phenomenon this project set out to study
+   may not survive its own operationalization.
+
+Diagnostic C, a minimal protected-learning control, is now licensed by the
+A-succeeds/sequential-fails pattern. It remains diagnostic only.
 
 Constraint carried forward: replay, EWC, OGD, adapters, separate heads and
 parameter isolation are **diagnostics only**. None enters the primary design

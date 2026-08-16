@@ -171,7 +171,11 @@ class TaskConfig:
 # Training families: which source is informative in the data itself.
 # Training families. Explicit families carry a mode token and are what Gate B
 # trains on; NEUTRAL_ALIGNED enters only after corrected Gate B succeeds.
-FAMILIES = ("W_EXPLICIT", "P_EXPLICIT", "NEUTRAL_ALIGNED")
+FAMILIES = ("W_EXPLICIT", "P_EXPLICIT", "NEUTRAL_ALIGNED", "W_P_INTERLEAVED")
+
+# W_P_INTERLEAVED is a diagnostic family, not part of any curriculum. It
+# exists to measure the joint-training upper bound: whether an architecture
+# can represent both skills at once when optimization is not sequential.
 
 # Evaluation conditions. W_COMPETENCE and P_COMPETENCE ask whether the same
 # checkpoint can execute each strategy on request. NEUTRAL_CONFLICT is the
@@ -267,13 +271,14 @@ def digit_table(config: TaskConfig, split: str) -> jax.Array:
     return jnp.asarray(digits[np.sort(rows)], dtype=jnp.int32)
 
 
-def _assemble(config: TaskConfig, mode: int, cue: jax.Array,
+def _assemble(config: TaskConfig, mode, cue: jax.Array,
               digits: jax.Array, answer: jax.Array) -> jax.Array:
     batch = cue.shape[0]
+    mode_column = jnp.broadcast_to(jnp.asarray(mode, dtype=jnp.int32), (batch,))
     return jnp.concatenate(
         [
             jnp.full((batch, 1), BOS, dtype=jnp.int32),
-            jnp.full((batch, 1), mode, dtype=jnp.int32),
+            mode_column[:, None],
             (config.cue_base + cue)[:, None].astype(jnp.int32),
             (config.digit_base + digits).astype(jnp.int32),
             jnp.full((batch, 1), SEP, dtype=jnp.int32),
@@ -339,6 +344,14 @@ def sample_batch(
         mode = NEUTRAL
         cue_class = w
         answer = w
+    elif kind == "W_P_INTERLEAVED":
+        # Balanced within-batch interleaving. The two halves are identical in
+        # content and differ only in MODE and the answer, so this isolates
+        # sequentiality from every other difference between the families.
+        mode_flag = jr.bernoulli(k_class, 0.5, (batch_size,))
+        cue_class = independent_cue_class
+        mode = jnp.where(mode_flag, USE_W, USE_P)
+        answer = jnp.where(mode_flag, w, cue_class)
     elif kind == "NEUTRAL_CONFLICT":
         # Offset by 1..n_classes-1 so the cue class never coincides with the
         # rule. Reserved for the behavioural preference measurement; never
@@ -358,7 +371,7 @@ def sample_batch(
 
     batch = Batch()
     batch["tokens"] = _assemble(config, mode, cue, digits, answer)
-    batch["mode"] = jnp.full((batch_size,), mode, dtype=jnp.int32)
+    batch["mode"] = jnp.broadcast_to(jnp.asarray(mode, dtype=jnp.int32), (batch_size,))
     batch["w_answer"] = w.astype(jnp.int32)
     batch["p_answer"] = cue_class.astype(jnp.int32)
     return batch
