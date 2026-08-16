@@ -6,9 +6,31 @@ The central question is:
 
 > **Can the developmental structure that makes one training order preferable to another be experimentally discovered rather than assumed?**
 
-The project treats pretraining as a developmental process rather than only a static mixture-optimization problem.
+Most pretraining pipelines optimize corpus composition, quality, weighting, and total token allocation. Temporal structure is often treated as secondary or as a manually designed curriculum.
 
-The long-term loop is:
+This project tests a stronger hypothesis:
+
+[
+\boxed{
+\text{earlier training changes the conditions under which later learning occurs}
+}
+]
+
+If so, then:
+
+[
+A\rightarrow B
+]
+
+and
+
+[
+B\rightarrow A
+]
+
+need not be equivalent developmental histories even when both contain the same data and total training budget.
+
+The project treats pretraining as a **developmental system-identification problem**:
 
 [
 \boxed{
@@ -24,114 +46,108 @@ The long-term loop is:
 }
 ]
 
-The project proceeds through three scientific levels:
+The research escalates through three scientific levels:
 
 1. **Controlled developmental causality**
-   Establish that developmental order can cause persistent differences in learning.
-
 2. **Developmental system identification**
-   Infer predictive relationships among candidate corpus components and revise those components when the initial ontology is inadequate.
-
 3. **Developmental control**
-   Use the discovered structure to derive a curriculum and test whether it improves fresh-model learning.
 
-The objective is not to recover a unique metaphysical ontology of knowledge. The practical criterion is:
+A final portability stage tests whether the same pipeline can operate on a previously unseen natural-language corpus without corpus-specific scientific logic.
+
+---
+
+# 2. Core Scientific Separation
+
+Three objects must remain distinct throughout the work.
+
+## 2.1 Intervention measurements
+
+These are observed experimental quantities.
+
+Examples:
+
+[
+T_{ij}^{(s)}
+]
+
+paired transfer effects,
+
+learning curves,
+
+conflict log-odds,
+
+tokens-to-threshold.
+
+## 2.2 Developmental model
+
+This is an inferred representation fitted to the measurements.
+
+Examples:
+
+* transfer matrix;
+* partial-pooled interaction model;
+* low-rank developmental factors;
+* revised corpus families;
+* sparse developmental map.
+
+## 2.3 Derived curriculum
+
+This is a downstream control policy generated from the fitted developmental model.
+
+Thus:
 
 [
 \boxed{
-\text{Does the inferred developmental representation predict what happens when training history changes?}
+\text{measurements}
+\neq
+\text{model}
+\neq
+\text{curriculum}
 }
 ]
 
----
-
-## 2. Core Scientific Commitments
-
-The project should preserve several distinctions throughout.
-
-### Observation is not interpretation
-
-Measured transfer effects are primary data.
-
-A graph is an interpretation of those measurements.
-
-A curriculum is a downstream control decision.
-
-These remain separate objects:
-
-[
-\boxed{\text{intervention measurements}}
-]
-
-[
-\boxed{\text{developmental model}}
-]
-
-[
-\boxed{\text{derived curriculum}}
-]
-
-### Semantic structure is not developmental structure
-
-A semantic ontology describes what examples appear to concern.
-
-A developmental ontology describes distinctions that predict different consequences for later learning.
-
-Semantic clustering, metadata, or LLM-generated descriptions may propose candidate units, but they are not accepted as ground truth.
-
-### Transfer and ordering are different estimands
-
-For families (A) and (B), distinguish:
-
-**Transfer effect**
-
-[
-\Delta^{\mathrm{transfer}}_{A\rightarrow B}
-===========================================
-
-## Y_B(A\rightarrow B)
-
-Y_B(N\rightarrow B),
-]
-
-where (N) is an explicit matched control.
-
-**Order effect**
-
-[
-\Delta^{\mathrm{order}}_{A,B}
-=============================
-
-## Y(A\rightarrow B)
-
-Y(B\rightarrow A).
-]
-
-The first asks whether exposure to (A) changes acquisition of (B).
-
-The second asks whether the ordering of (A) and (B) matters.
-
-Neither should be used as shorthand for the other.
+The system must never discover a curriculum first and retrofit a graph afterward.
 
 ---
 
-# 3. Stage 0 — Estimator and Experimental-System Validation
+# 3. Invalidators vs. Falsifiers
 
-Before training scientific models, validate the measurement machinery itself.
+A core methodological distinction is between:
 
-Generate synthetic learning curves with known implanted effect
+## Invalidators
+
+The experimental apparatus is not trustworthy.
+
+Examples:
+
+* biased estimator;
+* broken null calibration;
+* competence gate failure;
+* excessive divergence;
+* RNG leakage;
+* improper pairing.
+
+An invalidated experiment licenses no positive or negative scientific conclusion.
+
+## Falsifiers
+
+The apparatus is sound and the scientific claim fails.
+
+Negative outcomes at properly powered, valid stages are reportable scientific results.
+
+This distinction is enforced throughout the stage gates.
+
+---
+
+# 4. Stage 0 — Estimator Validation
+
+Before training any model, validate the statistical machinery using synthetic learning curves with known effects.
+
+Construct curves with planted:
 
 [
 \Delta_{\mathrm{true}}.
 ]
-
-Pass these through the exact estimators that will later compute:
-
-* area-under-learning-curve effects;
-* endpoint effects;
-* confidence intervals;
-* paired differences;
-* censoring metrics.
 
 Verify:
 
@@ -141,23 +157,34 @@ Verify:
 \Delta_{\mathrm{true}}
 ]
 
-and that nominal confidence intervals achieve approximately their expected coverage.
+and verify nominal confidence-interval coverage.
 
-This catches statistical and pairing bugs before GPU compute is spent.
+Test:
 
-### Exit criterion
+* AULC calculation;
+* paired differences;
+* confidence intervals;
+* equivalence tests;
+* threshold-crossing logic;
+* censoring logic.
 
-The estimator must recover known synthetic effects within prespecified tolerance and demonstrate calibrated interval coverage.
+### Gate A
+
+Estimator tests must recover known effects within prespecified tolerance and achieve acceptable interval coverage.
+
+Failure is an **invalidator**.
+
+This stage runs on CPU and should occur before any GPU usage.
 
 ---
 
-# 4. Stage 1 — Model Capacity Calibration
+# 5. Stage 1 — Model Capacity Calibration
 
-The experimental model should be the **smallest scientifically adequate learner**, not the largest model affordable.
+The experimental learner should be the **smallest adequate model**, not the largest affordable model.
 
-Let (N) be parameter count.
+Let (N) denote model parameter count.
 
-Select
+Select:
 
 [
 N^*=\min_N N
@@ -174,63 +201,68 @@ A_P(N)\ge\tau_P,
 ]
 
 [
-A_G(N)\ge\tau_G,
+A_G(N)\ge\tau_G.
 ]
 
-and for a multi-family corpus:
+For a multi-family corpus:
 
 [
 \min_j A_j(N)\ge\tau_D.
 ]
 
-The calibration sweep varies both model capacity and token budget to distinguish true capacity limitation from under-training.
+## 5.1 Capacity × token sweep
 
-Candidate scales may be geometrically spaced, e.g.
+Model size must be varied jointly with training budget.
 
-[
-1\text{M},2\text{M},4\text{M},8\text{M},16\text{M},32\text{M},
-]
+A small model may appear inadequate only because it is under-trained.
 
-subject to actual task difficulty.
-
-### Developmental resolution
-
-A model that instantly solves the task is also undesirable.
-
-Define a learning window
+Run a coarse grid over:
 
 [
-R(N)=t_{90}-t_{10},
+N\times \text{tokens}.
 ]
 
-where (t_{10}) and (t_{90}) mark 10% and 90% of observed capability acquisition.
+Candidate scales may be geometrically spaced, for example:
 
-The chosen model must have enough temporal resolution for checkpoint-level developmental analysis.
+[
+1M,;2M,;4M,;8M,;16M,;32M.
+]
 
-### Generalization controls
+Exact values remain empirical.
 
-Calibration should measure:
+## 5.2 Developmental resolution
 
-* train performance;
-* held-out surface forms;
-* held-out compositional structures;
-* worst-family competence;
-* learning speed;
-* cost per run.
+An overpowered model can also be undesirable if capabilities emerge nearly instantly.
 
-### Scale robustness
+Define:
 
-Once Stage I produces a headline result, replicate it at 2–3 adjacent model scales to guard against selecting a single artificially favorable regime.
+[
+R(N)=t_{90}-t_{10}.
+]
+
+A useful model should have:
+
+[
+R(N)\ge R_{\min}.
+]
+
+This ensures enough temporal resolution for checkpoint-level observation.
+
+### Gate B
+
+Choose the smallest model that passes competence, generalization, and developmental-resolution thresholds.
+
+Architecture and nuisance hyperparameters are then frozen for confirmatory experiments.
 
 ---
 
-# 5. Stage 2 — Noise and Power Calibration
+# 6. Stage 2 — Null Calibration and Power Planning
 
-This is mandatory before choosing the number of seeds for the primary experiments.
+The number of seeds must be justified empirically.
 
-### Identity-null experiments
+## 6.1 Identity-null experiments
 
-Run conditions that are scientifically identical but stochastically independent:
+Run structurally identical paired interventions:
 
 [
 N_1\rightarrow B
@@ -248,67 +280,65 @@ The expected effect is:
 \Delta_{\mathrm{null}}=0.
 ]
 
-These runs estimate the actual noise floor of the measurement procedure.
+These estimate the real noise floor of the paired estimator.
 
 They test:
 
-* pairing quality;
 * stochastic optimizer variance;
-* RNG handling;
+* data realization variance;
+* RNG correctness;
 * hardware nondeterminism;
 * estimator bias;
-* residual control mismatch.
+* pairing quality.
 
-### Estimate paired noise
+## 6.2 Execution null vs. data null
 
-From the pilot, estimate
+Two null notions may be useful.
+
+### Execution null
+
+As much as possible is held identical to test execution correctness.
+
+### Data null
+
+Two independently sampled but matched neutral corpora test variation in the neutral-generating process.
+
+These should not be conflated.
+
+## 6.3 Power
+
+Estimate:
 
 [
 \sigma_{\mathrm{pair}}.
 ]
 
-Prespecify the smallest scientifically meaningful effect
+Prespecify a minimum scientifically meaningful effect:
 
 [
 \delta_{\min}.
 ]
 
-Then choose paired seed count (n) to achieve a desired power target.
+Choose paired seed count (n) to achieve a target statistical power.
 
-Seed count should therefore be justified statistically rather than chosen arbitrarily.
+Seed count is therefore a result of the pilot, not a convention.
 
-### Multiplicity
+### Gate C
 
-The transfer matrix contains many comparisons.
+Identity-null distributions must be centered appropriately and power analysis must define (n) before confirmatory training begins.
 
-Raw per-cell winners should not be selected directly.
-
-Use:
-
-* hierarchical partial pooling;
-* shrinkage;
-* or prespecified multiplicity control such as Benjamini–Hochberg for confirmatory scans.
-
-One metric must be declared primary.
-
-The preferred primary transfer metric is learning-speed improvement, such as AULC.
-
-Endpoint performance and tokens-to-threshold are secondary.
-
-### Exit criterion
-
-Null cells must be centered near zero within calibrated uncertainty, and the required paired seed count must be determined before the confirmatory intervention matrix begins.
+Failure is an **invalidator**.
 
 ---
 
-# 6. Stage 3 — Controlled W/P Developmental Experiment
+# 7. Stage 3 — Controlled W/P Experiment
 
-Use a synthetic task with two independently learnable information sources:
+The first causal experiment uses two independently learnable signals.
 
-* (W): underlying rule, utility, or world structure;
-* (P): predictive preference cue.
+* (W): underlying rule, utility relation, or world structure
+* (P): predictive preference/cue
 
-Ordinary aligned examples satisfy:
+Aligned examples satisfy:
 
 [
 W(x)=P(x).
@@ -336,69 +366,90 @@ W\text{-only},
 P\text{-only},
 ]
 
-and a balanced mixed condition.
+and a balanced mixed baseline.
 
-### Competence gates
+---
 
-Before conflict behavior is interpreted:
+# 8. Competence Gates
+
+Conflict behavior is uninterpretable unless both strategies were learnable.
+
+Require:
 
 [
 A_W\ge\tau_W
 ]
 
-and
+and:
 
 [
 A_P\ge\tau_P.
 ]
 
-A model that follows (P) because it never learned (W) does not constitute path dependence.
+A model that follows (P) because it failed to learn (W) is not evidence of path dependence.
 
-### Diagnostic evaluations
+Competence failure is an **invalidator**, not a negative result.
 
-#### Clean-rule
+---
 
-Cue removed; (W) remains informative.
+# 9. Diagnostic Evaluations
 
-#### Cue isolation
+## Clean-rule evaluation
 
-(W) is uninformative; (P) determines the correct response.
+Remove the cue and test (W).
 
-#### Conflict
+## Cue-isolation evaluation
+
+Make (W) uninformative and test (P).
+
+## Conflict evaluation
+
+Construct:
 
 [
 W(x)\neq P(x).
 ]
 
-#### Counter-evidence
+Measure:
 
-Introduce later evidence designed to favor one strategy and measure revision.
+* categorical preference;
+* forced-choice log-probabilities;
+* log-odds:
+
+[
+\ell=
+\log p(y_W)-\log p(y_P).
+]
+
+## Counter-evidence
+
+Provide later evidence favoring one strategy and measure persistence/revision.
 
 ---
 
-# 7. Recency and Learning-Rate Controls
+# 10. Recency and Learning-Rate Controls
 
-Simple
+Simple:
 
 [
 W\rightarrow P
 ]
 
-versus
+versus:
 
 [
 P\rightarrow W
 ]
 
-can be confounded by training position, learning-rate schedule, and recency.
+can be confounded by recency or LR-schedule position.
 
-Therefore add a common post-curriculum washout phase:
+Therefore include shared-tail conditions:
 
 [
 W\rightarrow P\rightarrow M
 ]
 
-versus
+and:
 
 [
 P\rightarrow W\rightarrow M,
@@ -406,166 +457,374 @@ P\rightarrow W\rightarrow M,
 
 where (M) is identical balanced mixed training.
 
-Final diagnostics occur after this shared experience.
+Final diagnostics occur after the common tail.
 
-This tests the stronger claim:
+This tests the stronger proposition:
 
-> Different developmental histories leave persistent differences even after identical subsequent training.
+> different developmental histories can produce persistent differences even after identical subsequent experience.
 
-Where feasible:
+Where practical:
 
-* use constant learning rate across the controlled developmental window;
-* or counterbalance schedule position;
-* conduct at least one early-vs-late timing probe.
+* use constant LR during the developmental window;
+* or explicitly counterbalance LR position;
+* test at least one early-vs.-late timing intervention.
 
-### Stage I headline criterion
+### Claim 1 falsifier
 
-The primary result is persistent differentiation after competence controls and shared washout.
+After competence gates and common washout, if the confidence interval lies entirely inside:
 
-A negative result is scientifically valid and should be reported.
+[
+(-\delta_{\min},+\delta_{\min}),
+]
+
+persistent path dependence is rejected at that scale.
+
+A transient effect that disappears after washout falsifies persistence but not transient path dependence.
 
 ---
 
-# 8. Stage 4 — Scale Robustness
+# 11. Stage 4 — Adjacent-Scale Replication
 
-Replicate the principal W/P comparison at nearby calibrated scales.
+Replicate the Stage 3 headline result at nearby calibrated model sizes.
 
 For example:
 
 [
-N_{\mathrm{small}},
-N^*,
-N_{\mathrm{large}}.
+N_{\mathrm{small}},N^*,N_{\mathrm{large}}.
 ]
 
-Ask whether:
+Measure:
 
-* direction is preserved;
-* effect magnitude changes;
-* developmental timing shifts;
-* saturation suppresses the phenomenon.
+* effect direction;
+* effect magnitude;
+* developmental timing;
+* saturation behavior.
 
-The goal is not universal scaling-law discovery but protection against a single-scale artifact.
+### Gate E
 
----
+Failure to reproduce does not necessarily falsify path dependence outright.
 
-# 9. Stage 5 — Structured Multi-Family Corpus
-
-Construct a synthetic or semi-synthetic corpus with approximately 6–12 candidate families.
-
-The generator may contain planted latent relationships, but these are **quarantined from the discovery system**.
-
-Ground-truth generative metadata is reserved strictly for evaluation.
-
-The discovery process may initially use:
-
-* unsupervised embeddings;
-* surface statistical features;
-* dataset metadata that would exist naturally;
-* external LLM-generated semantic proposals, clearly marked as priors.
-
-It must never use hidden generator labels to decide merges, splits, or relationships.
+It bounds the claim to a specific scale regime and must be reported as such.
 
 ---
 
-# 10. Standardized Transfer Protocol
+# 12. Transfer Effects and Order Effects
 
-For each ordered pair
+These are distinct estimands.
+
+## Transfer effect
+
+[
+\Delta^{\mathrm{transfer}}_{A\rightarrow B}
+===========================================
+
+## Y_B(A\rightarrow B)
+
+Y_B(N\rightarrow B).
+]
+
+This asks:
+
+> Does prior exposure to (A) alter later acquisition of (B)?
+
+## Order effect
+
+[
+\Delta^{\mathrm{order}}_{A,B}
+=============================
+
+## Y(A\rightarrow B)
+
+Y(B\rightarrow A).
+]
+
+This asks:
+
+> Does reversing the order of the same training sources alter the outcome?
+
+Neither is a substitute for the other.
+
+They should be stored and analyzed separately.
+
+---
+
+# 13. Stage 5 — Generic Corpus Intake
+
+The system should not require manually supplied (D_1,\ldots,D_k).
+
+It must accept a generic text corpus:
+
+[
+X={x_1,\ldots,x_N}.
+]
+
+The supported first-paper ingestion contract is:
+
+* document identifier;
+* text;
+* optional ordinary metadata.
+
+The claim is therefore initially:
+
+> arbitrary text corpora satisfying the ingestion contract
+
+rather than arbitrary multimodal data.
+
+---
+
+# 14. Train / Validation / Test Split Before Discovery
+
+The raw corpus must first be split:
+
+[
+X=
+X_{\mathrm{train}}
+\cup
+X_{\mathrm{val}}
+\cup
+X_{\mathrm{test}}.
+]
+
+The initial family proposer is fitted only on:
+
+[
+X_{\mathrm{train}}.
+]
+
+Then it is frozen and used to assign validation and test material.
+
+This prevents corpus-structure leakage from held-out documents.
+
+---
+
+# 15. Provisional Family Proposal
+
+The initial decomposition is:
+
+[
+\mathcal P_0(X)
+===============
+
+{D_1,\ldots,D_k}.
+]
+
+Possible proposers include:
+
+* TF-IDF / LSA clustering;
+* frozen text embeddings;
+* topic models;
+* ordinary dataset metadata;
+* semantic classifiers;
+* LLM-generated descriptions.
+
+LLM labels or semantic clusters are proposals, not ground truth.
+
+The principle is:
+
+[
+\boxed{
+\text{the proposer proposes;
+training interventions adjudicate}
+}
+]
+
+---
+
+# 16. Hidden Synthetic Ground Truth
+
+For synthetic or semi-synthetic Corpus A, the generator may contain a planted latent structure.
+
+That information must be quarantined from discovery.
+
+Hidden metadata is used only for evaluation.
+
+Discovery code must not use planted labels to:
+
+* propose merges;
+* propose splits;
+* fit relationships;
+* select experiments;
+* derive curricula.
+
+---
+
+# 17. Generic Acquisition Metric
+
+An arbitrary corpus may lack task-specific labels.
+
+A universal family-level acquisition signal is held-out next-token loss:
+
+[
+L_j(t).
+]
+
+This makes the transfer protocol applicable without hand-authored task labels.
+
+At target-phase start, measure:
+
+[
+L_j(0).
+]
+
+This allows later separation of immediate transfer from altered learning rate.
+
+---
+
+# 18. Immediate vs. Acquisition-Rate Transfer
+
+For source (D_i) and target (D_j), define the immediate target offset:
+
+[
+H_{ij}
+======
+
+L_j^{N}(0)-L_j^{(i)}(0).
+]
+
+Then separately analyze target-phase improvement.
+
+This prevents AULC from silently conflating:
+
+1. a head start before target training;
+2. faster acquisition during target training.
+
+The (t=0) evaluation is mandatory from the first transfer implementation.
+
+---
+
+# 19. Standardized Pairwise Transfer Protocol
+
+For ordered pair:
 
 [
 D_i,D_j,\quad i\neq j,
 ]
 
-compare:
+and seed-family index (s):
 
 [
-D_i\rightarrow D_j
+\theta_0^{(s)}
+\rightarrow
+\begin{cases}
+D_i\rightarrow D_j\
+N\rightarrow D_j
+\end{cases}.
 ]
 
-against
+Within the pair, hold fixed:
+
+* parent checkpoint;
+* source token count;
+* target token count;
+* optimizer update count;
+* LR schedule position;
+* target example ordering;
+* evaluation suite/version;
+* relevant RNG streams;
+* code version;
+* data version.
+
+The intentional difference is the source-phase corpus.
+
+---
+
+# 20. Unit of Analysis
+
+The unit of analysis is the **pair**, not the individual run.
+
+For pair (s):
 
 [
-N_i\rightarrow D_j.
-]
-
-Hold constant:
-
-* source-phase tokens;
-* target-phase tokens;
-* optimizer updates;
-* checkpoint pool;
-* target examples;
-* evaluation protocol;
-* relevant RNG streams.
-
-Repeat across the statistically determined paired seed count.
-
-### Primary transfer metric
-
-Let
-
-[
-L_j^{(i)}(t)
-]
-
-be target loss after exposure to (D_i).
-
-Define
-
-[
-T_{ij}
-======
+T_{ij}^{(s)}
+============
 
 \int_0^{m_t}
 \left[
-L_j^{N}(t)
-----------
+L_j^N(t)
+--------
 
 L_j^{(i)}(t)
 \right]dt.
 ]
 
-Positive values indicate faster acquisition of (D_j).
+The (n) paired effects are the observations for cell (ij).
 
-Negative values indicate interference.
-
-### Null cells
-
-Continue running identity-null cells throughout the matrix to monitor drift in experimental noise.
-
-### Neutral controls
-
-Because (N) carries causal meaning, test robustness to at least two plausible neutral-prefix constructions in a targeted ablation.
-
-A leave-one-out mixture prefix is a useful additional control.
+Raw arms are not treated as independent replicates.
 
 ---
 
-# 11. Order-Specific Comparisons
+# 21. Transfer Matrix
 
-For selected scientifically important pairs, also compare:
-
-[
-D_i\rightarrow D_j
-]
-
-against
+Define:
 
 [
-D_j\rightarrow D_i.
+T_{ij}
+======
+
+\mathbb E_s[T_{ij}^{(s)}].
 ]
 
-These order comparisons are co-primary where the claim concerns path dependence.
+Maintain separate objects:
 
-They should not be replaced by neutral-prefix transfer effects.
+[
+T
+]
+
+effect estimates,
+
+[
+U
+]
+
+uncertainty,
+
+and:
+
+[
+N
+]
+
+replication counts.
+
+Do not collapse them into graph edges.
 
 ---
 
-# 12. Partial-Pooled Transfer Model
+# 22. Directionality
 
-Avoid constructing (T) purely from independent raw cell means.
+Decompose:
 
-A simple hierarchical model can be used:
+[
+T=S+A,
+]
+
+with:
+
+[
+S=\frac{T+T^\top}{2},
+]
+
+and:
+
+[
+A=\frac{T-T^\top}{2}.
+]
+
+The antisymmetric component (A) captures directional structure.
+
+Compare its magnitude against identity-null expectations.
+
+### Claim 2a falsifier
+
+If antisymmetric structure is indistinguishable from the null noise floor, strong directional developmental claims are unsupported.
+
+---
+
+# 23. Partial Pooling
+
+Raw cell maxima are subject to winner's curse.
+
+Use a simple hierarchical model:
 
 [
 y_{ijs}
@@ -573,7 +832,7 @@ y_{ijs}
 \mathcal N(\mu_{ij},\sigma^2),
 ]
 
-with
+with:
 
 [
 \mu_{ij}
@@ -582,104 +841,61 @@ with
 \mu+\alpha_i+\beta_j+\gamma_{ij}.
 ]
 
-Here:
+Interpretation:
 
-* (\alpha_i): source-family tendency;
+* (\alpha_i): general source usefulness;
 * (\beta_j): target susceptibility;
-* (\gamma_{ij}): pair-specific interaction.
+* (\gamma_{ij}): pair-specific developmental interaction.
 
-Pair effects receive shrinkage toward the overall structure.
+Shrunk estimates are preferred for downstream selection.
 
-This reduces winner's curse and makes noisy cells less likely to dominate downstream graph construction.
-
-The raw measurements remain available alongside shrunk estimates.
+Raw measurements remain available.
 
 ---
 
-# 13. Developmental Transfer Matrix
+# 24. Load-Bearing Baseline: Additive Model
 
-Maintain separately:
-
-[
-T
-]
-
-for estimated effects,
+The strongest simple competitor is:
 
 [
-U
+\mu+\alpha_i+\beta_j.
 ]
 
-for uncertainty,
-
-and
+If:
 
 [
-N
+\gamma_{ij}
 ]
 
-for replication counts.
+adds no held-out predictive value, then the system has discovered source rankings and target difficulty, but not meaningful relational developmental structure.
 
-Do not collapse all three into one graph edge.
-
-### Directionality
-
-Measure concordance between
-
-[
-T
-]
-
-and
-
-[
-T^\top.
-]
-
-If transfer is nearly symmetric, the developmental-order interpretation weakens.
-
-Strong patterns such as
-
-[
-T_{AB}\gg T_{BA}
-]
-
-provide more direct evidence of directional developmental structure.
+This comparison should be treated as a headline result.
 
 ---
 
-# 14. Required Prediction Baselines
+# 25. Other Prespecified Prediction Baselines
 
-The developmental representation must outperform simple alternatives.
-
-Prespecify at least:
+Compare against:
 
 * global mean;
 * source mean;
 * target mean;
-* source + target additive model;
-* symmetric estimate
-
-[
-(T+T^\top)/2;
-]
-
+* additive source + target;
+* symmetric transfer estimate;
 * family size;
 * family frequency;
-* semantic embedding similarity;
+* semantic cosine similarity;
 * embedding-kernel regression.
 
-The central Stage II comparison becomes:
+### Claim 2b falsifier
 
-> **Does intervention-derived developmental structure predict held-out transfer better than semantic similarity and simple statistical baselines?**
-
-If not, the ontology-discovery claim should be weakened.
+If semantic/statistical baselines predict held-out transfer as well as or better than the intervention-derived developmental model, the developmental-ontology claim is weakened or rejected.
 
 ---
 
-# 15. Developmental Phenotypes
+# 26. Developmental Phenotype
 
-Do not represent family (D_i) only by its outgoing transfer row.
+A family must be characterized as both source and target.
 
 Define:
 
@@ -691,144 +907,125 @@ T_{*,i}
 ].
 ]
 
-This captures both:
-
-> What does learning (D_i) change?
-
-and
-
-> What changes the learning of (D_i)?
-
-If a factor model is used:
+For a low-rank model:
 
 [
 T\approx UV^\top,
 ]
 
-then a compact phenotype is:
+use:
 
 [
 \phi_i=[U_i,V_i].
 ]
 
+This captures:
+
+* what learning (D_i) changes;
+* what changes learning (D_i).
+
 ---
 
-# 16. Ontology Revision
+# 27. Ontology Revision
 
 Candidate operations:
 
 * retain;
 * merge;
 * split;
-* introduce a latent aggregate.
+* introduce latent aggregate.
 
-### Merge
+## Merge
 
-Families whose developmental phenotypes are redundant may be merged.
+Merge families with sufficiently similar developmental phenotypes when doing so does not degrade held-out predictive performance.
 
-### Split
+## Split
 
-A family may be split using information available to the discovery system, such as unsupervised embedding structure.
+Propose splits from discovery-visible structure only:
 
-The split is accepted only if it improves held-out intervention prediction enough to justify added complexity.
+* unsupervised embedding clusters;
+* statistical heterogeneity;
+* semantic proposal methods.
 
-### Complexity control
+Never use hidden generator labels for discovery.
 
-Use a fixed criterion, such as:
+## Acceptance
 
-* held-out (\Delta)RMSE threshold;
+Use a frozen validation protocol plus complexity penalty.
+
+Possible criteria:
+
+* prespecified (\Delta)RMSE improvement;
 * information criterion;
-* regularized validation objective.
+* regularized held-out objective.
 
-Avoid repeatedly trying ontology changes until one improves a test set.
+Search attempts should be recorded to prevent repeated test-set optimization.
 
 ---
 
-# 17. Held-Out Intervention Validation
+# 28. Held-Out Intervention Prediction
 
-Use several levels of generalization.
+Use:
 
-### Leave-one-pair-out
+## Leave-one-pair-out
 
-Hide individual
+## Leave-one-source-out
 
-[
-D_i\rightarrow D_j.
-]
+## Leave-one-target-out
 
-### Leave-one-target-out
+## Held-out-family evaluation
 
-Hide all
-
-[
-*\rightarrow D_j.
-]
-
-### Leave-one-source-out
-
-Hide all
-
-[
-D_i\rightarrow *.
-]
-
-### Held-out-family
-
-Withhold a complete family from ontology fitting.
-
-Metrics include:
+Metrics:
 
 * RMSE;
 * MAE;
 * rank correlation;
 * uncertainty calibration.
 
-This is the core system-identification criterion.
+### Claim 3 falsifier
+
+The developmental model fails if it does not beat prespecified baselines by the predefined margin on held-out interventions.
 
 ---
 
-# 18. Higher-Order Probe
+# 29. Higher-Order Probe
 
-Pairwise transfer assumes substantial additivity.
-
-Before compiling complex curricula, include at least one deliberately designed synergy test:
+Before assuming pairwise additivity is sufficient for curriculum compilation, test at least one interaction:
 
 [
 A+C\rightarrow B.
 ]
 
-Compare against:
+Compare with predictions from:
 
 [
 A\rightarrow B
 ]
 
-and
+and:
 
 [
 C\rightarrow B.
 ]
 
-If pairwise prediction fails substantially, the curriculum compiler must acknowledge interaction structure rather than treating the graph as additive.
+If strongly mispredicted, the pairwise compiler's additivity assumption is falsified.
+
+The compiler must then account for interaction terms or explicitly narrow its scope.
 
 ---
 
-# 19. Active Experiment Selection
+# 30. Active Experiment Selection
 
-Only activate this stage after held-out prediction is demonstrably useful.
+Only introduce active selection after the developmental predictor works.
 
 Version 1:
 
 [
-e^*
-===
-
-\arg\max_e U_e,
+e^*=
+\arg\max_e U_e.
 ]
 
-where (U_e) is predictive uncertainty.
-
-A budget-aware heuristic is:
+Budget-aware version:
 
 [
 e^*
@@ -836,7 +1033,7 @@ e^*
 
 \arg\max_e
 \frac{
-U_e \cdot I_e
+U_e I_e
 }{
 C_e
 },
@@ -844,48 +1041,42 @@ C_e
 
 where:
 
-* (I_e): estimated scientific importance;
-* (C_e): expected monetary or accelerator cost.
+* (U_e): predictive uncertainty;
+* (I_e): scientific importance;
+* (C_e): estimated compute cost.
 
-Batch selection should include diversity so that one wave does not contain many redundant interventions.
+Batch selection should avoid redundant experiments.
 
-A full Bayesian expected-information-gain system remains a later extension.
-
----
-
-# 20. Stage 6 — Curriculum Compilation
-
-Use a deliberately transparent compiler first.
-
-Strong positive transfer relationships may define coarse phases such as:
-
-[
-D_1+D_2
-]
-
-then
-
-[
-D_1+D_2+D_3+D_4
-]
-
-then
-
-[
-D_3+D_4+D_5
-]
-
-then full mixture.
-
-The compiler should avoid claiming optimality.
-
-It generates a curriculum predicted by the discovered developmental model.
+Full expected information gain is deferred.
 
 ---
 
-# 21. Stage 7 — Fresh-Model Validation
+# 31. Curriculum Compilation
 
-Train completely fresh models under:
+The first compiler should remain transparent.
+
+Input:
+
+* shrunk transfer model;
+* uncertainty;
+* developmental phenotype;
+* higher-order warnings.
+
+Output:
+
+[
+\pi_{\mathrm{discovered}}.
+]
+
+No optimality claim is made.
+
+The compiler produces a schedule predicted to be favorable under the identified developmental system.
+
+---
+
+# 32. Stage 7 — Fresh-Model Validation
+
+Train entirely fresh models under:
 
 1. discovered curriculum;
 2. **reversed discovered curriculum**;
@@ -893,33 +1084,11 @@ Train completely fresh models under:
 4. randomized schedule;
 5. semantic/manual baseline.
 
-The reversed curriculum is critical.
+No discovery checkpoint is reused.
 
-If both the discovered and reversed schedules outperform uniform equally, the apparent advantage may come from mixture allocation rather than developmental ordering.
+## Primary control metric
 
-### Target separation
-
-Distinguish:
-
-[
-\text{discovery evaluations}
-]
-
-from
-
-[
-\text{held-out intervention evaluations}
-]
-
-from
-
-[
-\text{curriculum target evaluations}.
-]
-
-### Primary control metric
-
-For target score (S) and threshold (\tau):
+Let:
 
 [
 C(\pi)
@@ -931,41 +1100,89 @@ t:S(\theta_t^\pi)\ge\tau
 }.
 ]
 
-If threshold is not reached by (T_{\max}), treat the observation as censored.
+If threshold is not reached by (T_{\max}), the run is censored.
 
 Report:
 
-* probability of reaching threshold;
+* probability of reaching (\tau);
 * threshold-time distribution;
 * AULC;
 * final score;
-* generalization;
-* retention.
+* retention;
+* generalization.
+
+### Claim 5 falsifiers
+
+Claim 5 fails if:
+
+* discovered does not beat uniform/random;
+* discovered and reversed perform equivalently.
+
+If both discovered and reversed beat uniform, the advantage may come from mixture allocation rather than order.
 
 ---
 
-# 22. Mechanistic Observation
+# 33. Validation Separation
 
-Mechanistic interpretability is supplementary rather than foundational.
+Maintain three distinct evaluation layers:
 
-At checkpoints collect selected:
+[
+\boxed{
+\text{discovery evaluations}
+}
+]
+
+[
+\boxed{
+\text{held-out intervention evaluations}
+}
+]
+
+[
+\boxed{
+\text{curriculum target evaluations}
+}
+]
+
+No target suite used to construct (T) should silently become the final curriculum benchmark.
+
+---
+
+# 34. Censoring Analysis
+
+Tokens-to-threshold requires explicit treatment of non-reaching runs.
+
+Do not report only a mean threshold time.
+
+Report jointly:
+
+* probability of reaching threshold;
+* threshold time among successful runs;
+* optionally survival-style curves.
+
+Threshold (\tau) should be prespecified and chosen so baseline runs are neither trivially successful nor almost always censored.
+
+---
+
+# 35. Mechanistic Measurements
+
+Mechanistic interpretability is supplementary.
+
+Potential measurements include:
 
 * hidden-state activations;
-* probe scores;
+* linear probe scores;
 * representation similarity;
-* feature activity;
-* attribution measurements;
-* targeted activation interventions where justified.
+* selected sparse features;
+* attribution;
+* activation patching;
+* targeted ablations.
 
-The first question is:
+Initial mechanistic question:
 
-> Does internal state improve prediction of future transfer?
+> Does internal representation state improve prediction of future transfer?
 
-A stronger later question is:
-
-> Does intervention on representation (R) causally alter acquisition of downstream behavior (B)?
-
-Do not infer
+Do not infer:
 
 [
 A\rightarrow R\rightarrow B
@@ -975,120 +1192,183 @@ from probe decodability alone.
 
 ---
 
-# 23. Influence-Based Baselines
+# 36. Influence-Based Baselines
 
-Compare expensive intervention measurements against cheaper data-influence approximations such as influence-function or datamodel-style proxies where practical.
+Where practical, compare full training interventions against cheaper influence approximations.
 
-This tests whether:
+These may serve as:
 
-[
-T_{ij}
-]
+* competitor methods;
+* prioritization heuristics;
+* amortization tools for (T).
 
-can be approximated cheaply enough to prioritize which full training interventions deserve actual execution.
-
-Such methods are competitors and possible amortization tools rather than replacements assumed in advance.
+They do not replace the intervention protocol unless validated.
 
 ---
 
-# 24. Compute and Cost as Scientific Variables
+# 37. Corpus A — Identifiable Benchmark
 
-Track for every experiment:
+The first multi-family corpus should contain hidden planted developmental structure.
 
-* tokens;
+Purposes:
+
+* validate system identification;
+* validate ontology revision;
+* validate directional recovery;
+* measure error against known latent structure.
+
+The discovery system must not see ground truth.
+
+---
+
+# 38. Corpus B — Blind Natural-Corpus Demonstration
+
+The paper should include a second, previously unseen heterogeneous natural-language corpus.
+
+The same frozen pipeline should perform:
+
+[
+X_B
+\rightarrow
+\mathcal P_0
+\rightarrow
+T
+\rightarrow
+M_{\mathrm{dev}}
+\rightarrow
+\mathcal P_1
+\rightarrow
+\pi.
+]
+
+No corpus-specific scientific logic should be introduced.
+
+Questions:
+
+1. Does the system autonomously propose usable families?
+2. Does developmental structure predict unseen transfer?
+3. Does it beat semantic and additive baselines?
+4. Is meaningful directionality present?
+5. Does ontology revision improve prediction?
+6. Does the derived curriculum improve fresh training?
+7. Does reversing it remove or weaken the advantage?
+
+---
+
+# 39. Gate J — Portability
+
+The strongest generic-corpus claim requires success on Corpus B.
+
+A portability claim is supported only if the frozen pipeline works without corpus-specific developmental coding.
+
+At minimum:
+
+[
+\text{developmental predictor}
+
+>
+
+\text{semantic/additive baselines}
+]
+
+on held-out intervention prediction by a prespecified margin.
+
+Stronger support also requires:
+
+[
+C(\pi_{\mathrm{discovered}})
+<
+C(\pi_{\mathrm{uniform}})
+]
+
+with the reverse control behaving consistently with the ordering hypothesis.
+
+If Corpus A succeeds and Corpus B fails, portability is not established.
+
+That negative result remains scientifically useful.
+
+---
+
+# 40. Compute and Cost
+
+Every run records:
+
+* tokens processed;
 * accelerator seconds;
 * dollar cost;
-* shared-prefix reuse;
+* checkpoint reuse;
 * storage;
-* failed/retried runs.
+* retry/failure status.
 
-Eventually experiment selection can optimize:
+Eventually active experiment selection may optimize:
 
 [
 \frac{
-\text{information gained}
+\text{expected information gain}
 }{
 \text{dollar}
 }.
 ]
 
-The scientific program should scale only when each stage justifies the next stage's compute.
+Each research stage must justify the next stage's compute.
 
 ---
 
-# 25. Stage Gates
+# 41. Scientific Gates
 
-Each stage receives quantitative exit criteria.
+## Gate A
 
-Example progression:
+Estimator calibration.
 
-### Gate A
+## Gate B
 
-Estimator calibration passes.
+Minimal adequate model selected.
 
-### Gate B
+## Gate C
 
-Smallest adequate model identified.
+Null calibration and powered seed count.
 
-### Gate C
+## Gate D
 
-Null noise calibrated and statistical power established.
+Persistent W/P differentiation after washout.
 
-### Gate D
+## Gate E
 
-W/P produces persistent, replicated differentiation after common washout.
+Adjacent-scale replication.
 
-### Gate E
+## Gate F
 
-Effect reproduces at adjacent model scale.
+Directional transfer signal exceeds null and simple baselines.
 
-### Gate F
+## Gate G
 
-Transfer matrix contains directional signal exceeding semantic/statistical baselines.
+Held-out intervention prediction succeeds.
 
-### Gate G
-
-Developmental model predicts held-out interventions.
-
-### Gate H
+## Gate H
 
 Ontology revision improves predictive compression.
 
-### Gate I
+## Gate I
 
-Derived curriculum beats baselines and reversed-order control in fresh models.
+Derived curriculum beats baselines and reverse.
 
-A failed gate is an interpretable negative result, not a reason to silently alter the experiment.
+## Gate J
 
----
+Pipeline transfers unchanged to unseen natural corpus.
 
-# 26. Required Figures
-
-1. **Discovery-to-control overview**
-2. **W/P branching and washout design**
-3. **Capacity and learning-window calibration**
-4. **Null distribution and power calibration**
-5. **W/P learning trajectories**
-6. **Diagnostic conflict differentiation**
-7. **Transfer matrix with uncertainty**
-8. **Directional asymmetry / (T) vs. (T^\top)**
-9. **Developmental interaction map**
-10. **Held-out prediction versus semantic/statistical baselines**
-11. **Fresh curriculum validation including reversed curriculum**
-
-An appendix may contain mechanistic trajectory visualizations.
+Negative outcomes at any gate are acceptable results.
 
 ---
 
-# 27. Interactive Research Artifact
+# 42. Interactive Research Artifact
 
-The public artifact should make the developmental process navigable.
-
-One page should link:
+The project should include one single-page scientific interface linking:
 
 [
 \boxed{
-\text{history}
+\text{corpus}
++
+\text{developmental history}
 +
 \text{stimulus}
 +
@@ -1098,54 +1378,89 @@ One page should link:
 }
 ]
 
-### Developmental map
+## Corpus view
 
-Click nodes and edges to inspect:
+Show:
 
-* measured transfer;
+* corpus size;
+* provisional families;
+* representative documents;
+* semantic descriptions;
+* family evolution.
+
+## Developmental map
+
+Nodes represent developmental families.
+
+Edges show measured transfer with:
+
+* effect estimate;
 * uncertainty;
-* controls;
-* seed count;
+* replication count;
 * source/target exposure;
-* underlying experimental branches.
+* actual paired intervention.
 
-### Model interrogation
+## Model interrogation
 
-Support:
+Allow:
 
 * aligned;
 * conflict;
 * W-only;
 * P-only;
 * counter-evidence;
-* custom synthetic examples.
+* custom input.
 
-Allow comparison across:
+Compare:
 
 * curricula;
 * checkpoints;
 * model sizes.
 
-### Internal-state view
+## Internal state
 
-Use restrained views such as:
+Use restrained scientific views:
 
-* layer × signal heatmaps;
-* probe values;
+* layer × signal heatmap;
+* probe responses;
 * representation similarity;
-* selected feature activations.
+* selected activation summaries.
 
-### Developmental scrubber
+## Timeline
 
-Allow users to move through checkpoints and observe when behaviors and representations emerge.
+A checkpoint scrubber lets users inspect when behaviors and representations emerge.
 
-The polished bespoke interface is deferred until the scientific result is established, but a minimal explorer should be developed early enough to validate the artifact contract.
+The polished UI is built only after the scientific result is established.
+
+A minimal explorer may be created earlier to validate artifact contracts.
 
 ---
 
-# 28. Final Scientific Claim Structure
+# 43. Lessons From the Predecessor Project
 
-The project should only escalate its claims as evidence accumulates.
+The abandoned predecessor reinforces several design rules.
+
+## Preserve
+
+* staged scientific gates;
+* provenance-first results;
+* competence before interpretation;
+* cheap tests before expensive training.
+
+## Avoid
+
+* runtime artifacts coupled to Git paths;
+* proliferating shell/orchestration scripts;
+* premature implementation of future conceptual abstractions;
+* visually ambitious interfaces before measurements stabilize;
+* normalized metrics whose denominator behavior has not been audited;
+* theorizing from anomalous individual seeds.
+
+These lessons support greater simplicity, not greater architectural complexity.
+
+---
+
+# 44. Final Claim Hierarchy
 
 ### Claim 1
 
@@ -1153,23 +1468,29 @@ Training order can produce persistent developmental differences.
 
 ### Claim 2
 
-Pairwise intervention effects contain directional structure not reducible to semantic similarity.
+Controlled interventions reveal directional transfer beyond noise.
 
 ### Claim 3
 
-A model fitted to those effects predicts interventions it has not observed.
+That structure is not reducible to semantic similarity or source/target difficulty.
 
 ### Claim 4
 
-Developmental units can be revised according to predictive consequences rather than semantic labels alone.
+The fitted developmental model predicts unseen interventions.
 
 ### Claim 5
 
-A curriculum derived from the discovered system improves fresh-model sample efficiency and outperforms its reversed ordering.
+Corpus units can be revised based on developmental consequence.
 
-The framework remains valuable even if the project stops at an earlier claim.
+### Claim 6
 
-The strongest form of the program is:
+A curriculum derived from that model improves fresh-model learning and outperforms its reverse.
+
+### Claim 7
+
+The complete pipeline can ingest and organize a previously unseen natural text corpus without corpus-specific scientific logic.
+
+The strongest contribution is therefore:
 
 [
 \boxed{
@@ -1177,6 +1498,18 @@ The strongest form of the program is:
 \rightarrow
 \text{system identification}
 \rightarrow
+\text{ontology revision}
+\rightarrow
 \text{control}
+\rightarrow
+\text{portability}
+}
+]
+
+The central empirical criterion remains:
+
+[
+\boxed{
+\text{Can a model of development predict what happens when training history is changed?}
 }
 ]
