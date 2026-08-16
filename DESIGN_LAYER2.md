@@ -384,3 +384,58 @@ F5's answer marginal deviates 0.096 from uniform, more than the other three,
 because its chain index derives from a value that can itself be selected. Not
 tuned today. It becomes blocking only if it produces a concrete transfer or
 evaluation invalidator, in which case F5's rows and columns are suspect.
+
+
+## 13. Transfer pilot result (viability pass)
+
+36 bundled units, 72 trajectories, all 12 directed pairs x 3 seeds, 776s.
+A second VM was blocked by `CPUS_ALL_REGIONS` quota (limit 32; the running
+worker holds 22), so the wave ran in two waves at concurrency 22 on one
+machine rather than shrinking the experiment.
+
+### Measurability
+
+| quantity | value |
+|---|---|
+| between-pair spread of mean `T_aulc` | 0.478 |
+| median within-pair seed sd | 0.109 |
+| signal-to-noise | **4.37** |
+
+Effects are reproducible across seeds. **Exception: F6->F5 has a within-pair
+sd of 0.897**, eight times the median, so that cell is not reproducible and
+its row should be treated as suspect.
+
+Most pairs show **negative** transfer — prior exposure to another family
+slows target acquisition — strongest at F1->F5 (-1.51). Only F5->F4 (+0.20)
+and F6->F1 (+0.12) are positive.
+
+The `t=0` head start and the rate-only component **frequently carry opposite
+signs**: F4->F1 has head start -2.31 against rate-only +2.06. A single AULC
+number would have hidden two opposing mechanisms, which is precisely why the
+`t=0` evaluation is mandatory.
+
+### Held-out prediction, pair as split unit
+
+| model | held-out RMSE | MAE |
+|---|---|---|
+| global mean | 0.4987 | 0.3745 |
+| additive source + target | 0.6743 | 0.5984 |
+| **additive + shared-primitive features** | **0.2711** | **0.2354** |
+| pair-ID interaction | in-sample only, descriptive |
+
+Structural features beat the additive baseline by **59.8% RMSE**. The
+additive model is *worse than the global mean*, which is itself informative:
+source and target main effects alone do not explain this matrix, so target
+difficulty is not the whole story.
+
+### What this does and does not establish
+
+It establishes **viability**: paired transfer is measurable at this scale,
+reproducible across seeds, and predictable on held-out pairs by a model whose
+features exist for unseen pairs.
+
+It does **not** establish primitive-level developmental structure. Only 2 of
+12 directed pairs are primitive-disjoint, so the structural features rest on
+almost no contrast and could reflect those two pairs rather than a general
+relationship. A broader substrate with deliberately primitive-disjoint
+families is required before any such claim, and that is rigor-pass work.
