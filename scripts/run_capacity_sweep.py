@@ -202,6 +202,7 @@ def sweep(grid, out: Path) -> None:
     for settings in combos:
         task, model_config, train_config, label = _configure(settings)
         steps = settings["steps_per_phase"]
+        config_started = time.time()
         curve_w, gen_w, _ = run_sequence(("W", "P"), task, model_config, train_config, steps, solo_only=True)
         curve_p, gen_p, _ = run_sequence(("P", "W"), task, model_config, train_config, steps, solo_only=True)
         params = count_params(init_state(model_config, train_config, jr.key(0)).model)
@@ -213,6 +214,7 @@ def sweep(grid, out: Path) -> None:
             "window_w": learning_window(OFFSETS, curve_w),
             "window_p": learning_window(OFFSETS, curve_p),
         }
+        record["seconds_b1"] = time.time() - config_started
         provisional = _candidate(record, retention=1.0)
         record["solo_failures"] = tuple(
             f for f in provisional.failures(CRITERIA) if not f.startswith("retention")
@@ -221,6 +223,7 @@ def sweep(grid, out: Path) -> None:
         print(f"{label:30s} p={params:>7,} A_W={record['acc_w']:.2f} A_P={record['acc_p']:.2f} "
               f"gen={record['generalization_worst']:.2f} "
               f"R_W={_fmt(record['window_w'])} R_P={_fmt(record['window_p'])} "
+              f"{record['seconds_b1']:.0f}s "
               f"{'ok' if not record['solo_failures'] else 'fail: ' + ', '.join(record['solo_failures'])}")
 
     survivors = [r for r in stage1 if not r["solo_failures"]]
@@ -232,7 +235,9 @@ def sweep(grid, out: Path) -> None:
     writer = ArtifactWriter(out)
     for record in stage1:
         retention = float("nan")
+        record["seconds_b2"] = 0.0
         if not record["solo_failures"]:
+            config_started = time.time()
             steps = record["settings"]["steps_per_phase"]
             args = (record["task"], record["model_config"], record["train_config"], steps)
             _, _, final_wp = run_sequence(("W", "P"), *args, solo_only=False)
@@ -241,7 +246,9 @@ def sweep(grid, out: Path) -> None:
                 final_wp["w_only"].accuracy, final_wp["p_only"].accuracy,
                 final_pw["w_only"].accuracy, final_pw["p_only"].accuracy,
             )
-            print(f"{record['label']:30s} retention={retention:.3f}")
+            record["seconds_b2"] = time.time() - config_started
+            print(f"{record['label']:30s} retention={retention:.3f} "
+                  f"{record['seconds_b2']:.0f}s")
 
         candidate = _candidate(record, retention=0.0 if retention != retention else retention)
         candidates.append(candidate)
@@ -257,6 +264,8 @@ def sweep(grid, out: Path) -> None:
             "window_w_censored": record["window_w"].censored,
             "window_p_censored": record["window_p"].censored,
             "reached_stage_b2": not record["solo_failures"],
+            "seconds_b1": record["seconds_b1"], "seconds_b2": record["seconds_b2"],
+            "seconds_total": record["seconds_b1"] + record["seconds_b2"],
             "adequate": not failures, "failures": "; ".join(failures),
             "code_version": version, "recorded_at": utc_now(),
         })
