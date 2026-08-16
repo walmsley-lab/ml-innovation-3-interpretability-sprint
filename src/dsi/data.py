@@ -9,7 +9,23 @@ history rather than of what was learnable.
 
 Each example is a fixed-length sequence
 
-    [BOS, CUE, d1 ... dn, SEP, ANSWER]
+    [BOS, MODE, CUE, d1 ... dn, SEP, ANSWER]
+
+``MODE`` states which strategy is requested, and is the only explicit task
+identifier in the input. Without it the task is unidentifiable: see
+research.md 8b. The original construction presented byte-identical visible
+inputs for the two families and differed only in the answer, which capped
+``min(A_W, A_P)`` at ``(1 + 1/n_classes)/2 = 0.625`` for any deterministic
+predictor, below the prespecified retention threshold of 0.80. No model
+capacity could have satisfied it.
+
+``MODE`` separates three things the original conflated:
+
+    USE_W     execute the rule.     Trains and measures W capability.
+    USE_P     execute the cue map.  Trains and measures P capability.
+    NEUTRAL   nothing requested.    Aligned training when W = P; the
+                                    behavioural preference measurement when
+                                    W != P.
 
 ``W`` is the sum of the digits modulo ``n_classes``. ``P`` is a fixed
 many-to-one map from ``n_cues`` cue tokens onto the same answer classes. Both
@@ -48,7 +64,10 @@ __all__ = [
 ]
 
 PAD, BOS, SEP = 0, 1, 2
-_N_SPECIAL = 3
+USE_W, USE_P, NEUTRAL = 3, 4, 5
+_N_SPECIAL = 6
+
+MODES = {"USE_W": USE_W, "USE_P": USE_P, "NEUTRAL": NEUTRAL}
 
 
 SPLITS = ("train", "heldout")
@@ -131,8 +150,8 @@ class TaskConfig:
 
     @property
     def seq_len(self) -> int:
-        """[BOS, CUE, digits..., SEP, ANSWER]"""
-        return 4 + self.n_digits
+        """[BOS, MODE, CUE, digits..., SEP, ANSWER]"""
+        return 5 + self.n_digits
 
     @property
     def answer_position(self) -> int:
@@ -150,10 +169,22 @@ class TaskConfig:
 
 
 # Training families: which source is informative in the data itself.
-FAMILIES = ("W", "P", "MIX")
+# Training families. Explicit families carry a mode token and are what Gate B
+# trains on; NEUTRAL_ALIGNED enters only after corrected Gate B succeeds.
+FAMILIES = ("W_EXPLICIT", "P_EXPLICIT", "NEUTRAL_ALIGNED")
 
-# Evaluation conditions: the diagnostic suite of research plan Stage 3.
-CONDITIONS = ("aligned", "w_only", "p_only", "conflict")
+# Evaluation conditions. W_COMPETENCE and P_COMPETENCE ask whether the same
+# checkpoint can execute each strategy on request. NEUTRAL_CONFLICT is the
+# behavioural preference measurement and is reserved for after Gate B.
+CONDITIONS = ("W_COMPETENCE", "P_COMPETENCE", "NEUTRAL_ALIGNED_EVAL", "NEUTRAL_CONFLICT")
+
+GATE_B_CONDITIONS = ("W_COMPETENCE", "P_COMPETENCE")
+"""What corrected Gate B is allowed to look at.
+
+Restricting the gate to the explicit modes makes it structurally impossible
+to select a regime on the preference or order effect the project exists to
+measure.
+"""
 
 
 Family = str
@@ -236,11 +267,13 @@ def digit_table(config: TaskConfig, split: str) -> jax.Array:
     return jnp.asarray(digits[np.sort(rows)], dtype=jnp.int32)
 
 
-def _assemble(config: TaskConfig, cue: jax.Array, digits: jax.Array, answer: jax.Array) -> jax.Array:
+def _assemble(config: TaskConfig, mode: int, cue: jax.Array,
+              digits: jax.Array, answer: jax.Array) -> jax.Array:
     batch = cue.shape[0]
     return jnp.concatenate(
         [
             jnp.full((batch, 1), BOS, dtype=jnp.int32),
+            jnp.full((batch, 1), mode, dtype=jnp.int32),
             (config.cue_base + cue)[:, None].astype(jnp.int32),
             (config.digit_base + digits).astype(jnp.int32),
             jnp.full((batch, 1), SEP, dtype=jnp.int32),
@@ -266,13 +299,13 @@ def sample_batch(
             to digit combinations never trained on.
         kind: One of :data:`FAMILIES` or :data:`CONDITIONS`.
 
-            ``W``         rule informative, cue uniform random
-            ``P``         cue informative, rule uniform random
-            ``MIX``       both informative and agreeing
-            ``aligned``   as ``MIX``; the ordinary case W(x) = P(x)
-            ``w_only``    clean-rule diagnostic: cue uninformative
-            ``p_only``    cue-isolation diagnostic: rule uninformative
-            ``conflict``  W(x) != P(x); neither answer is privileged
+            ``W_EXPLICIT``           MODE=USE_W, answer is the rule
+            ``P_EXPLICIT``           MODE=USE_P, answer is the cue map
+            ``NEUTRAL_ALIGNED``      MODE=NEUTRAL, W(x) = P(cue)
+            ``W_COMPETENCE``         evaluation counterpart of W_EXPLICIT
+            ``P_COMPETENCE``         evaluation counterpart of P_EXPLICIT
+            ``NEUTRAL_ALIGNED_EVAL`` evaluation counterpart of the aligned family
+            ``NEUTRAL_CONFLICT``     MODE=NEUTRAL, W(x) != P(cue); preference only
     """
     if batch_size < 1:
         raise ValueError(f"batch_size must be positive, got {batch_size}")
@@ -287,34 +320,45 @@ def sample_batch(
     k_class, k_slot = jr.split(k_cue)
     slot = jr.randint(k_slot, (batch_size,), 0, config.cues_per_class)
 
-    if kind in ("W", "w_only"):
-        # The cue is present but uninformative: its class is independent of w.
-        cue_class = jr.randint(k_class, (batch_size,), 0, config.n_classes)
-        cue = cues[cue_class, slot]
+    # The cue class is drawn identically in both explicit families, and
+    # independently of the rule, so the content tokens are distribution
+    # matched and MODE is the only explicit task identifier.
+    independent_cue_class = jr.randint(k_class, (batch_size,), 0, config.n_classes)
+
+    if kind in ("W_EXPLICIT", "W_COMPETENCE"):
+        mode = USE_W
+        cue_class = independent_cue_class
         answer = w
-    elif kind in ("P", "p_only"):
-        cue_class = jr.randint(k_class, (batch_size,), 0, config.n_classes)
-        cue = cues[cue_class, slot]
+    elif kind in ("P_EXPLICIT", "P_COMPETENCE"):
+        mode = USE_P
+        cue_class = independent_cue_class
         answer = cue_class
-    elif kind in ("MIX", "aligned"):
+    elif kind in ("NEUTRAL_ALIGNED", "NEUTRAL_ALIGNED_EVAL"):
+        # Ordinary aligned training: W(x) = P(cue), so neither strategy is
+        # privileged and no mode is requested.
+        mode = NEUTRAL
         cue_class = w
-        cue = cues[cue_class, slot]
         answer = w
-    elif kind == "conflict":
-        # Offset by 1..n_classes-1 so the cue class never coincides with the rule.
+    elif kind == "NEUTRAL_CONFLICT":
+        # Offset by 1..n_classes-1 so the cue class never coincides with the
+        # rule. Reserved for the behavioural preference measurement; never
+        # trained on, and not evaluated at Gate B.
+        mode = NEUTRAL
         offset = 1 + jr.randint(k_class, (batch_size,), 0, config.n_classes - 1)
         cue_class = (w + offset) % config.n_classes
-        cue = cues[cue_class, slot]
-        # The answer token written into the sequence is never scored in this
-        # condition; both w_answer and p_answer are read out instead.
+        # The answer token written here is never scored: both w_answer and
+        # p_answer are read out instead.
         answer = w
     else:
         raise ValueError(
             f"unknown kind {kind!r}; expected one of {FAMILIES + CONDITIONS}"
         )
 
+    cue = cues[cue_class, slot]
+
     batch = Batch()
-    batch["tokens"] = _assemble(config, cue, digits, answer)
+    batch["tokens"] = _assemble(config, mode, cue, digits, answer)
+    batch["mode"] = jnp.full((batch_size,), mode, dtype=jnp.int32)
     batch["w_answer"] = w.astype(jnp.int32)
     batch["p_answer"] = cue_class.astype(jnp.int32)
     return batch

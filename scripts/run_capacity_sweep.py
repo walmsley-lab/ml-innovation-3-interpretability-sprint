@@ -63,7 +63,7 @@ from dsi.calibrate import (
     select_regime,
     worst_case_over_seeds,
 )
-from dsi.data import TaskConfig
+from dsi.data import GATE_B_CONDITIONS, TaskConfig
 from dsi.eval import evaluate
 from dsi.model import ModelConfig, count_params
 from dsi.rng import run_keys
@@ -91,7 +91,7 @@ SCREEN_SEED = CALIBRATION_SEEDS[0]
 
 OFFSETS = tuple(round(0.1 * i, 1) for i in range(11))
 EVAL_BATCH = 256
-SWEEP_CONDITIONS = ("w_only", "p_only", "aligned")  # note: no "conflict"
+SWEEP_CONDITIONS = GATE_B_CONDITIONS  # explicit modes only; no NEUTRAL_CONFLICT
 
 # Narrow neutral grid, eight regimes. Task difficulty and phase duration are
 # fixed at the values the first sweep showed adequate for solo competence,
@@ -151,7 +151,7 @@ def _spec(order, task, model_config, settings, seed: int, solo: bool) -> RunSpec
         (PhaseSpec(first, tokens, "target"),) if solo else
         (PhaseSpec(first, tokens, "source"),
          PhaseSpec(second, tokens, "target"),
-         PhaseSpec("MIX", tokens, "washout"))
+         PhaseSpec("NEUTRAL_ALIGNED", tokens, "washout"))
     )
     return RunSpec(
         parent_id=None, phases=phases,
@@ -168,7 +168,7 @@ def run_sequence(order, task, model_config, train_config, settings, seed, *, sol
     keys = run_keys(spec.seed_family, n_phases=spec.n_phases, arm=spec.arm,
                     n_eval_points=spec.n_eval_points(0))
     state = init_state(model_config, train_config, keys["init"])
-    own = "w_only" if order[0] == "W" else "p_only"
+    own = "W_COMPETENCE" if order[0].startswith("W") else "P_COMPETENCE"
     curve, solo_heldout, per_phase = [], float("nan"), {}
 
     for index, phase in enumerate(spec.phases):
@@ -223,9 +223,9 @@ def execute_unit(settings, seed: int, stage: str, out: Path) -> None:
                    for k, v in settings.items()}}
 
     if stage == "b1":
-        curve_w, gen_w, _ = run_sequence(("W", "P"), task, model_config,
+        curve_w, gen_w, _ = run_sequence(("W_EXPLICIT", "P_EXPLICIT"), task, model_config,
                                          train_config, settings, seed, solo=True)
-        curve_p, gen_p, _ = run_sequence(("P", "W"), task, model_config,
+        curve_p, gen_p, _ = run_sequence(("P_EXPLICIT", "W_EXPLICIT"), task, model_config,
                                          train_config, settings, seed, solo=True)
         window_w, window_p = learning_window(OFFSETS, curve_w), learning_window(OFFSETS, curve_p)
         payload.update({
@@ -236,18 +236,18 @@ def execute_unit(settings, seed: int, stage: str, out: Path) -> None:
             "window_p": window_p.width, "window_p_censored": window_p.censored,
         })
     elif stage == "b2":
-        _, _, wp = run_sequence(("W", "P"), task, model_config, train_config,
+        _, _, wp = run_sequence(("W_EXPLICIT", "P_EXPLICIT"), task, model_config, train_config,
                                 settings, seed, solo=False)
-        _, _, pw = run_sequence(("P", "W"), task, model_config, train_config,
+        _, _, pw = run_sequence(("P_EXPLICIT", "W_EXPLICIT"), task, model_config, train_config,
                                 settings, seed, solo=False)
         # Both sides of the washout. Adequacy uses the pre-washout figure.
         payload.update({
             "retention_pre_washout": min(
-                wp["target"]["w_only"].accuracy, wp["target"]["p_only"].accuracy,
-                pw["target"]["w_only"].accuracy, pw["target"]["p_only"].accuracy),
+                wp["target"]["W_COMPETENCE"].accuracy, wp["target"]["P_COMPETENCE"].accuracy,
+                pw["target"]["W_COMPETENCE"].accuracy, pw["target"]["P_COMPETENCE"].accuracy),
             "retention_post_washout": min(
-                wp["washout"]["w_only"].accuracy, wp["washout"]["p_only"].accuracy,
-                pw["washout"]["w_only"].accuracy, pw["washout"]["p_only"].accuracy),
+                wp["washout"]["W_COMPETENCE"].accuracy, wp["washout"]["P_COMPETENCE"].accuracy,
+                pw["washout"]["W_COMPETENCE"].accuracy, pw["washout"]["P_COMPETENCE"].accuracy),
         })
     else:
         raise ValueError(f"unknown stage {stage!r}")

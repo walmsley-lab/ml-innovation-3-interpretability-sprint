@@ -17,7 +17,7 @@ import jax
 import jax.numpy as jnp
 import jax.random as jr
 
-from dsi.data import CONDITIONS, TaskConfig, sample_batch
+from dsi.data import CONDITIONS, GATE_B_CONDITIONS, TaskConfig, sample_batch
 from dsi.model import Transformer
 
 __all__ = ["ConditionResult", "evaluate_condition", "evaluate"]
@@ -27,9 +27,9 @@ __all__ = ["ConditionResult", "evaluate_condition", "evaluate"]
 class ConditionResult:
     """Answer-position metrics for one diagnostic condition.
 
-    ``follows_w`` and ``follows_p`` are only meaningful under ``conflict``,
-    where the two sources disagree and the question is which one the model
-    obeys. Elsewhere they are recorded but coincide.
+    ``follows_w`` and ``follows_p`` are only meaningful under
+    ``NEUTRAL_CONFLICT``, where the two sources disagree and the question is
+    which one the model produces. Elsewhere they are recorded but coincide.
     """
 
     condition: str
@@ -69,7 +69,7 @@ def evaluate_condition(
     follows_w = jnp.mean(predicted == w_token)
     follows_p = jnp.mean(predicted == p_token)
 
-    if condition == "conflict":
+    if condition == "NEUTRAL_CONFLICT":
         # No answer is correct under both sources, so "accuracy" is not
         # defined. Reporting the W-following rate here would quietly assert
         # that the rule is the right answer, which is the very thing the
@@ -77,8 +77,11 @@ def evaluate_condition(
         loss = -jnp.mean(jnp.logaddexp(lp_w, lp_p))
         accuracy = jnp.array(jnp.nan)
     else:
+        # Under USE_P the cue map determines the answer; otherwise the rule
+        # does. Both are read from the batch rather than recomputed.
         target = config.answer_base + jnp.where(
-            jnp.asarray(condition in ("p_only", "P")), batch["p_answer"], batch["w_answer"]
+            jnp.asarray(condition in ("P_COMPETENCE", "P_EXPLICIT")),
+            batch["p_answer"], batch["w_answer"],
         )
         loss = -jnp.mean(jnp.take_along_axis(logprobs, target[:, None], axis=1))
         accuracy = jnp.mean(predicted == target)
@@ -100,7 +103,7 @@ def evaluate(
     key: jax.Array,
     *,
     batch_size: int = 512,
-    conditions: tuple[str, ...] = CONDITIONS,
+    conditions: tuple[str, ...] = GATE_B_CONDITIONS,
     split: str = "train",
 ) -> dict[str, ConditionResult]:
     """Run the diagnostic suite.
@@ -108,10 +111,10 @@ def evaluate(
     Each condition draws from its own split of the evaluation key, so adding
     or reordering conditions does not change the examples the others see.
 
-    ``conditions`` is a parameter rather than a constant so that a caller can
-    decline to measure something. The Gate B sweep uses this to omit
-    ``conflict`` entirely, which makes selecting a regime on order-effect
-    magnitude structurally impossible rather than merely discouraged.
+    ``conditions`` defaults to :data:`GATE_B_CONDITIONS`, the two explicit
+    modes. ``NEUTRAL_CONFLICT`` must be asked for by name, so measuring the
+    preference effect is always a deliberate act and can never happen by
+    default inside a calibration routine.
     """
     unknown = set(conditions) - set(CONDITIONS)
     if unknown:

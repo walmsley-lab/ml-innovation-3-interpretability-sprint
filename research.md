@@ -392,6 +392,137 @@ Competence failure is an **invalidator**, not a negative result.
 
 ---
 
+# 8b. Invalidated Task Construction, and the Capability/Preference Separation
+
+The first implementation of the W/P task was **unidentifiable**, and the
+error was found only after Gate B had failed against it. The finding is
+recorded here rather than quietly corrected, because the sequence matters:
+the gate exposed an impossible criterion rather than being relaxed after the
+outcome was seen.
+
+## The defect
+
+In that construction the training families ``W`` and ``P`` presented
+**identically distributed model-visible inputs**. Digits were drawn from the
+same table, the cue class was independently uniform in both, and the model
+was never told which family an example came from. Only the target-generating
+function changed, from (W(x)) to (P(x)).
+
+Verified empirically: drawing both families from the same RNG key produced
+byte-identical visible inputs, differing only in the answer token.
+
+## The consequence
+
+Let (f) be any deterministic predictor of the answer from the visible input.
+On inputs where (W(x)\neq P(x)) at most one of the two conditions can be
+scored correct, and only where (W(x)=P(x)) can both be. With (K) balanced,
+independent answer classes:
+
+[
+A_W+A_P
+\le
+1+\Pr[W=P]
+=
+1+\frac{1}{K},
+]
+
+and therefore
+
+[
+\min(A_W,A_P)\le\frac{1}{2}\left(1+\frac{1}{K}\right).
+]
+
+At (K=4) this is (\min(A_W,A_P)\le 0.625), against a prespecified
+(\tau_{\mathrm{retention}}=0.80). **Simultaneous W/P behavioural competence
+was impossible at any model capacity, learning rate, or training duration.**
+Every capacity sweep run against it was measuring an unsatisfiable criterion.
+
+This also explains the diagnostic results obtained before the defect was
+identified: retention pinned near chance at every scale, and a strongly
+negative W-vs-P gradient cosine under answer-only loss, because the two
+objectives demand *different outputs on the same inputs*.
+
+The threshold is **not** lowered in response. An impossible criterion is
+repaired by making the task well-posed, not by moving the bar to whatever the
+broken task could reach.
+
+## The separation the construction was missing
+
+Three things were conflated that must be measured separately.
+
+**Capability.** Can this checkpoint execute (W)? Can it execute (P)? These
+are questions about what the model retains, and answering them requires the
+request to be part of the input.
+
+**Preference.** When the input does not specify which strategy to apply, and
+the two disagree, which does the model produce? This is a behavioural default.
+
+**History.** Which training order produced that capability profile and that
+default.
+
+The invalidated construction tried to read capability off a stimulus that
+also had to carry preference, which is why it could measure neither.
+
+## The corrected construction
+
+An explicit mode token makes the request part of the input:
+
+* ``USE_W`` — execute the rule; used for W training and W competence;
+* ``USE_P`` — execute the cue map; used for P training and P competence;
+* ``NEUTRAL`` — no strategy requested.
+
+``NEUTRAL`` with (W=P) is ordinary aligned training and privileges neither
+strategy. ``NEUTRAL`` with (W\neq P) is reserved exclusively for the
+preference measurement.
+
+The estimands become:
+
+[
+A_W=\Pr[\text{correct}\mid \texttt{USE\_W}],
+\qquad
+A_P=\Pr[\text{correct}\mid \texttt{USE\_P}],
+]
+
+both evaluated on the **same checkpoint**, and
+
+[
+\mathrm{Pref}=\Pr[\text{answer}=W(x)\mid \texttt{NEUTRAL},\,W\neq P].
+]
+
+Under this construction an oracle that reads the mode achieves (A_W=A_P=1),
+so the competence gates are jointly satisfiable and the (0.625) ceiling is
+gone. Competence and preference are now separately identified: the mode token
+is the only explicit task identifier, and the content tokens remain
+distribution-matched across the two explicit families.
+
+## Gate B does not see the phenomenon
+
+Gate B is confined to capability coexistence. It trains and evaluates only
+the explicit modes:
+
+[
+\texttt{W\_EXPLICIT}\rightarrow\texttt{P\_EXPLICIT}
+\quad\text{and}\quad
+\texttt{P\_EXPLICIT}\rightarrow\texttt{W\_EXPLICIT},
+]
+
+asking whether one checkpoint retains both capabilities in both orders. The
+neutral conflict condition is not generated, not trained on, and not
+evaluated at this gate, so no regime can be selected on the preference or
+order effect that the project exists to measure. The aligned neutral tail
+enters only after corrected Gate B succeeds.
+
+## Interpretation limit
+
+The neutral conflict measurement is, initially, a **behavioural default**
+only. Observing that a model answers with (W) under ``NEUTRAL`` does not
+establish that it executed the W computation; it may have learned a third
+solution that coincides with (W) on these inputs. Whether neutral computation
+resembles the W route, the P route, or neither is a separate mechanistic
+question, and is not settled by the behavioural measurement.
+
+---
+
 # 9. Diagnostic Evaluations
 
 ## Clean-rule evaluation

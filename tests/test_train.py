@@ -16,7 +16,7 @@ import numpy as np
 import pytest
 
 from dsi.artifacts import ArtifactWriter, code_version
-from dsi.data import CONDITIONS, TaskConfig, sample_batch
+from dsi.data import CONDITIONS, GATE_B_CONDITIONS, TaskConfig, sample_batch
 from dsi.eval import evaluate
 from dsi.model import ModelConfig, count_params, init_model
 from dsi.rng import run_keys
@@ -40,13 +40,13 @@ def _phase(family: str, steps: int, role: str = "target") -> PhaseSpec:
 
 
 def test_rule_and_cue_are_independent_in_the_isolating_conditions():
-    """The cue-isolation condition must carry exactly zero rule signal.
+    """The P competence condition must carry exactly zero rule signal.
 
     If digit residues were not uniform, the digit sum would predict the
     answer slightly even under p_only, and that leak would surface later as
     transfer that is really an artifact of the generator.
     """
-    batch = sample_batch(jr.key(0), "p_only", TASK, 40_000)
+    batch = sample_batch(jr.key(0), "P_COMPETENCE", TASK, 40_000)
     w, p = np.asarray(batch["w_answer"]), np.asarray(batch["p_answer"])
     joint = np.histogram2d(w, p, bins=[TASK.n_classes, TASK.n_classes])[0]
     expected = joint.sum(0)[None, :] * joint.sum(1)[:, None] / joint.sum()
@@ -55,12 +55,12 @@ def test_rule_and_cue_are_independent_in_the_isolating_conditions():
 
 
 def test_conflict_examples_never_agree():
-    batch = sample_batch(jr.key(1), "conflict", TASK, 4096)
+    batch = sample_batch(jr.key(1), "NEUTRAL_CONFLICT", TASK, 4096)
     assert not bool(jnp.any(batch["w_answer"] == batch["p_answer"]))
 
 
 def test_aligned_examples_always_agree():
-    batch = sample_batch(jr.key(2), "aligned", TASK, 4096)
+    batch = sample_batch(jr.key(2), "NEUTRAL_ALIGNED", TASK, 4096)
     assert bool(jnp.all(batch["w_answer"] == batch["p_answer"]))
 
 
@@ -74,13 +74,13 @@ def test_digit_residues_are_exactly_uniform_by_construction():
 
 
 def test_phase_steps_derive_from_token_budget():
-    assert phase_steps(_phase("W", 10), TASK, TRAIN) == 10
+    assert phase_steps(_phase("W_EXPLICIT", 10), TASK, TRAIN) == 10
 
 
 def test_phase_too_small_for_a_step_is_an_error_not_a_skip():
     """A silently skipped phase would still look like a valid arm."""
     with pytest.raises(ValueError, match="at least one step"):
-        phase_steps(PhaseSpec("W", 1, "target"), TASK, TRAIN)
+        phase_steps(PhaseSpec("W_EXPLICIT", 1, "target"), TASK, TRAIN)
 
 
 def test_offset_zero_maps_to_zero_steps():
@@ -101,20 +101,20 @@ def test_zero_offset_evaluation_happens_before_any_training():
 
     seen: list = []
     _, records = train_phase(
-        state, _phase("W", 5), TASK, TRAIN, jr.key(1),
+        state, _phase("W_EXPLICIT", 5), TASK, TRAIN, jr.key(1),
         eval_at=(0, 5),
         eval_fn=lambda model, i: seen.append(evaluate(model, TASK, jr.key(9), batch_size=64)) or seen[-1],
     )
     assert records[0]["step_in_phase"] == 0
     assert records[0]["tokens_in_phase"] == 0
-    for condition in CONDITIONS:
+    for condition in GATE_B_CONDITIONS:
         assert seen[0][condition].loss == pytest.approx(before[condition].loss, abs=1e-6)
 
 
 def test_evaluation_records_carry_tokens_and_steps():
     state = _state()
     _, records = train_phase(
-        state, _phase("W", 4), TASK, TRAIN, jr.key(1),
+        state, _phase("W_EXPLICIT", 4), TASK, TRAIN, jr.key(1),
         eval_at=(0, 2, 4), eval_fn=lambda m, i: i,
     )
     assert [r["step_in_phase"] for r in records] == [0, 2, 4]
@@ -124,7 +124,7 @@ def test_evaluation_records_carry_tokens_and_steps():
 
 def test_training_advances_step_and_token_counters():
     state = _state()
-    after, _ = train_phase(state, _phase("W", 6), TASK, TRAIN, jr.key(1))
+    after, _ = train_phase(state, _phase("W_EXPLICIT", 6), TASK, TRAIN, jr.key(1))
     assert int(after.step) == 6
     assert int(after.tokens_seen) == 6 * TRAIN.batch_size * TASK.seq_len
 
@@ -134,8 +134,8 @@ def test_training_advances_step_and_token_counters():
 
 def test_the_same_spec_trains_to_the_same_parameters():
     """A run is reproducible from its specification alone."""
-    a, _ = train_phase(_state(), _phase("W", 8), TASK, TRAIN, jr.key(1))
-    b, _ = train_phase(_state(), _phase("W", 8), TASK, TRAIN, jr.key(1))
+    a, _ = train_phase(_state(), _phase("W_EXPLICIT", 8), TASK, TRAIN, jr.key(1))
+    b, _ = train_phase(_state(), _phase("W_EXPLICIT", 8), TASK, TRAIN, jr.key(1))
     for x, y in zip(
         jax.tree.leaves(eqx.filter(a.model, eqx.is_inexact_array)),
         jax.tree.leaves(eqx.filter(b.model, eqx.is_inexact_array)),
@@ -165,8 +165,8 @@ def test_different_seed_families_start_differently():
 
 def test_different_data_streams_produce_different_batches():
     keys = run_keys(0, n_phases=2)
-    source = sample_batch(keys["source_data.0"], "W", TASK, 64)
-    target = sample_batch(keys["target_data.0"], "W", TASK, 64)
+    source = sample_batch(keys["source_data.0"], "W_EXPLICIT", TASK, 64)
+    target = sample_batch(keys["target_data.0"], "W_EXPLICIT", TASK, 64)
     assert not bool(jnp.array_equal(source["tokens"], target["tokens"]))
 
 
@@ -180,9 +180,10 @@ def test_conflict_reports_no_accuracy():
     that the rule is the right answer, which is what the condition exists to
     leave open.
     """
-    results = evaluate(_state().model, TASK, jr.key(3), batch_size=128)
-    assert np.isnan(results["conflict"].accuracy)
-    for condition in ("aligned", "w_only", "p_only"):
+    results = evaluate(_state().model, TASK, jr.key(3), batch_size=128,
+                       conditions=CONDITIONS)
+    assert np.isnan(results["NEUTRAL_CONFLICT"].accuracy)
+    for condition in ("W_COMPETENCE", "P_COMPETENCE", "NEUTRAL_ALIGNED_EVAL"):
         assert not np.isnan(results[condition].accuracy)
 
 
@@ -195,7 +196,7 @@ def test_evaluation_is_deterministic_given_its_key():
 
 def test_model_shape_and_size():
     model = init_model(MODEL, jr.key(0))
-    logits = jax.vmap(model)(sample_batch(jr.key(0), "W", TASK, 4)["tokens"][:, :-1])
+    logits = jax.vmap(model)(sample_batch(jr.key(0), "W_EXPLICIT", TASK, 4)["tokens"][:, :-1])
     assert logits.shape == (4, TASK.seq_len - 1, TASK.vocab_size)
     assert count_params(model) > 0
 
@@ -260,7 +261,7 @@ def test_unbalanced_cue_count_is_refused():
 
 
 def test_cue_is_uninformative_about_the_rule_in_w_family():
-    batch = sample_batch(jr.key(7), "W", TaskConfig(n_digits=3), 40_000)
+    batch = sample_batch(jr.key(7), "W_EXPLICIT", TaskConfig(n_digits=3), 40_000)
     w, p = np.asarray(batch["w_answer"]), np.asarray(batch["p_answer"])
     joint = np.histogram2d(w, p, bins=[4, 4])[0]
     expected = joint.sum(0)[None, :] * joint.sum(1)[:, None] / joint.sum()
