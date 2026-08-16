@@ -112,11 +112,19 @@ SWEEP_CONDITIONS = GATE_B_CONDITIONS  # explicit modes only; no NEUTRAL_CONFLICT
 # under-training rather than a capacity limit, so duration is the neutral
 # thing to move. Architecture, learning rate, task construction, loss and
 # thresholds are all held at their existing values.
+# Pre-confirmatory task-difficulty recalibration. 1200 steps is the
+# provisional duration: it resolved replicated W competence and held-out
+# generalization across seeds, and exposed that the cue's much shorter
+# intrinsic acquisition timescale is the remaining B1 failure. n_cues is the
+# pre-existing neutral difficulty control for that family.
+#
+# No conflict or default outcome has been generated or inspected in this
+# cycle, so no confirmatory scientific result is being optimized against.
 FULL_GRID = {
     "n_digits": (3,),
-    "n_cues": (256,),
+    "n_cues": (256, 512, 1024),
     "model": ((64, 4),),
-    "steps_per_phase": (600, 900, 1200),
+    "steps_per_phase": (1200,),
     "learning_rate": (3e-3,),
 }
 PILOT_GRID = {
@@ -258,6 +266,14 @@ def execute_unit(settings, seed: int, stage: str, out: Path) -> None:
             "generalization_worst": min(gen_w, gen_p),
             "window_w": window_w.width, "window_w_censored": window_w.censored,
             "window_p": window_p.width, "window_p_censored": window_p.censored,
+            # Fractions are what min_window is defined against; absolute
+            # lengths are recorded because a fraction hides that the cue's
+            # acquisition is roughly fixed in steps while the phase is not.
+            "window_w_steps": (None if window_w.censored
+                               else window_w.width * settings["steps_per_phase"]),
+            "window_p_steps": (None if window_p.censored
+                               else window_p.width * settings["steps_per_phase"]),
+            "steps_per_phase_actual": settings["steps_per_phase"],
         })
     elif stage == "b2":
         _, _, wp = run_sequence(("W_EXPLICIT", "P_EXPLICIT"), task, model_config, train_config,
@@ -359,7 +375,7 @@ def candidate_from(settings, b1: dict, b2: dict, seed: int) -> RegimeCandidate:
     )
 
 
-def sweep(grid, out: Path, workers: int, stagger: float) -> None:
+def sweep(grid, out: Path, workers: int, stagger: float, *, b1_only: bool = False) -> None:
     keys = list(grid)
     combos = [dict(zip(keys, c)) for c in itertools.product(*grid.values())]
     version = code_version()
@@ -411,6 +427,20 @@ def sweep(grid, out: Path, workers: int, stagger: float) -> None:
         print(f"    -> {'B1-ROBUST' if robust else 'not robust; does not proceed to B2'}")
         if robust:
             survivors.append(settings)
+
+    if b1_only:
+        print(f"\n--- B1 only; retention, overlap and common-tail not run ---")
+        print(f"B1-robust regimes: "
+              f"{[label_of(x) for x in survivors] if survivors else 'none'}")
+        ArtifactWriter(out).write("b1_replicated", [
+            {"label": label_of(x), "seed": seed, **{k: v for k, v in
+             b1[(label_of(x), seed)].items() if k not in ("model",)},
+             "b1_robust": x in survivors}
+            for x in combos for seed in CALIBRATION_SEEDS
+            if (label_of(x), seed) in b1
+        ])
+        print(f"wrote {out}/b1_replicated.parquet")
+        return
 
     # --- B2: retention, B1-robust regimes only, every seed ----------------
     todo = pending_for("b2", survivors, CALIBRATION_SEEDS)
@@ -511,6 +541,8 @@ def main() -> None:
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--stagger", type=float, default=3.0)
     parser.add_argument("--out", type=Path, default=Path("artifacts/capacity"))
+    parser.add_argument("--b1-only", action="store_true",
+                        help="stop after replicated solo adequacy")
     parser.add_argument("--unit", action="store_true", help=argparse.SUPPRESS)
     for name in ("n-digits", "n-cues", "d-model", "n-layers", "steps", "seed"):
         parser.add_argument(f"--{name}", type=int)
@@ -527,7 +559,8 @@ def main() -> None:
         execute_unit(settings, args.seed, args.stage, args.out)
         return
 
-    sweep(PILOT_GRID if args.pilot else FULL_GRID, args.out, args.workers, args.stagger)
+    sweep(PILOT_GRID if args.pilot else FULL_GRID, args.out, args.workers,
+          args.stagger, b1_only=args.b1_only)
 
 
 if __name__ == "__main__":

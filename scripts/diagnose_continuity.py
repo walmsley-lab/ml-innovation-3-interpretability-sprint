@@ -44,9 +44,10 @@ from dsi.rng import run_keys
 from dsi.specs import PhaseSpec
 from dsi.train import TrainConfig, init_state, offset_steps, phase_steps, train_phase
 
-# d64/l4: B1-capable, reaching A_W = A_P = 1.00 solo.
+# The frozen replicated-B1 regime.
 D_MODEL, N_LAYERS, LR = 64, 4, 3e-3
-STEPS = 600
+N_CUES = 512
+STEPS = 1200
 SEED = 1000
 RATIOS = (0.0, 0.05, 0.10, 0.25, 0.50)
 CALIBRATION_RATIOS = (0.15, 0.20, 0.25, 0.30)
@@ -59,7 +60,7 @@ DIRECTIONS = (("W_EXPLICIT", "P_EXPLICIT"), ("P_EXPLICIT", "W_EXPLICIT"))
 
 
 def setup():
-    task = TaskConfig(n_digits=3, n_cues=256)
+    task = TaskConfig(n_digits=3, n_cues=N_CUES)
     model_config = ModelConfig(
         vocab_size=task.vocab_size, d_model=D_MODEL, n_layers=N_LAYERS,
         n_heads=max(1, D_MODEL // 16), d_ff=4 * D_MODEL,
@@ -90,14 +91,71 @@ def classify(trace, old_key: str, tau: float) -> str:
     return f"collapses to {lowest:.2f} then recovers"
 
 
+def run_unit(ratio: float, seed: int, first: str, second: str, out: Path) -> None:
+    """One (ratio, seed, direction) job. Atomic write, skip if already done."""
+    import time as _t
+
+    path = out / "units" / f"r{ratio}__seed{seed}__{first[0]}to{second[0]}.json"
+    if path.exists():
+        return
+    task, model_config, train_config = setup()
+    tokens = STEPS * train_config.batch_size * task.seq_len
+    keys = run_keys(seed, n_phases=2, n_eval_points=len(OFFSETS))
+    started = _t.time()
+
+    state = init_state(model_config, train_config, keys["init"])
+    phase1 = PhaseSpec(first, tokens, "source")
+    state, _ = train_phase(state, phase1, task, train_config, keys["source_data.0"],
+                           eval_at=(phase_steps(phase1, task, train_config),),
+                           eval_fn=lambda m, i: None)
+
+    steps2 = phase2_steps(ratio, budget_corrected=True)
+    phase = PhaseSpec(f"{second}+{first}@{ratio}",
+                      steps2 * train_config.batch_size * task.seq_len, "target")
+    _, records = train_phase(
+        state, phase, task, train_config, keys["target_data.1"],
+        eval_at=offset_steps(OFFSETS, phase_steps(phase, task, train_config)),
+        eval_fn=lambda m, point: evaluate(m, task, keys[f"eval.1.{point}"],
+                                          batch_size=EVAL_BATCH,
+                                          conditions=GATE_B_CONDITIONS, split="train"),
+    )
+    trace = [{"offset": o,
+              "acc_w": r["result"]["W_COMPETENCE"].accuracy,
+              "acc_p": r["result"]["P_COMPETENCE"].accuracy}
+             for o, r in zip(OFFSETS, records)]
+    final = trace[-1]
+    old_key = "acc_w" if first.startswith("W") else "acc_p"
+    payload = {
+        "direction": f"{first}->{second}", "ratio": ratio, "seed": seed,
+        "phase2_steps": steps2, "new_skill_steps": STEPS, "n_cues": N_CUES,
+        "acc_w": final["acc_w"], "acc_p": final["acc_p"],
+        "coexistence": min(final["acc_w"], final["acc_p"]),
+        "prior_capability": classify(trace, old_key, TAU),
+        "trace": trace, "seconds": _t.time() - started,
+        "code_version": code_version(), "recorded_at": utc_now(),
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(payload, indent=2) + "\n")
+    tmp.replace(path)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--unit", action="store_true")
+    parser.add_argument("--ratio", type=float)
+    parser.add_argument("--seed", type=int)
+    parser.add_argument("--first")
+    parser.add_argument("--second")
     parser.add_argument("--fixed-total", action="store_true",
                         help="hold phase-2 length constant (the confounded variant)")
     parser.add_argument("--out", type=Path, default=Path("artifacts/continuity_corrected"))
     parser.add_argument("--calibrate", action="store_true",
                         help="neutral overlap calibration across ratios and seeds")
     args = parser.parse_args()
+    if args.unit:
+        run_unit(args.ratio, args.seed, args.first, args.second, args.out)
+        return
     budget_corrected = not args.fixed_total
     ratios = CALIBRATION_RATIOS if args.calibrate else RATIOS
     seeds = CALIBRATION_SEEDS if args.calibrate else (SEED,)
