@@ -189,7 +189,53 @@ recorded per unit.
 
 ---
 
-## Post-barrier branches for the running overlap diagnostic
+---
+
+## Barrier: r = 0.20 overlap diagnostic — **Branch 2** (2026-08-16)
+
+**Completed stage.** 15/15 units, manifest `cd73c7444818dcfc`, every family at
+exactly 600 steps in every arm.
+
+**Gate result.** Retention restored (min acc 0.106 -> 0.53-0.57), order effect
+absent (best - reverse = -0.0383 against pooled seed sd 0.2556, effect/noise
+**-0.15**), and interleaving wins every efficiency metric (min acc 0.951 vs
+0.529; joint steps-to-threshold reached 5/5 seeds at median 950 steps vs 1/5
+and 0/5).
+
+**Scientific interpretation.** Overlap at `r = 0.20` substantially fixes the
+catastrophic forgetting the ceiling scout exposed, so failure mode 1 was real.
+With retention restored and order decoupled from dose, **the ordering effect
+is still absent**. Per the branch fixed in advance: local pairwise transfer
+does **not** straightforwardly compose into useful multi-stage orderings, and
+the static ordering construction is not to be patched further.
+
+Claims kept separate. *Mechanistic*: pairwise transfer is real and measurable
+but does not compose additively — a finding about composition, not evidence
+that developmental structure is absent. *Practical*: the ordering programme
+has no utility at this dose, and the sequential arms are ~15x less stable
+across seeds than interleaving (sd 0.27 vs 0.016).
+
+**Current risks.** Interleaving may be near-optimal at this scale; until a
+regime exists where it is below ceiling, no method can demonstrate an
+efficiency gain over it.
+
+**Next licensed action.** The resource-constrained scheduling benchmark. No
+pairwise-derived static ordering carries forward.
+
+**Against the four questions.**
+
+* *Phenomenon* — **yes, but not the hypothesized one.** The reproducible
+  effect at equal compute is presentation structure (interleaved vs blocked),
+  not ordering.
+* *Prediction* — pairwise predictions do not compose into multi-stage
+  outcomes. WikiText prospective prediction remains the only partial success.
+* *Utility* — **no.** Interleaving wins every frozen efficiency metric.
+* *Efficiency* — interleaving reaches joint 0.90 across all families in a
+  median 950 steps, 5/5 seeds; the best ordering manages 1/5.
+
+---
+
+## Post-barrier branches (now resolved — Branch 2 fired)
 
 Fixed before the result is visible:
 
