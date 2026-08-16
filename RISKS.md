@@ -35,9 +35,17 @@ which is what the per-unit persistence was added for.
 
 ---
 
-## 2. Active blocker, diagnosed and with a demonstrated remedy
+## 2. Completed negative apparatus result
 
-### Catastrophic forgetting under corrected explicit-mode sequential training
+### Pure block-sequential Gate B: abrupt isolated phases produce catastrophic interference
+
+**This is a finished result and stands unchanged.** Abrupt, isolated training
+phases destroy the prior capability at every capacity tested, and no
+continual-learning method was introduced to work around it. It is recorded as
+a property of the block-sequential apparatus, not as a fault in it and not as
+a defect of the hypothesis.
+
+What follows is the evidence and the diagnosis that closed it.
 
 At the fixed d64/l2 regime on the corrected task, worst-order coexistence is
 0.238 against 0.80. The first capability collapses to chance within the first
@@ -127,8 +135,11 @@ Diagnostic C is **not** run. The A-succeeds/sequential-fails pattern licensed
 it, but continuity rescues coexistence without any protection method, so
 EWC/OGD would answer a question that is no longer open.
 
-The threshold is r=0.25 **in this architecture, task and seed regime**. It is
-not a universal constant and is unreplicated across seeds and scales.
+r=0.10 to r=0.25 is a **sharp transition region observed in the discovery
+run**, at one architecture, one task and one seed. It is not a universal
+threshold, and r=0.25 is deliberately **not frozen** from the discovery seed.
+A neutral calibration over r in {.15, .20, .25, .30} across three seeds and
+both directions selects the operating point.
 
 The open question is now about the hypothesis, not the apparatus: whether the
 primary developmental operationalization stays pure block-sequential or moves

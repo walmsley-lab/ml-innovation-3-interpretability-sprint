@@ -89,9 +89,29 @@ F5  CHAIN∘SELECT      [BOS MODE_F5 kA v3 kB v7 kC v1 kD v5 SEP  b(v5) ]   3 mo
 F6  CHAIN∘MAP         [BOS MODE_F6 kA v3 kB v7 kC v1 kD v5 SEP  L(v5) ]
 ```
 
-The four bodies are **byte-identical**. Only MODE and the answer differ,
-which is the property `tests/test_identifiability.py` already enforces for
-W/P and which the Layer-2 tests would enforce across all six families.
+In the illustration the four bodies are identical, but **literal byte
+identity is not the requirement** and should not be imposed where it would
+impoverish the families. Chained and comparison families in particular need
+value distributions that make their own computation non-degenerate, and
+forcing every family through one record draw would flatten exactly the
+richness that makes six families worth having.
+
+The real requirement is threefold:
+
+* **controlled nuisance statistics** — record length, key order, value
+  marginals and answer-class marginals are matched across families, and any
+  deliberate dependency (as in a chained family, where one value indexes a
+  field) is declared and is the *only* uncontrolled statistic;
+* **matched surface complexity** — no family is distinguishable from its
+  surface form alone by a model that ignores MODE;
+* **identifiable capability differences** — MODE remains the only explicit
+  task identifier, so competence in each family is separately measurable on
+  the same checkpoint.
+
+The Layer-1 identifiability failure was not about bytes. It was that the
+answer-generating function varied while nothing in the input said which
+function applied. MODE fixes that, and matched nuisance statistics prevent a
+model from inferring the family through a back door instead.
 
 ### Persistent background
 

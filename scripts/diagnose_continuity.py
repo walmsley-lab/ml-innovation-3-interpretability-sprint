@@ -32,6 +32,9 @@ import json
 import time
 from pathlib import Path
 
+import sys as _sys
+_sys.stdout.reconfigure(line_buffering=True)
+
 from dsi.artifacts import ArtifactWriter, code_version, utc_now
 from dsi.calibrate import RegimeCriteria
 from dsi.data import GATE_B_CONDITIONS, TaskConfig
@@ -46,6 +49,8 @@ D_MODEL, N_LAYERS, LR = 64, 4, 3e-3
 STEPS = 600
 SEED = 1000
 RATIOS = (0.0, 0.05, 0.10, 0.25, 0.50)
+CALIBRATION_RATIOS = (0.15, 0.20, 0.25, 0.30)
+CALIBRATION_SEEDS = (1000, 1001, 1002)
 OFFSETS = tuple(round(0.1 * i, 1) for i in range(11))
 EVAL_BATCH = 512
 TAU = RegimeCriteria().tau_retention
@@ -90,8 +95,12 @@ def main() -> None:
     parser.add_argument("--fixed-total", action="store_true",
                         help="hold phase-2 length constant (the confounded variant)")
     parser.add_argument("--out", type=Path, default=Path("artifacts/continuity_corrected"))
+    parser.add_argument("--calibrate", action="store_true",
+                        help="neutral overlap calibration across ratios and seeds")
     args = parser.parse_args()
     budget_corrected = not args.fixed_total
+    ratios = CALIBRATION_RATIOS if args.calibrate else RATIOS
+    seeds = CALIBRATION_SEEDS if args.calibrate else (SEED,)
 
     task, model_config, train_config = setup()
     tokens = STEPS * train_config.batch_size * task.seq_len
@@ -110,8 +119,11 @@ def main() -> None:
         print(f"phase 2: total length held fixed at {STEPS} steps (confounded)")
     print(f"conditions {GATE_B_CONDITIONS}  (NEUTRAL_CONFLICT not evaluated)\n")
 
-    for first, second in DIRECTIONS:
-        # Phase 1 once; every ratio branches from this exact checkpoint.
+    for seed in seeds:
+      keys = run_keys(seed, n_phases=2, n_eval_points=len(OFFSETS))
+      for first, second in DIRECTIONS:
+        # Phase 1 once per (seed, direction); every ratio branches from this
+        # exact checkpoint, so arms differ in the ratio and nothing else.
         state = init_state(model_config, train_config, keys["init"])
         state, records = train_phase(
             state, PhaseSpec(first, tokens, "source"), task, train_config,
@@ -122,11 +134,11 @@ def main() -> None:
                                           conditions=GATE_B_CONDITIONS, split="train"),
         )
         after_phase1 = records[-1]["result"]
-        print(f"--- {first} -> {second} "
+        print(f"--- seed {seed}: {first} -> {second} "
               f"(after phase 1: A_W={after_phase1['W_COMPETENCE'].accuracy:.3f} "
               f"A_P={after_phase1['P_COMPETENCE'].accuracy:.3f}) ---")
 
-        for ratio in RATIOS:
+        for ratio in ratios:
             family = f"{second}+{first}@{ratio}"
             steps2 = phase2_steps(ratio, budget_corrected=budget_corrected)
             phase = PhaseSpec(
@@ -154,7 +166,7 @@ def main() -> None:
             old_key = "acc_w" if first.startswith("W") else "acc_p"
             behaviour = classify(trace, old_key, TAU)
             results.append({
-                "direction": f"{first}->{second}", "ratio": ratio,
+                "direction": f"{first}->{second}", "ratio": ratio, "seed": seed,
                 "phase2_steps": steps2, "new_skill_steps": STEPS,
                 "budget_corrected": budget_corrected,
                 "acc_w": final["acc_w"], "acc_p": final["acc_p"],
@@ -168,10 +180,46 @@ def main() -> None:
 
     print("\n--- phase-2 competence traces ---")
     for r in results:
-        print(f"  {r['direction']:26s} r={r['ratio']:<5} "
+        print(f"  s{r['seed']} {r['direction']:26s} r={r['ratio']:<5} "
               f"A_W " + " ".join(f"{t['acc_w']:5.2f}" for t in r["trace"]))
-        print(f"  {'':26s} {'':7s} "
+        print(f"  {'':5s} {'':26s} {'':7s} "
               f"A_P " + " ".join(f"{t['acc_p']:5.2f}" for t in r["trace"]))
+
+    if args.calibrate:
+        print("\n--- overlap calibration: worst case over seeds and directions ---")
+        print(f"{'r':>6s} {'worst':>7s} {'per-seed worst (both directions)':>40s}  robust")
+        robust = []
+        for ratio in ratios:
+            cells = [x for x in results if x["ratio"] == ratio]
+            per_seed = {s_: min(x["coexistence"] for x in cells if x["seed"] == s_)
+                        for s_ in seeds}
+            worst = min(per_seed.values())
+            ok = worst >= TAU
+            if ok:
+                robust.append(ratio)
+            detail = " ".join(f"s{s_}={v:.3f}" for s_, v in per_seed.items())
+            print(f"{ratio:>6.2f} {worst:>7.3f} {detail:>40s}  {'YES' if ok else 'no'}")
+        print("\n--- prior-capability behaviour ---")
+        for ratio in ratios:
+            kinds = {}
+            for x in (x for x in results if x["ratio"] == ratio):
+                kinds[x["prior_capability"].split(" to ")[0]] = \
+                    kinds.get(x["prior_capability"].split(" to ")[0], 0) + 1
+            print(f"  r={ratio:<5} " + ", ".join(f"{k}: {v}" for k, v in sorted(kinds.items())))
+        if robust:
+            print(f"\nSMALLEST ROBUST OVERLAP: r={min(robust)} "
+                  f"(all {len(seeds)} seeds, both directions, coexistence >= {TAU})")
+        else:
+            print(f"\nNo tested ratio is robust across all seeds and directions.")
+        print("\nSelected on explicit competence only. NEUTRAL_CONFLICT was "
+              "never generated or evaluated.")
+        ArtifactWriter(args.out).write("continuity", [
+            {k: (json.dumps(v) if isinstance(v, list) else v) for k, v in r.items()}
+            | {"d_model": D_MODEL, "n_layers": N_LAYERS, "learning_rate": LR,
+               "code_version": code_version(), "recorded_at": utc_now()}
+            for r in results
+        ])
+        return
 
     print("\n--- smallest continuity clearing tau, per direction ---")
     print("  (directional thresholds are kept separate; an asymmetry here "

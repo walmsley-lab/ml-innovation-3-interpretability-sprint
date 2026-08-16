@@ -392,6 +392,134 @@ Competence failure is an **invalidator**, not a negative result.
 
 ---
 
+# 8c. Revised Operationalization: Overlapping Curricula
+
+## The block-sequential result, and why it is not the end of the hypothesis
+
+Pure block-sequential training is a **completed negative apparatus result**.
+Abrupt isolated phases destroy the prior capability at every capacity tested:
+worst-order coexistence 0.195-0.250 across a 6.4x parameter range, two depths
+and two learning rates. The result stands and is not revised.
+
+Its consequence for the hypothesis is specific. Claim 1 asserts that
+different developmental histories leave **persistent** differences after
+identical subsequent training. If the first history is erased before the
+second phase ends, there is nothing left for a difference to persist in, and
+Claim 1 becomes unmeasurable for reasons that have nothing to do with whether
+it is true. The apparatus, not the hypothesis, is what fails.
+
+Two facts establish that the apparatus rather than the model is the limit.
+Joint training on the same total budget reaches coexistence 0.982 at d64/l2,
+so the architecture holds both capabilities comfortably. And mixing a
+fraction of the prior family into the second phase restores coexistence to
+near ceiling in both directions. No continual-learning method is involved in
+either; **EWC, OGD, gradient projection and layer freezing are not used, and
+are not part of this design**.
+
+## The revised operationalization
+
+A developmental history becomes a **curriculum of overlapping mixtures**
+rather than a sequence of isolated blocks. Writing `alpha_i(t)` for the
+mixture weight on family `i` at training time `t`:
+
+* every family retains a floor weight `r` while any other family is
+  emphasized, so no family's exposure ever drops to zero;
+* histories differ in **which family is emphasized when**, not in whether a
+  family appears at all;
+* total tokens and per-family total allocation are held identical across
+  compared histories, so ordering is the only manipulated variable.
+
+The last constraint matters most. It makes the reversed-curriculum control of
+section 21 structural rather than a post-hoc check: two histories that agree
+exactly on aggregate composition and differ only in trajectory cannot differ
+because one saw more of something.
+
+`r` is the **overlap floor**. It is a calibrated parameter of the apparatus,
+selected by neutral competence criteria before any history is compared, and
+frozen thereafter.
+
+## Calibrating the overlap floor
+
+`r = 0.25` is **not** frozen from the discovery run. That figure came from one
+architecture, one task and one seed, and the region from `r = 0.10` to
+`r = 0.25` is a sharp transition **observed in the discovery run**, not a
+universal threshold.
+
+Selection protocol, run before any history comparison:
+
+* `r` in {0.15, 0.20, 0.25, 0.30};
+* three calibration seeds, disjoint from the confirmatory ones;
+* both directions;
+* incoming-skill exposure matched, so higher overlap adds tokens rather than
+  displacing the skill being acquired;
+* selection rule: the **smallest** `r` for which every seed and both
+  directions reach explicit coexistence at or above `tau_retention`.
+
+Explicit competence conditions only. The neutral-conflict condition is not
+generated during calibration, so the overlap floor cannot be chosen for the
+preference behaviour it produces.
+
+Competence traces are retained for every cell, because three outcomes must
+stay distinguishable and a final number hides the difference:
+
+* **continuous preservation** — the prior capability never falls below
+  threshold;
+* **collapse then recovery** — it falls and returns, which is what the
+  discovery run showed at its threshold ratio;
+* **permanent forgetting** — it falls and does not return.
+
+The distinction is substantive. Continuity that enables *recovery* is a
+different mechanism from continuity that prevents *disruption*, and the
+developmental claim reads differently under each.
+
+---
+
+# 8d. Common-Tail Adequacy Gate
+
+Claim 1 has the structure:
+
+> different developmental trajectories -> identical subsequent experience ->
+> both explicit capabilities retained -> test neutral/default behaviour
+
+The third step is a **precondition**, not an outcome. If the shared tail
+leaves either explicit capability below threshold, the neutral behaviour that
+follows is uninterpretable in exactly the way a failed competence gate is
+uninterpretable: a model that defaults to one strategy because it no longer
+has the other is not exhibiting a preference.
+
+The tail must therefore satisfy four requirements, and they are gated before
+Claim 1 rather than assumed:
+
+1. **identical across histories** — same data, same order, same token count,
+   so the arms differ only in what preceded the tail;
+2. **NEUTRAL mode in-distribution** — the preference probe must not be an
+   out-of-distribution query, or the measurement is of extrapolation rather
+   than of default behaviour;
+3. **both explicit capabilities above threshold at the end of the tail**;
+4. **no unequal recent exposure** — the tail must not leave one family more
+   recently emphasized than the other, or recency reintroduces the confound
+   the shared tail exists to remove.
+
+The existing pure `NEUTRAL_ALIGNED` tail is **not assumed adequate**. The
+evidence available says it probably is not: appending it to block-sequential
+histories left the forgotten capability at 0.246-0.277, and it degraded the
+*retained* capability from 1.00 to 0.62-0.69 at depth 4. Aligned examples are
+solvable by either strategy, so they exert no pressure to maintain both, and
+they place no explicit-mode examples in the tail at all.
+
+It is tested first. If it fails, the replacement is a **mixed common tail**:
+neutral-aligned examples, which put NEUTRAL in-distribution, plus balanced
+explicit W and P maintenance at the calibrated overlap floor, which keeps
+both capabilities above threshold without favouring either. Balance across
+the two explicit families is what satisfies requirement 4.
+
+Gate ordering is strict. The overlap regime is frozen, then the common tail
+is frozen, and only then do Gate C null and power calibration and the
+Claim-1 experiment proceed. Neither the overlap floor nor the tail
+composition may be revisited once a history comparison has been seen.
+
+---
+
 # 8a. Two Layers of Experimental Environment
 
 The W/P task is **Layer 1**: the causal primitive, and the environment in
