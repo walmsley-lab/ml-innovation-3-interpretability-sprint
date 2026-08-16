@@ -873,3 +873,91 @@ and the relational model 15, against 26 development relationships. Ridge
 throughout, penalty by inner LOPO inside development only. The 25%
 material-improvement rule is unchanged and remains **prospective and
 WikiText-only**; it is not applied to H3.
+
+## 23. Three clarifications, before transfer starts
+
+### 1. The family-6 exclusion is an amendment, not an algorithm
+
+Excluding family 6 is a **WikiText-specific, outcome-blind protocol
+amendment**, justified by a clear and specific residual-cluster pathology:
+cohesion 0.145 against a 0.409 median, top terms spanning three unrelated
+domains, distinctive terms spanning astronomy, silent cinema, Australian
+flora, microscopy and cricket, and nearest-neighbour status to five of the
+other seven families.
+
+**This project does not have a general automated residual-family rejection
+rule, and nothing here should be read as one.** The decision was a judgement
+made by inspecting diagnostics on one corpus, before any outcome existed. It
+does not generalize, and it would not survive being applied mechanically to a
+corpus whose cluster structure differs.
+
+A future corpus needs a **prospectively defined family-quality gate** —
+thresholds on cohesion, distinctiveness and margin, fixed before the
+proposal is inspected, in the way the 200,000-token support gate was fixed
+before the 20NG audit. Defining that gate is outstanding work, and until it
+exists, any family exclusion on a new corpus is a fresh judgement that must
+be recorded as one.
+
+### 2. "Single-pass" means no repetition, not a complete pass
+
+The phase budget of 1,536 chunks (196,608 LM tokens) is drawn from families
+holding far more:
+
+| family | available chunks | used | fraction |
+|---|---|---|---|
+| 1 (binding) | 5,061 | 1,536 | 30.3% |
+| 5 | 6,515 | 1,536 | 23.6% |
+| 7 | 9,240 | 1,536 | 16.6% |
+| 3 | 11,653 | 1,536 | 13.2% |
+| 4 | 13,689 | 1,536 | 11.2% |
+| 2 | 20,067 | 1,536 | 7.7% |
+| 0 | 23,526 | 1,536 | 6.5% |
+
+**"Single-pass" means no chunk is seen twice.** It does **not** mean the
+source phase traverses the family. A treatment is 1,536 distinct chunks
+sampled once, without replacement, from a pool three to fifteen times larger,
+taken as a prefix of a seeded document shuffle.
+
+Two consequences, recorded as nuisances rather than corrected:
+
+* **The sampled fraction varies 4.7x across families.** A source drawn from
+  family 1 covers 30% of it; one drawn from family 0 covers 6.5%. How
+  representative a treatment is of its family therefore differs by family.
+* **Which slice is drawn varies with the seed**, so within-pair seed variance
+  includes the sampling variance of which documents were seen. That is
+  properly part of the intervention's variability rather than measurement
+  error, but it means seed replication is doing two jobs at once.
+
+### 3. What the 25% criterion must beat
+
+**A relational-developmental claim must beat the best *simpler* model, not
+merely the global mean.**
+
+    simpler models = {global, source_only, target_only, additive}
+    required: RMSE(relational) <= 0.75 x min RMSE over the simpler models
+
+A relational model that beats the global mean while a source-only model
+predicts better has demonstrated that something about the source matters —
+a main effect — and nothing whatever about the relationship between source
+and target. The weaker "beats global" form would let precisely that pass, and
+on this project it nearly did: on the same matrix where the relational model
+reached a 1.5% gain over global, source-only reached 13.8%.
+
+All conditions must hold together, on **both** components, under the **same**
+model, prospectively on the frozen confirmatory pool:
+
+1. RMSE <= 0.75 x the **best simpler model**, not the global mean;
+2. the margin survives leaving out any single confirmatory pair;
+3. the reduction exceeds that component's within-pair seed-noise floor.
+
+Implemented in `scripts/success_criterion.py` so the gate lives in code
+rather than only in prose, with a regression check confirming that
+"relational beats global but loses to source-only" **fails**.
+
+### Frozen and not to be changed once outcomes begin
+
+The seven-family proposal, equal-family control weighting, the fixed
+196,608-token dose, and the hashed 13/5/3 unordered-pair pools
+(`497b9c3fc66e8adbca96ac2eef41e9e2ada14ffcdc0d78bb4cbbf589c42b3c27`) are
+frozen. None of them may be revised once any developmental outcome exists on
+this substrate.
