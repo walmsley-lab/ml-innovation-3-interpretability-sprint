@@ -219,11 +219,51 @@ Gate-B ordering is
 
 A B2 failure can no longer suppress discovery of B1 seed fragility.
 
-Phase duration is then calibrated as the only new variable —
-`steps_per_phase` in {600, 900, 1200} at fixed d64/l4, lr=3e-3, seeds
-1000-1002, everything else unchanged — selecting the **smallest** duration
-with robust solo competence and generalization across all seeds. Overlap
-calibration does not re-run until that duration is frozen.
+### Duration calibration: no duration passes, but the failure migrated
+
+`steps_per_phase` in {600, 900, 1200}, d64/l4, lr=3e-3, seeds 1000-1002, all
+else unchanged:
+
+| steps | s1000 | s1001 | s1002 | robust |
+|---|---|---|---|---|
+| 600 | ok | A_W=0.480, gen=0.430 | ok | no |
+| 900 | ok | A_W=0.711, gen=0.527 | ok | no |
+| 1200 | ok | ok | R_P=0.115 | no |
+
+**Duration fixes what it was expected to fix.** At 1200 steps the rule is
+learned on every seed (A_W = 0.988, 1.000, 1.000) and generalization clears
+everywhere (0.871 to 0.996). Seed 1001, which reached 0.480 at 600 steps, was
+simply under-trained.
+
+What remains is a different criterion failing for a mechanical reason. The
+learning window is defined as a **fraction of the phase**, and the cue's
+acquisition is roughly fixed in absolute steps:
+
+| steps | mean absolute cue window | as a fraction |
+|---|---|---|
+| 600 | 138 | 0.229 |
+| 900 | 142 | 0.158 |
+| 1200 | 172 | 0.143 |
+
+Lengthening the phase to make the rule learnable therefore shrinks `R_P` as a
+fraction, and at 1200 steps `min_window = 0.15` demands an absolute cue
+window of 180 steps. The two criteria are in direct tension **because W and P
+have very different intrinsic timescales**.
+
+This is the difficulty-mismatch problem that `DESIGN_LAYER2.md` §4 makes a
+gate for Layer 2, appearing in Layer 1. The neutral lever is task difficulty:
+`n_cues` sets how long the cue takes to acquire, and
+`scripts/probe_cue_window.py` already records the relationship (R_P rising
+from 0.080 at 16 cues to 0.550 at 1024, measured at 600 steps).
+
+`n_cues` was frozen at Gate B on the cue in isolation, with the stipulation
+that it must not be revisited once confirmatory results are visible. No
+confirmatory result exists: the conflict condition has never been generated
+or evaluated in any run of this cycle. Re-calibrating it on neutral solo
+criteria is therefore legitimate, and doing so would be recorded as a
+recalibration rather than a silent change.
+
+**Not launched.** Neither `min_window` nor any threshold has been moved.
 
 ---
 
