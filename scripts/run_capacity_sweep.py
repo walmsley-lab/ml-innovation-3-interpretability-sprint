@@ -93,12 +93,22 @@ OFFSETS = tuple(round(0.1 * i, 1) for i in range(11))
 EVAL_BATCH = 256
 SWEEP_CONDITIONS = ("w_only", "p_only", "aligned")  # note: no "conflict"
 
+# Narrow neutral grid, eight regimes. Task difficulty and phase duration are
+# fixed at the values the first sweep showed adequate for solo competence,
+# generalization and both learning windows; only capacity and learning rate
+# vary, because retention is the sole criterion still failing.
+#
+# loss_positions is fixed at "all". scripts/diagnose_coexistence.py tested
+# answer-only loss at this regime and rejected it: best pre-washout
+# coexistence 0.273 against 0.301 for full-token, with the second source also
+# acquired far more weakly. The objective is not the explanation, so it is not
+# an axis of this sweep.
 FULL_GRID = {
-    "n_digits": (3, 4),
+    "n_digits": (3,),
     "n_cues": (256,),
-    "model": ((32, 2), (64, 2), (128, 2)),
-    "steps_per_phase": (600, 1200),
-    "learning_rate": (3e-3,),
+    "model": ((64, 2), (64, 4), (128, 2), (128, 4)),
+    "steps_per_phase": (600,),
+    "learning_rate": (3e-3, 1e-3),
 }
 PILOT_GRID = {
     "n_digits": (3,),
@@ -126,7 +136,10 @@ def configure(settings):
         vocab_size=task.vocab_size, d_model=d_model, n_layers=n_layers,
         n_heads=max(1, d_model // 16), d_ff=4 * d_model,
     )
-    return task, model_config, TrainConfig(learning_rate=settings["learning_rate"])
+    # loss_positions is fixed, not swept; see the note on FULL_GRID.
+    return task, model_config, TrainConfig(
+        learning_rate=settings["learning_rate"], loss_positions="all"
+    )
 
 
 def _spec(order, task, model_config, settings, seed: int, solo: bool) -> RunSpec:
