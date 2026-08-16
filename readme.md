@@ -9,32 +9,40 @@ differences, inferring predictive structure among corpus families, and
 compiling a curriculum from that structure and validating it on fresh
 models.
 
-- [research.md](research.md) — the scientific program, stages and gates A–I
+- [research.md](research.md) — the scientific program and gates A–J
 - [technical.md](technical.md) — implementation plan
 
 Three objects stay distinct throughout: **intervention measurements**, the
 **developmental model** fitted to them, and the **derived curriculum**. A
 curriculum is never discovered first and given a graph afterwards.
 
-## Status: Milestone A
+## Invalidators are not falsifiers
 
-| Exit criterion | State |
-|---|---|
-| Gate A: estimators recover known effects with calibrated coverage | passing |
-| RNG sharing / divergence contracts | passing |
-| `RunSpec` canonicalization stable | passing |
-| Target-phase t=0 evaluation wired into the interface | enforced by `EvalSpec` |
-| One local W→P / P→W paired experiment writing versioned Parquet | running |
+A broken apparatus licenses no conclusion in either direction. A sound
+apparatus whose claim fails is a reportable negative result. The two are kept
+apart everywhere, because conflating them is how a broken pipeline gets
+written up as "no effect found".
 
-89 tests. Gate A measures bias ≤ 7e-5 against a 2e-3 tolerance and interval
-coverage of 0.947–0.951 against a nominal 0.95.
+## Gates
+
+| Gate | Criterion | State |
+|---|---|---|
+| A | Estimator calibration | passing |
+| B | Minimal adequate model selected | in progress |
+| C | Null calibration and powered seed count | not started |
+| D | Persistent W/P differentiation after washout | not started |
+| E | Adjacent-scale replication | not started |
+| F | Directional transfer signal exceeds null and simple baselines | not started |
+| G | Held-out intervention prediction succeeds | not started |
+| H | Ontology revision improves predictive compression | not started |
+| I | Derived curriculum beats baselines and reverse | not started |
+| J | Pipeline transfers unchanged to unseen natural corpus | not started |
+
+Gate A measures bias ≤ 7e-5 against a 2e-3 tolerance and interval coverage of
+0.947–0.951 against a nominal 0.95.
 
 ```bash
 uv venv && uv pip install -e ".[dev]" && .venv/bin/python -m pytest
-```
-
-```bash
-.venv/bin/python scripts/run_wp_local.py --seed-families 4 --steps 250
 ```
 
 ## Layout
@@ -51,9 +59,9 @@ src/dsi/
   artifacts.py   versioned Parquet
 ```
 
-Deliberately absent until their milestone: Hydra and Orbax (B/D), the GCP
-executor and budget system (D), partial pooling (E), transfer, discovery and
-curriculum compilation (E–G), and any UI (H).
+Deliberately absent until earned: Hydra and Orbax, the GCP executor and
+budget system, partial pooling, transfer/discovery/curriculum compilation,
+and any UI.
 
 ## The paired experimental unit
 
@@ -76,6 +84,11 @@ yardstick for treatment pairs. `rng.py` enforces this and `tests/test_rng.py`
 asserts it, because a pairing bug is silent: the runs complete, the numbers
 look plausible, and every downstream conclusion is wrong.
 
+`RunSpec` carries one `seed_family` rather than four independent seeds. Both
+arms of a pair pass the same value; `arm` forces divergence on the source
+stream alone, and is `None` for transfer pairs and distinct integers for
+identity-null pairs.
+
 ## Two things worth knowing early
 
 **Positive means faster.** Every estimator is written as `control − treatment`
@@ -87,3 +100,17 @@ seen is what separates a head start carried in from the source phase from a
 genuinely faster acquisition rate. AULC conflates the two, and the
 decomposition is unrecoverable after the run. `EvalSpec` refuses offsets that
 omit `0.0` even though nothing yet consumes the measurement.
+
+## Smoke configuration
+
+`scripts/run_wp_local.py` and the `n_digits=2` task configuration are
+**smoke-only**. They exist to exercise the machinery end to end, not to
+produce evidence. The regime is uncalibrated: model scale, task difficulty,
+phase duration and seed count are all placeholders that Gates B and C
+replace.
+
+The recorded smoke run fails its competence gate and is retained as an
+**invalidated exploratory run**. Training on the second family erases the
+first, so the apparent order effect is recency — the confound the washout
+phase exists to control. Nothing measured in that regime, including its
+`P→W` retention gradient, may be used to tune the confirmatory design.

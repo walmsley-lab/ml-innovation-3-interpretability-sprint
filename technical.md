@@ -57,10 +57,16 @@ In particular:
 * Equinox
 * Optax
 * Polars
-* PyArrow
 * NumPy
 * SciPy
 * pytest
+
+Parquet is written and read by Polars through its own Rust implementation.
+
+PyArrow is **not** a required dependency. It no longer ships wheels for every
+platform the project runs on, so requiring it means building Arrow from
+source for no functional gain. Add it only if a specific interoperability
+need appears, and as an optional extra rather than a core dependency.
 
 ## Added when earned
 
@@ -178,16 +184,40 @@ class RunSpec:
     phases: tuple[PhaseSpec, ...]
     model_config_id: str
     data_version: str
-    init_seed: int
-    data_seed: int
-    branch_seed: int
-    eval_seed: int
+    seed_family: int
+    arm: int | None
     evals: tuple[EvalSpec, ...]
 ```
 
 Configuration is data.
 
 Execution is functional.
+
+## One seed family, not four seeds
+
+An earlier draft gave `RunSpec` four independent seeds: `init_seed`,
+`data_seed`, `branch_seed`, `eval_seed`. That contradicted section 9, which
+states that every `RunSpec` receives one root key from which all streams are
+derived by role, and the contradiction was not benign.
+
+Four independent seeds provide a second way to specify the same streams, and
+the redundancy makes it representable to vary `eval_seed` between two arms of
+a matched pair while still believing them paired. Nothing in the resulting
+numbers would reveal the error.
+
+`seed_family` indexes the matched pair rather than the run. Both arms pass
+the same value, and that is what makes them paired. `arm` forces stochastic
+divergence, is applied to the source stream alone, and is:
+
+* `None` for a transfer pair, whose arms already differ by training on
+  different corpora, so forcing a further RNG difference would confound
+  corpus identity with sampling noise;
+* distinct integers for an identity-null pair, where two independent draws of
+  the same condition are precisely the measurement.
+
+`arm=None` and `arm=0` must derive different source streams. Otherwise a
+transfer arm and a null arm would silently share a draw, and the null would
+stop being independent.
 
 ---
 
