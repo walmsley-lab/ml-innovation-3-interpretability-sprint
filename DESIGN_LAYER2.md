@@ -325,3 +325,62 @@ Developmental structure counts as established only if the relationship
 features beat the additive baseline **on truly held-out pairs**. Sharing a
 primitive is a feature, not a prediction: it may correspond to positive
 transfer, interference, or nothing.
+
+
+## 12. Transfer pilot design and its structural limit
+
+All **12 directed pairs** over the frozen four families, 3 seeds, paired
+source/control arms sharing one base checkpoint, target `t=0` evaluation
+preserved. The neutral control `N` is a balanced mixture of the two families
+that are neither source nor target at the same token budget, so the arms
+differ in the identity of the source phase and nothing else.
+
+### Execution units
+
+| quantity | value |
+|---|---|
+| trajectories | 72 (12 pairs x 2 arms x 3 seeds) |
+| bundled units | 36 (paired arms in one process) |
+| steps per unit | 2,400 — total 86,400 |
+| measured C3 rate | ~190 steps/s aggregate at concurrency 22 |
+| 1 VM | 1.6 waves, ~8 min |
+| **2 VMs** | **1 wave of 18 units each, ~4 min** |
+
+Two `c3-standard-22` VMs, one wave each. The experiment is not reduced to fit
+one machine.
+
+### Predictive ladder, deliberately small
+
+Twelve pair identities is a very small universe, so the ladder stops early:
+
+    global mean
+      -> additive source + target
+      -> additive + minimal primitive-sharing features
+
+Structural features are limited to **shared-primitive count and identity**.
+Composition-slot interactions are *not* fitted: with 12 pairs they would
+overfit immediately. Pair-ID interactions remain descriptive and in-sample
+only, because a per-pair coefficient cannot predict a pair never observed.
+
+**Held-out split unit is the pair.** Every seed and both arms of a held-out
+source-to-target pair stay entirely held out, or the model sees the pair it
+is being asked to predict.
+
+### The structural limit, recorded
+
+**10 of the 12 directed pairs share at least one primitive.** Only 2 do not.
+That is very little contrast for a feature whose whole purpose is to
+distinguish sharing from non-sharing, and it caps what this pilot can
+establish: a positive result would rest on two negative-control pairs.
+
+This is a **viability pass**, not evidence of developmental structure. A
+broader substrate — more families, deliberately including primitive-disjoint
+ones — is required in the rigor pass before any claim about primitive-level
+structure is defensible.
+
+### Non-blocking pilot debt
+
+F5's answer marginal deviates 0.096 from uniform, more than the other three,
+because its chain index derives from a value that can itself be selected. Not
+tuned today. It becomes blocking only if it produces a concrete transfer or
+evaluation invalidator, in which case F5's rows and columns are suspect.
