@@ -235,3 +235,60 @@ def test_run_spec_drives_the_stream_count():
                     n_eval_points=spec.n_eval_points(0))
     assert spec.n_eval_points(0) == 3
     assert f"eval.{spec.target_phase_index}.0" in keys
+
+
+# --- The cue map (added at Gate B) ----------------------------------------
+
+
+def test_cue_map_is_balanced_across_classes():
+    """An unbalanced cue map would make the cue predict the rule.
+
+    Every class must own the same number of cue tokens, or the cue carries
+    information about the rule and the isolating conditions stop isolating.
+    """
+    from dsi.data import cue_table
+
+    config = TaskConfig(n_digits=3)
+    table = np.asarray(cue_table(config))
+    assert table.shape == (config.n_classes, config.cues_per_class)
+    assert sorted(table.flatten().tolist()) == list(range(config.n_cues))
+
+
+def test_unbalanced_cue_count_is_refused():
+    with pytest.raises(ValueError, match="multiple of n_classes"):
+        TaskConfig(n_classes=4, n_cues=6)
+
+
+def test_cue_is_uninformative_about_the_rule_in_w_family():
+    batch = sample_batch(jr.key(7), "W", TaskConfig(n_digits=3), 40_000)
+    w, p = np.asarray(batch["w_answer"]), np.asarray(batch["p_answer"])
+    joint = np.histogram2d(w, p, bins=[4, 4])[0]
+    expected = joint.sum(0)[None, :] * joint.sum(1)[:, None] / joint.sum()
+    assert float(((joint - expected) ** 2 / expected).sum()) < 30.0
+
+
+def test_heldout_split_is_disjoint_from_train():
+    from dsi.data import digit_table
+
+    config = TaskConfig(n_digits=3)
+    train = {tuple(r) for r in np.asarray(digit_table(config, "train")).tolist()}
+    heldout = {tuple(r) for r in np.asarray(digit_table(config, "heldout")).tolist()}
+    assert train and heldout
+    assert train.isdisjoint(heldout)
+    assert len(train) + len(heldout) == config.n_inputs
+
+
+def test_split_is_stratified_so_residues_stay_uniform():
+    """Both halves must keep exactly uniform rule residues.
+
+    An unstratified split would leave the digit sum weakly predictive in each
+    half, which would surface later as transfer that is an artifact of how
+    the data was divided.
+    """
+    from dsi.data import digit_table
+
+    config = TaskConfig(n_digits=3)
+    for split in ("train", "heldout"):
+        table = np.asarray(digit_table(config, split))
+        counts = np.bincount(table.sum(1) % config.n_classes, minlength=config.n_classes)
+        assert len(set(counts.tolist())) == 1, f"{split} residues unbalanced: {counts}"

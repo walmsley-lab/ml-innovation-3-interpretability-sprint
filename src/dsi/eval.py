@@ -33,6 +33,7 @@ class ConditionResult:
     """
 
     condition: str
+    split: str
     loss: float
     accuracy: float
     follows_w: float
@@ -53,8 +54,10 @@ def evaluate_condition(
     config: TaskConfig,
     key: jax.Array,
     batch_size: int,
+    *,
+    split: str = "train",
 ) -> ConditionResult:
-    batch = sample_batch(key, condition, config, batch_size)
+    batch = sample_batch(key, condition, config, batch_size, split=split)
     logprobs = _answer_logprobs(model, batch["tokens"], config.answer_target_index)
 
     w_token = config.answer_base + batch["w_answer"]
@@ -82,6 +85,7 @@ def evaluate_condition(
 
     return ConditionResult(
         condition=condition,
+        split=split,
         loss=float(loss),
         accuracy=float(accuracy),
         follows_w=float(follows_w),
@@ -97,14 +101,23 @@ def evaluate(
     *,
     batch_size: int = 512,
     conditions: tuple[str, ...] = CONDITIONS,
+    split: str = "train",
 ) -> dict[str, ConditionResult]:
     """Run the diagnostic suite.
 
     Each condition draws from its own split of the evaluation key, so adding
     or reordering conditions does not change the examples the others see.
+
+    ``conditions`` is a parameter rather than a constant so that a caller can
+    decline to measure something. The Gate B sweep uses this to omit
+    ``conflict`` entirely, which makes selecting a regime on order-effect
+    magnitude structurally impossible rather than merely discouraged.
     """
+    unknown = set(conditions) - set(CONDITIONS)
+    if unknown:
+        raise ValueError(f"unknown conditions {sorted(unknown)}")
     keys = jr.split(key, len(conditions))
     return {
-        condition: evaluate_condition(model, condition, config, k, batch_size)
+        condition: evaluate_condition(model, condition, config, k, batch_size, split=split)
         for condition, k in zip(conditions, keys)
     }
