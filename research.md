@@ -440,10 +440,16 @@ frozen thereafter.
 
 ## Calibrating the overlap floor
 
-`r = 0.25` is **not** frozen from the discovery run. That figure came from one
-architecture, one task and one seed, and the region from `r = 0.10` to
-`r = 0.25` is a sharp transition **observed in the discovery run**, not a
-universal threshold.
+`r = 0.25` is **not** frozen from the discovery run, and is classified as a
+**discovery / proof-of-concept result at seed 1000**. The replicated
+calibration that followed showed it does not hold on other seeds. It
+establishes that overlap *can* restore coexistence; it is not a calibrated
+setting. The region from `r = 0.10` to `r = 0.25` is likewise a sharp
+transition **observed in the discovery run**, not a universal threshold.
+
+Calibration is also blocked until the regime's own solo competence is robust
+across seeds: an overlap floor cannot be chosen for preserving a capability
+the regime does not reliably acquire. Phase duration is calibrated first.
 
 Selection protocol, run before any history comparison:
 
@@ -451,7 +457,9 @@ Selection protocol, run before any history comparison:
 * three calibration seeds, disjoint from the confirmatory ones;
 * both directions;
 * incoming-skill exposure matched, so higher overlap adds tokens rather than
-  displacing the skill being acquired;
+  displacing the skill being acquired. At frozen incoming exposure `N`, the
+  old-skill sample count is `N_old = N * r / (1 - r)`, so the arithmetic
+  rescales whenever the frozen phase duration changes;
 * selection rule: the **smallest** `r` for which every seed and both
   directions reach explicit coexistence at or above `tau_retention`.
 

@@ -11,19 +11,24 @@ evaluate ``conflict`` at all, so a regime cannot be selected on the magnitude
 of the effect the project exists to measure. That is structural, not a
 convention.
 
-Three stages, cheapest first:
+Two stages:
 
-    B1  solo competence, generalization and learning window, at the screening
-        seed. One phase per source.
-    B2  retention, measured immediately after the second source *and* after
-        the washout. Adequacy uses the pre-washout figure: retention after
-        MIX confounds whether the learner held both sources with whether the
-        shared washout restored one, and adequacy is a property of the
-        learner.
-    B3  replication of the full measurement over the remaining calibration
-        seeds. Eligibility is the worst case across seeds, because a regime
-        adequate on one seed and not another would fail under the
-        confirmatory design it was selected for.
+    B1  **replicated solo adequacy.** Solo competence for each family,
+        held-out generalization, and learning-window adequacy, measured on
+        *every* calibration seed. A regime does not proceed unless it passes
+        on all of them.
+
+    B2  sequential coexistence and retention, on B1-robust regimes only,
+        also across every calibration seed.
+
+Seed replication lives in B1 by design. An earlier version gated replication
+behind retention, so a regime that failed retention never had its solo
+competence replicated. Retention was then failing for an apparatus reason
+unrelated to the regime, and the fact that the regime itself learned the rule
+on only two of three seeds went unseen for an entire calibration cycle. Solo
+competence, generalization and learning window are properties of the regime
+alone; they are established first, and a B2 failure can no longer suppress
+discovery of B1 seed fragility.
 
 Execution
 ---------
@@ -87,7 +92,6 @@ CALIBRATION_SEEDS = (1000, 1001, 1002)
 Screening runs on the first; eligibility is replicated over all three before
 the regime is frozen.
 """
-SCREEN_SEED = CALIBRATION_SEEDS[0]
 
 OFFSETS = tuple(round(0.1 * i, 1) for i in range(11))
 EVAL_BATCH = 256
@@ -103,12 +107,17 @@ SWEEP_CONDITIONS = GATE_B_CONDITIONS  # explicit modes only; no NEUTRAL_CONFLICT
 # coexistence 0.273 against 0.301 for full-token, with the second source also
 # acquired far more weakly. The objective is not the explanation, so it is not
 # an axis of this sweep.
+# Duration calibration. Phase duration is the only variable: the solo traces
+# at 600 steps were still climbing on the seed that failed, which is
+# under-training rather than a capacity limit, so duration is the neutral
+# thing to move. Architecture, learning rate, task construction, loss and
+# thresholds are all held at their existing values.
 FULL_GRID = {
     "n_digits": (3,),
     "n_cues": (256,),
-    "model": ((64, 2), (64, 4), (128, 2), (128, 4)),
-    "steps_per_phase": (600,),
-    "learning_rate": (3e-3, 1e-3),
+    "model": ((64, 4),),
+    "steps_per_phase": (600, 900, 1200),
+    "learning_rate": (3e-3,),
 }
 PILOT_GRID = {
     "n_digits": (3,),
@@ -357,7 +366,7 @@ def sweep(grid, out: Path, workers: int, stagger: float) -> None:
     print(f"code_version {version}")
     print(f"criteria     {CRITERIA}")
     print(f"conditions   {SWEEP_CONDITIONS}  (conflict deliberately not measured)")
-    print(f"seeds        screen={SCREEN_SEED} replicate={CALIBRATION_SEEDS}")
+    print(f"seeds        {CALIBRATION_SEEDS} (B1 replicated across all)")
     print(f"configs      {len(combos)}   workers {workers}\n")
     started = time.time()
 
@@ -366,62 +375,65 @@ def sweep(grid, out: Path, workers: int, stagger: float) -> None:
         return [(s, seed, stage) for s in subset for seed in seeds
                 if (label_of(s), seed) not in done]
 
-    # --- B1: solo, screening seed -----------------------------------------
-    todo = pending_for("b1", combos, [SCREEN_SEED])
-    print(f"--- B1 solo ({len(todo)} to run, {len(combos) - len(todo)} resumed) ---")
+    # --- B1: replicated solo adequacy, every seed -------------------------
+    todo = pending_for("b1", combos, CALIBRATION_SEEDS)
+    total = len(combos) * len(CALIBRATION_SEEDS)
+    print(f"--- B1 replicated solo ({len(todo)} to run, {total - len(todo)} resumed) ---")
     dispatch(todo, out, workers, stagger)
     b1 = load_units(out, "b1")
 
-    def solo_ok(settings):
-        record = b1.get((label_of(settings), SCREEN_SEED))
+    def solo_failures(settings, seed):
+        record = b1.get((label_of(settings), seed))
         if not record:
-            return False
-        candidate = candidate_from(settings, record, None, SCREEN_SEED)
-        return not [f for f in candidate.failures(CRITERIA) if not f.startswith("retention")]
+            return ("missing",)
+        candidate = candidate_from(settings, record, None, seed)
+        return tuple(f for f in candidate.failures(CRITERIA)
+                     if not f.startswith("retention"))
 
-    survivors = [s for s in combos if solo_ok(s)]
+    survivors = []
     for settings in combos:
-        record = b1.get((label_of(settings), SCREEN_SEED))
-        if record:
-            print(f"{label_of(settings):31s} A_W={record['acc_w']:.2f} "
-                  f"A_P={record['acc_p']:.2f} gen={record['generalization_worst']:.2f} "
+        label = label_of(settings)
+        print(f"\n  {label}")
+        robust = True
+        for seed in CALIBRATION_SEEDS:
+            record = b1.get((label, seed))
+            if not record:
+                print(f"    seed {seed}: missing")
+                robust = False
+                continue
+            failures = solo_failures(settings, seed)
+            robust &= not failures
+            print(f"    seed {seed}: A_W={record['acc_w']:.3f} A_P={record['acc_p']:.3f} "
+                  f"gen={record['generalization_worst']:.3f} "
                   f"R_W={record['window_w']:.2f} R_P={record['window_p']:.2f} "
-                  f"{record['seconds']:.0f}s {'ok' if solo_ok(settings) else 'fail'}")
+                  f"{record['seconds']:.0f}s  "
+                  f"{'ok' if not failures else 'FAIL: ' + ', '.join(failures)}")
+        print(f"    -> {'B1-ROBUST' if robust else 'not robust; does not proceed to B2'}")
+        if robust:
+            survivors.append(settings)
 
-    # --- B2: retention, screening seed ------------------------------------
-    todo = pending_for("b2", survivors, [SCREEN_SEED])
-    print(f"\n--- B2 retention ({len(survivors)} survivors, {len(todo)} to run) ---")
+    # --- B2: retention, B1-robust regimes only, every seed ----------------
+    todo = pending_for("b2", survivors, CALIBRATION_SEEDS)
+    print(f"\n--- B2 retention ({len(survivors)} B1-robust regimes, {len(todo)} to run) ---")
+    if not survivors:
+        print("  none. B1 is where this stopped, which is the point of doing it first.")
     dispatch(todo, out, workers, stagger)
     b2 = load_units(out, "b2")
     for settings in survivors:
-        record = b2.get((label_of(settings), SCREEN_SEED))
-        if record:
-            print(f"{label_of(settings):31s} retention pre={record['retention_pre_washout']:.3f} "
-                  f"post={record['retention_post_washout']:.3f} {record['seconds']:.0f}s")
+        for seed in CALIBRATION_SEEDS:
+            record = b2.get((label_of(settings), seed))
+            if record:
+                print(f"  {label_of(settings):31s} seed {seed} "
+                      f"coexistence={record['retention_pre_washout']:.3f} "
+                      f"heldout={record['heldout_worst']:.3f} {record['seconds']:.0f}s")
 
-    def fully_ok(settings, seed):
-        first = b1.get((label_of(settings), seed))
-        second = b2.get((label_of(settings), seed))
-        return bool(first and second and
-                    candidate_from(settings, first, second, seed).is_adequate(CRITERIA))
-
-    replicate = [s for s in survivors if fully_ok(s, SCREEN_SEED)]
-
-    # --- B3: replication over the remaining calibration seeds -------------
-    others = [s for s in CALIBRATION_SEEDS if s != SCREEN_SEED]
-    todo = pending_for("b1", replicate, others) + pending_for("b2", replicate, others)
-    print(f"\n--- B3 replication ({len(replicate)} candidates x {len(others)} seeds, "
-          f"{len(todo)} to run) ---")
-    dispatch(todo, out, workers, stagger)
-    b1, b2 = load_units(out, "b1"), load_units(out, "b2")
-
-    # --- Aggregate, select, freeze ----------------------------------------
+    # --- Aggregate over seeds, select, freeze -----------------------------
     candidates, rows = [], []
     for settings in combos:
+        label = label_of(settings)
         replicates = [
-            candidate_from(settings, b1[(label_of(settings), seed)],
-                           b2.get((label_of(settings), seed)), seed)
-            for seed in CALIBRATION_SEEDS if (label_of(settings), seed) in b1
+            candidate_from(settings, b1[(label, seed)], b2.get((label, seed)), seed)
+            for seed in CALIBRATION_SEEDS if (label, seed) in b1
         ]
         if not replicates:
             continue
@@ -436,8 +448,8 @@ def sweep(grid, out: Path, workers: int, stagger: float) -> None:
             "acc_w": worst.acc_w, "acc_p": worst.acc_p,
             "generalization_worst": worst.generalization_worst,
             "retention_pre_washout": worst.retention_pre_washout,
-            "retention_post_washout": worst.retention_post_washout,
             "window_w": worst.window_w.width, "window_p": worst.window_p.width,
+            "b1_robust": settings in survivors,
             "adequate": worst.is_adequate(CRITERIA),
             "failures": "; ".join(worst.failures(CRITERIA)),
             "code_version": version, "recorded_at": utc_now(),

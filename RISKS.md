@@ -135,11 +135,20 @@ Diagnostic C is **not** run. The A-succeeds/sequential-fails pattern licensed
 it, but continuity rescues coexistence without any protection method, so
 EWC/OGD would answer a question that is no longer open.
 
-r=0.10 to r=0.25 is a **sharp transition region observed in the discovery
-run**, at one architecture, one task and one seed. It is not a universal
-threshold, and r=0.25 is deliberately **not frozen** from the discovery seed.
-A neutral calibration over r in {.15, .20, .25, .30} across three seeds and
-both directions selects the operating point.
+**Status of the r=0.25 result: discovery / proof-of-concept only.** It was
+obtained at seed 1000, at one architecture and one task, and the replicated
+calibration that followed showed it does not hold on other seeds (0.369 at
+seed 1002). It demonstrates that overlap *can* restore coexistence; it is
+**not** a calibrated overlap setting and must not be used as one.
+
+r=0.10 to r=0.25 is likewise a sharp transition region **observed in the
+discovery run**, not a universal threshold.
+
+The calibrated overlap floor is undetermined. It cannot be selected until the
+regime's solo competence is robust across calibration seeds, and when it is
+re-run the matched-incoming-exposure arithmetic scales with the frozen
+duration: at incoming exposure N, the old-skill sample count is
+`N_old = N * r / (1 - r)`.
 
 The open question is now about the hypothesis, not the apparatus: whether the
 primary developmental operationalization stays pure block-sequential or moves
@@ -200,10 +209,21 @@ should be replicated across seeds inside B1, before any retention measurement
 is attempted. The seed-replication requirement was correct; it was placed too
 late in the sequence to catch this.
 
-Remedy, not yet run: restore solo reliability first — the traces indicate
-under-training, so phase duration is the neutral variable to move — then
-re-run the overlap calibration on a regime whose solo competence holds across
-all calibration seeds.
+Remedy, in progress: **seed replication is now permanent in B1**. The revised
+Gate-B ordering is
+
+* **B1 — replicated solo adequacy.** Solo competence per family, held-out
+  generalization and learning-window adequacy, on every calibration seed. A
+  regime does not reach retention testing unless it passes on all of them.
+* **B2 — sequential coexistence and retention**, on B1-robust regimes only.
+
+A B2 failure can no longer suppress discovery of B1 seed fragility.
+
+Phase duration is then calibrated as the only new variable —
+`steps_per_phase` in {600, 900, 1200} at fixed d64/l4, lr=3e-3, seeds
+1000-1002, everything else unchanged — selecting the **smallest** duration
+with robust solo competence and generalization across all seeds. Overlap
+calibration does not re-run until that duration is frozen.
 
 ---
 
