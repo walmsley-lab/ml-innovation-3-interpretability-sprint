@@ -170,6 +170,7 @@ def run_sequence(order, task, model_config, train_config, settings, seed, *, sol
     state = init_state(model_config, train_config, keys["init"])
     own = "W_COMPETENCE" if order[0].startswith("W") else "P_COMPETENCE"
     curve, solo_heldout, per_phase = [], float("nan"), {}
+    trace, heldout_final = [], {}
 
     for index, phase in enumerate(spec.phases):
         stream = "source_data" if phase.role == "source" else "target_data"
@@ -185,6 +186,12 @@ def run_sequence(order, task, model_config, train_config, settings, seed, *, sol
             eval_fn=eval_fn,
         )
         per_phase[phase.role] = records[-1]["result"]
+        for offset, record in zip(OFFSETS, records):
+            trace.append({
+                "phase": index, "phase_family": phase.family, "offset": offset,
+                "acc_w": record["result"]["W_COMPETENCE"].accuracy,
+                "acc_p": record["result"]["P_COMPETENCE"].accuracy,
+            })
         if index == 0 and solo:
             curve = [r["result"][own].accuracy for r in records]
             # Generalization at peak competence, so it is identifiable
@@ -194,7 +201,15 @@ def run_sequence(order, task, model_config, train_config, settings, seed, *, sol
                 batch_size=EVAL_BATCH, conditions=SWEEP_CONDITIONS, split="heldout",
             )[own].accuracy
 
-    return curve, solo_heldout, per_phase
+    if not solo:
+        # Held-out generalization measured on the same final checkpoint.
+        last = len(spec.phases) - 1
+        heldout_final = evaluate(
+            state.model, task, keys[f"eval.{last}.{len(OFFSETS)-1}"],
+            batch_size=EVAL_BATCH, conditions=SWEEP_CONDITIONS, split="heldout",
+        )
+    return curve, solo_heldout, {"per_phase": per_phase, "trace": trace,
+                                 "heldout": heldout_final}
 
 
 # --- Units -----------------------------------------------------------------
@@ -240,14 +255,20 @@ def execute_unit(settings, seed: int, stage: str, out: Path) -> None:
                                 settings, seed, solo=False)
         _, _, pw = run_sequence(("P_EXPLICIT", "W_EXPLICIT"), task, model_config, train_config,
                                 settings, seed, solo=False)
-        # Both sides of the washout. Adequacy uses the pre-washout figure.
+        end_wp, end_pw = wp["per_phase"]["target"], pw["per_phase"]["target"]
         payload.update({
+            # Coexistence at the end of sequential exposure, worst source and
+            # worst order. There is no washout phase in this gate, so the
+            # post-washout figure is not measured rather than defaulted.
             "retention_pre_washout": min(
-                wp["target"]["W_COMPETENCE"].accuracy, wp["target"]["P_COMPETENCE"].accuracy,
-                pw["target"]["W_COMPETENCE"].accuracy, pw["target"]["P_COMPETENCE"].accuracy),
-            "retention_post_washout": min(
-                wp["washout"]["W_COMPETENCE"].accuracy, wp["washout"]["P_COMPETENCE"].accuracy,
-                pw["washout"]["W_COMPETENCE"].accuracy, pw["washout"]["P_COMPETENCE"].accuracy),
+                end_wp["W_COMPETENCE"].accuracy, end_wp["P_COMPETENCE"].accuracy,
+                end_pw["W_COMPETENCE"].accuracy, end_pw["P_COMPETENCE"].accuracy),
+            "retention_post_washout": float("nan"),
+            "washout_present": False,
+            "heldout_worst": min(
+                wp["heldout"]["W_COMPETENCE"].accuracy, wp["heldout"]["P_COMPETENCE"].accuracy,
+                pw["heldout"]["W_COMPETENCE"].accuracy, pw["heldout"]["P_COMPETENCE"].accuracy),
+            "trace_wp": wp["trace"], "trace_pw": pw["trace"],
         })
     else:
         raise ValueError(f"unknown stage {stage!r}")
@@ -317,7 +338,7 @@ def candidate_from(settings, b1: dict, b2: dict, seed: int) -> RegimeCandidate:
     steps = settings["steps_per_phase"]
     return RegimeCandidate(
         label=label_of(settings), params=b1["params"],
-        tokens=3 * steps * train_config.batch_size * task.seq_len,
+        tokens=2 * steps * train_config.batch_size * task.seq_len,
         n_digits=settings["n_digits"], d_model=model_config.d_model,
         n_layers=model_config.n_layers, learning_rate=settings["learning_rate"],
         steps_per_phase=steps, n_cues=settings["n_cues"], seeds=(seed,),
