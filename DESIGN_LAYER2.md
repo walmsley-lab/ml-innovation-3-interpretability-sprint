@@ -1209,3 +1209,97 @@ Validated prediction of unseen natural-data developmental interventions,
 followed by model-selected execution of **one** untouched intervention.
 Nothing about latent state, nothing about causal ontology, nothing about
 curriculum control.
+
+## 22. Three outcome-blind design resolutions, before any WikiText transfer
+
+No transfer has been run on this substrate. Nothing below is informed by an
+outcome.
+
+### 1. Family imbalance: family 6 is a residual cluster, and is excluded
+
+| fam | docs | tokens | med len | cohesion | margin | top terms |
+|---|---|---|---|---|---|---|
+| 0 | 997 | 3,010,425 | 2,400 | 0.377 | 0.60 | album, song, music, band |
+| 1 | 408 | 647,413 | 1,085 | 0.442 | 0.79 | highway, route, ny, road |
+| 2 | 629 | 2,568,054 | 3,047 | 0.291 | 0.52 | army, battalion, aircraft, war |
+| 3 | 411 | 1,491,233 | 3,122 | 0.429 | 0.64 | game, player, gameplay, nintendo |
+| 4 | 719 | 1,751,525 | 2,084 | 0.375 | 0.63 | episode, series, season, homer |
+| 5 | 384 | 833,651 | 1,692 | 0.611 | 0.81 | storm, tropical, hurricane |
+| **6** | **6,126** | **23,942,169** | 2,992 | **0.145** | 0.52 | **film, species, new, team, time** |
+| 7 | 470 | 1,182,302 | 1,811 | 0.462 | 0.56 | ship, ships, guns, fleet |
+
+Seven families are crisply thematic. Family 6 is not:
+
+* **cohesion 0.145**, less than half the next-worst (0.291) and a third of
+  the 0.409 median — its documents are not near each other;
+* top terms `film, species, new, team, season, time` span three unrelated
+  domains, and its distinctive terms — `kepler, thanhouser, banksia, µm,
+  wickets` — span astronomy, silent cinema, Australian flora, microscopy and
+  cricket;
+* it is the **nearest neighbour of five of the other seven**, the signature
+  of a central leftover blob.
+
+It is the residual bin k-means leaves after the coherent structure is carved
+off. A source drawn from it measures "generic text" rather than a
+developmental family, and including it in a control would make the control
+generic.
+
+**Resolution: family 6 is excluded from every role — source, target and
+control.** It remains in the corpus and is used for nothing. Seven usable
+families, 21 unordered and 42 directed pairs. Re-clustering was rejected: at
+`k=12` the method produces the same artifact (family 0 at 4,632 documents and
+18.5M tokens), so a residual bin is a property of the proposer, not of `k`.
+
+### 2. Intervention dose: fixed, not corpus-derived
+
+The 638,976-token figure came from taking the phase budget to be *the largest
+single full pass the binding family can serve*. That makes treatment strength
+a function of corpus size, so a WikiText effect and a 20NG effect would not be
+the same intervention, and any difference between substrates would be
+partly a dose difference.
+
+**Resolution: the phase budget is fixed at 1,536 chunks = 196,608 LM tokens,
+identical to 20NG.** Corpus size now affects **support** — how much headroom
+exists, how many families clear the gate, whether exposure stays single-pass
+— and not **intervention strength**. Every family still supplies its phase in
+a single pass with large margin: the binding family holds 5,061 chunks
+against a 1,536 requirement.
+
+There is no principled reason here to define treatment as one full family
+pass. "One pass" is a property of the corpus; dose should be a controlled
+variable.
+
+### 3. Common-control weighting: equal-family, frozen
+
+`N_j` is an **equal-family** mixture over the six non-target used families,
+256 chunks each. Natural-frequency weighting is rejected: at 37x imbalance it
+would make the control almost entirely one family, so the control's
+composition would be an accident of corpus proportions rather than a
+controlled constant, and it would vary in character across targets for
+reasons unrelated to the design. Equal weighting keeps the control a fixed,
+stated object. (Excluding family 6 removes most of the imbalance anyway; the
+weighting is frozen explicitly so it cannot drift.)
+
+### Re-frozen pools
+
+The 8-family partition is **superseded** and retained as
+`frozen_pools_k8_superseded.json`. The replacement is built on 7 families:
+
+`sha256 497b9c3fc66e8adbca96ac2eef41e9e2ada14ffcdc0d78bb4cbbf589c42b3c27`
+
+| pool | unordered | directed |
+|---|---|---|
+| development | 13 | 26 |
+| confirmatory | 5 | 10 |
+| adaptive | 3 | 6 |
+
+Superseding a frozen partition is legitimate **only** because the defect was
+found on outcome-blind grounds and no WikiText transfer has been run. The
+supersession, its reason and both hashes are recorded rather than the old
+file being deleted.
+
+**Ladder consequence.** With 7 families the additive model is 13 parameters
+and the relational model 15, against 26 development relationships. Ridge
+throughout, penalty by inner LOPO inside development only. The 25%
+material-improvement rule is unchanged and remains **prospective and
+WikiText-only**; it is not applied to H3.

@@ -26,14 +26,24 @@ from pathlib import Path
 import numpy as np
 
 OUT = Path("artifacts/corpus_v2")
-FAMILIES = tuple(range(8))
-N_DEV, N_CONF, N_ADAPT = 18, 6, 4       # unordered pairs; 28 total
+
+# Family 6 is excluded on outcome-blind grounds: cohesion 0.145 against a
+# 0.409 median, top terms spanning film/species/team, distinctive terms
+# spanning astronomy, silent cinema, Australian flora, microscopy and
+# cricket, and it is the nearest neighbour of five of the other seven. It is
+# the residual bin k-means leaves after the coherent structure is carved off.
+# Using it as a source would measure "generic text", and including it in a
+# control would make the control generic. It stays in the corpus and is used
+# for nothing. No transfer outcome informed this.
+RESIDUAL_FAMILY = 6
+FAMILIES = tuple(f for f in range(8) if f != RESIDUAL_FAMILY)
+N_DEV, N_CONF, N_ADAPT = 13, 5, 3       # unordered pairs; 21 total
 SEED = 20260816
 
 
 def main() -> None:
     unordered = [(a, b) for i, a in enumerate(FAMILIES) for b in FAMILIES[i + 1:]]
-    assert len(unordered) == 28, len(unordered)
+    assert len(unordered) == 21, len(unordered)
 
     order = np.random.default_rng(SEED).permutation(len(unordered))
     pools = {}
@@ -54,11 +64,22 @@ def main() -> None:
     if overlap:
         raise AssertionError(f"pools overlap: {overlap}")
     total = sum(len(g) for g in directed.values())
-    if total != 56:
-        raise AssertionError(f"{total} directed pairs, expected 56")
+    if total != 42:
+        raise AssertionError(f"{total} directed pairs, expected 42")
 
     payload = {
         "corpus": "wikitext103-raw-v1", "k": 8, "seed": SEED,
+        "families_used": list(FAMILIES),
+        "excluded_family": RESIDUAL_FAMILY,
+        "exclusion_reason": "residual cluster: cohesion 0.145 vs 0.409 median, "
+                            "incoherent distinctive terms, nearest neighbour of "
+                            "five other families. Outcome-blind; no transfer "
+                            "result informed it.",
+        "phase_lm_tokens": 196608,
+        "phase_chunks": 1536,
+        "dose_rationale": "fixed at the 20NG dose so corpus size affects support, "
+                          "not intervention strength",
+        "control_weighting": "equal-family over the non-target used families",
         "partition_unit": "unordered pair; both directions move together so a "
                           "reverse-direction observation cannot leak pair identity",
         "unordered": {k: [list(p) for p in v] for k, v in pools.items()},
