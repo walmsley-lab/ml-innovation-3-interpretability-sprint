@@ -38,6 +38,15 @@ class ConditionResult:
     accuracy: float
     follows_w: float
     follows_p: float
+    logodds_w_minus_p: float
+    """Mean of s(x) = log P(W-answer | x) - log P(P-answer | x).
+
+    The primary Claim-1 estimand. A rate like ``follows_w`` thresholds the
+    decision and throws away how strongly it was made; the log-odds keeps the
+    margin, which is both more sensitive and better behaved when both answers
+    are close.
+    """
+
     n_examples: int
 
 
@@ -89,6 +98,7 @@ def evaluate_condition(
     return ConditionResult(
         condition=condition,
         split=split,
+        logodds_w_minus_p=float(jnp.mean(lp_w - lp_p)),
         loss=float(loss),
         accuracy=float(accuracy),
         follows_w=float(follows_w),

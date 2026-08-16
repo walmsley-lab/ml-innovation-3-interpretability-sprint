@@ -340,7 +340,15 @@ def sample_batch(
         k_primary, k_secondary, k_mask = jr.split(key, 3)
         a = sample_batch(k_primary, primary, config, batch_size, split=split)
         b = sample_batch(k_secondary, secondary, config, batch_size, split=split)
-        take_secondary = jr.bernoulli(k_mask, fraction, (batch_size,))
+        # Deterministic exact-count allocation, not Bernoulli. Independent
+        # sampling gives equal *expected* counts and unequal *realized* ones,
+        # and a difference in realized exposure between two compared histories
+        # is a difference in what they saw — exactly the confound that holding
+        # allocation fixed exists to remove. A permutation makes the count
+        # exact in every batch while keeping which positions are chosen
+        # deterministic in the key.
+        n_secondary = int(round(fraction * batch_size))
+        take_secondary = jr.permutation(k_mask, batch_size) < n_secondary
         mixed = Batch()
         for field in ("tokens", "w_answer", "p_answer", "mode"):
             mask = take_secondary
