@@ -1,20 +1,20 @@
 # Technical Plan: Developmental System Identification for Pretraining
 
-## 1. Engineering Philosophy
+## 1. Engineering Objective
 
-The implementation should be:
+The codebase should be:
 
-* functional where practical;
 * small;
+* functional where practical;
 * explicit;
 * reproducible;
+* easy to test;
 * cheap to branch;
-* highly parallel at the experiment level;
-* deterministic enough to support paired experimentation;
+* easy to parallelize;
 * budget aware;
 * infrastructure agnostic.
 
-The core principle is:
+The central principle is:
 
 [
 \boxed{
@@ -24,130 +24,138 @@ The core principle is:
 }
 ]
 
-The research code defines experiments.
+The science layer defines experiments.
 
-Execution infrastructure merely runs them.
+The executor runs them.
+
+The infrastructure must never decide the scientific design.
 
 ---
 
-# 2. Primary Technology Stack
+# 2. Simplicity Rule
 
-## Model and optimization
+No abstraction is implemented merely because the eventual research program might need it.
 
-* **JAX**
-* **Equinox**
-* **Optax**
-* **Orbax**
+New modules or frameworks are added only when a current stage requires them.
 
-JAX fits the project particularly well because explicit state, explicit RNG keys, function transformation, vectorization, and immutable-style computation align with controlled developmental branching.
+In particular:
 
-## Configuration
+* no graph framework before (T) exists;
+* no ontology engine before held-out prediction works;
+* no active-selection framework before exhaustive small-scale experiments work;
+* no learned control policy before a transparent curriculum compiler works;
+* no polished UI before scientific outputs stabilize.
 
-* Hydra
+---
 
-## Analysis
+# 3. Core Stack
 
+## Initial core
+
+* Python
+* JAX
+* Equinox
+* Optax
 * Polars
-* PyArrow / Parquet
+* PyArrow
 * NumPy
 * SciPy
-* scikit-learn
-* NetworkX
-* Matplotlib
+* pytest
 
-## Statistical modeling
+## Added when earned
 
-Initial:
+### Hydra
 
-* SciPy / statsmodels where sufficient
+At capacity/HPO sweep stage.
 
-If hierarchical inference becomes useful:
+### Orbax
 
-* NumPyro is the natural JAX-aligned option.
+When checkpoints must cross processes/machines.
 
-Do not introduce probabilistic programming until the transfer pilot justifies it.
+### NumPyro
 
-## HPO
+Only if the transfer pilot justifies hierarchical probabilistic inference.
 
-* Optuna or Ray Tune
-* used only for nuisance/calibration parameters.
+### NetworkX
 
-## Cloud execution
+For graph views after transfer structure exists.
 
-* existing GCP runner, evolved rather than replaced.
+### Optuna / Ray Tune
 
-The prior runner already protects against runaway billing with a deadman shutdown, failed-job shutdown, and delete-not-stop workflow.
+Only for calibration/HPO if a simple sweep becomes insufficient.
 
-It also already handles real operational failures such as GPU quota ambiguity and scarce L4 capacity by trying multiple zones.
+### Ray
+
+Only if local/GCP process scheduling becomes genuinely difficult.
 
 ---
 
-# 3. Repository Structure
+# 4. Milestone A Repository
 
-Keep the repository small.
+Initial scaffold:
 
 ```text
-src/
-  config.py
+pyproject.toml
+
+src/dsi/
+  rng.py
+  specs.py
+  stats.py
   data.py
   model.py
   train.py
   eval.py
-
-  specs.py
-  interventions.py
-  executor.py
-
-  stats.py
-  transfer.py
-  discovery.py
-  curriculum.py
-
   artifacts.py
-  budget.py
-  plots.py
-
-configs/
-  model/
-  experiment/
-  sweep/
-  budget/
-
-notebooks/
-  00_quickstart.ipynb
-  01_capacity.ipynb
-  02_wp.ipynb
-  03_transfer.ipynb
-  04_explorer.ipynb
-
-scripts/
-  run_local.sh
-  gcp.py
-
-ui/
-  ...
 
 tests/
-  ...
+  test_rng.py
+  test_specs.py
+  test_stats.py
+  test_data.py
+  test_train.py
 
-artifacts/
+README.md
 ```
 
-Avoid a large `experiments.py` god-module.
-
-Keep separate:
-
-* spec generation;
-* selection;
-* execution;
-* inference;
-* visualization.
+Nothing else is required initially.
 
 ---
 
-# 4. Immutable Core Specifications
+# 5. Milestone A Ordering
 
-Use frozen dataclasses or equivalent immutable PyTrees.
+Implementation order:
+
+1. `stats.py`
+2. `rng.py`
+3. `specs.py`
+4. `data.py`
+5. `model.py`
+6. `train.py`
+7. `eval.py`
+8. `artifacts.py`
+
+Estimator validation comes first because it requires no model code and satisfies Research Gate A before any accelerator use.
+
+This corrects the earlier plan that placed estimator simulation in Milestone B.
+
+---
+
+# 6. Milestone A Exit Criterion
+
+Milestone A exits only when:
+
+1. `test_stats` recovers known synthetic effects with calibrated CI coverage;
+2. `test_rng` proves pair-sharing and null-divergence contracts;
+3. canonical `RunSpec` hashing is stable;
+4. target-phase (t=0) evaluation exists in the interface;
+5. one local (W\rightarrow P) / (P\rightarrow W) pair trains end-to-end;
+6. versioned Parquet artifacts are written successfully.
+
+Hydra, Orbax, GCP, GCS, NumPyro, transfer discovery, and UI are deliberately absent.
+
+---
+
+# 7. Immutable Specifications
 
 ```python
 @dataclass(frozen=True)
@@ -166,30 +174,26 @@ class EvalSpec:
 @dataclass(frozen=True)
 class RunSpec:
     schema_version: int
-
     parent_id: str | None
     phases: tuple[PhaseSpec, ...]
-
     model_config_id: str
     data_version: str
-
     init_seed: int
     data_seed: int
     branch_seed: int
     eval_seed: int
-
     evals: tuple[EvalSpec, ...]
 ```
 
-The scientific layer generates `RunSpec`s.
+Configuration is data.
 
-The executor does not decide what experiment should exist.
+Execution is functional.
 
 ---
 
-# 5. Canonical Run Hashing
+# 8. Canonical Content Addressing
 
-Every run receives a stable content address:
+Every run receives:
 
 [
 run_id
@@ -201,81 +205,148 @@ code_version
 ).
 ]
 
-Canonicalization requirements:
+Canonical serialization must specify:
 
 * sorted keys;
+* stable numeric formatting;
 * explicit schema version;
-* stable JSON or msgpack encoding;
-* normalized floats;
-* no local absolute paths;
-* no machine hostname;
-* pinned code version;
-* immutable dataset/eval version identifiers.
+* normalized tuples/lists;
+* no hostnames;
+* no absolute local paths;
+* immutable data/eval IDs;
+* pinned code version semantics.
 
-Different infrastructure should produce the same scientific hash.
+Scientific identity should remain stable across execution infrastructure.
 
-Hardware metadata belongs in the resulting artifact, not the scientific run identity unless the hardware itself is an experimental variable.
+Hardware metadata belongs in the resulting artifact unless hardware is itself experimental.
 
 ---
 
-# 6. JAX RNG Discipline
+# 9. JAX RNG Discipline
 
-Every `RunSpec` receives one root key.
+Every run receives one root key.
 
-Derive all stochastic streams explicitly using `jax.random.fold_in`.
+Derive named streams using `jax.random.fold_in`.
 
-Conceptually:
+Example:
 
 ```python
-root = key(run_seed)
+root = key(seed)
 
-init_key = fold_in(root, INIT_ROLE)
-source_key = fold_in(root, SOURCE_DATA_ROLE)
-target_key = fold_in(root, TARGET_DATA_ROLE)
-branch_key = fold_in(root, BRANCH_ROLE)
-eval_key = fold_in(root, EVAL_ROLE)
+init_key = fold_in(root, INIT)
+source_key = fold_in(root, SOURCE_DATA)
+target_key = fold_in(root, TARGET_DATA)
+train_key = fold_in(root, TRAIN)
+eval_key = fold_in(root, EVAL)
 ```
 
-Phase keys also fold in phase index.
+Phase index and role are also folded in.
 
 Never reuse a JAX key.
 
-Document role constants centrally.
-
-Paired branches share the RNG streams they are intended to share and diverge only on explicitly defined roles.
+Role identifiers are centralized and tested.
 
 ---
 
-# 7. Model
+# 10. Paired RNG Contract
 
-Use a deliberately conventional decoder-only transformer.
+For transfer pair:
 
-Example structure:
+[
+D_i\rightarrow D_j
+]
 
-* token embedding;
-* 4–8 transformer blocks;
-* LayerNorm or RMSNorm;
+versus:
+
+[
+N\rightarrow D_j,
+]
+
+share:
+
+* initialization key;
+* target-data ordering;
+* evaluation RNG;
+* phase-2 stochasticity where possible.
+
+Differ only in source-corpus identity and source realization as prespecified.
+
+The pair-sharing contract is unit tested.
+
+---
+
+# 11. Null RNG Contract
+
+Identity-null pairs must differ in the same logical location as real treatment pairs.
+
+For:
+
+[
+N_1\rightarrow D_j
+]
+
+versus:
+
+[
+N_2\rightarrow D_j,
+]
+
+the source draw differs while initialization, target sequence, and evaluation are matched.
+
+This keeps null variance comparable to treatment variance.
+
+---
+
+# 12. Reproducibility Levels
+
+Do not promise universal bitwise reproducibility.
+
+## Same process / same hardware / deterministic mode
+
+Expect exact or extremely tight agreement where JAX/XLA permits.
+
+## Different process / same accelerator class
+
+Expect numerical agreement within strict tolerance.
+
+## Different accelerator class
+
+Expect distributional equivalence rather than pointwise identity.
+
+Tests should distinguish these regimes.
+
+---
+
+# 13. Model
+
+Use a conventional decoder-only transformer.
+
+Initial components:
+
+* token embeddings;
 * causal attention;
 * RoPE;
+* LayerNorm or RMSNorm;
 * GELU or SwiGLU;
+* residual blocks;
 * output projection.
 
-Do not innovate on architecture while studying curriculum.
+Model architecture remains deliberately boring.
 
-Model configuration is frozen after capacity calibration.
+Architecture innovation would confound the curriculum experiment.
 
 ---
 
-# 8. Functional Training API
+# 14. Functional Training API
 
-Prefer signatures resembling:
+Prefer:
 
 ```python
 state = init_model(config, key)
 
-state, metrics = train_phase(
+state, curve = train_phase(
     state,
-    phase,
+    phase_spec,
     data,
     key,
 )
@@ -287,49 +358,57 @@ metrics = evaluate(
 )
 ```
 
-Avoid hidden global state.
+Avoid hidden globals.
 
 Training state contains:
 
 * parameters;
 * optimizer state;
 * step;
-* RNG lineage;
-* token count.
+* token count;
+* RNG lineage.
 
 ---
 
-# 9. Orbax Checkpointing
+# 15. Statistical Utilities
 
-Checkpoint at:
+`stats.py` initially implements:
 
-* phase boundaries;
-* analysis checkpoints;
-* safe recovery intervals.
+* AULC;
+* paired effect;
+* confidence interval;
+* equivalence interval check;
+* threshold crossing;
+* censoring summary.
+
+Synthetic estimator tests operate entirely on arrays.
+
+---
+
+# 16. Target (t=0) Evaluation
+
+The target family must be evaluated immediately before target training.
 
 Store:
 
-* parameters;
-* optimizer state;
-* step;
-* RNG metadata;
-* parent run ID;
-* data version;
-* config hash;
-* code version;
-* accelerator metadata.
+[
+L_j(0).
+]
 
-Retention policy:
+This is mandatory.
 
-* always keep boundary checkpoints;
-* keep selected analysis checkpoints;
-* prune redundant intermediate recovery checkpoints after verified upload.
+It allows decomposition of:
+
+* immediate transfer;
+* acquisition-rate transfer.
+
+Skipping this measurement makes the decomposition unrecoverable without rerunning experiments.
 
 ---
 
-# 10. Artifact Schema
+# 17. Artifact Schema
 
-Every artifact contains:
+Every persisted artifact contains:
 
 ```text
 schema_version
@@ -339,9 +418,15 @@ config_hash
 code_version
 data_version
 eval_version
-accelerator
+status
+```
+
+Compute artifacts additionally include:
+
+```text
 provider
 region
+accelerator
 start_time
 end_time
 wall_seconds
@@ -349,14 +434,11 @@ accelerator_seconds
 tokens_seen
 estimated_cost_usd
 actual_cost_usd
-status
 ```
-
-Use Parquet for tabular results.
 
 ---
 
-# 11. Core Tables
+# 18. Parquet Tables
 
 ## runs.parquet
 
@@ -390,6 +472,18 @@ logprob
 loss
 ```
 
+## learning_curves.parquet
+
+```text
+schema_version
+run_id
+family
+target_phase_step
+tokens_seen
+loss
+accuracy
+```
+
 ## transfer.parquet
 
 ```text
@@ -398,6 +492,7 @@ source
 target
 seed_pair
 control
+t0_delta
 aulc_delta
 endpoint_delta
 threshold_delta
@@ -411,54 +506,53 @@ cost_usd
 schema_version
 target
 seed_pair
+null_type
 null_delta
-estimator
 hardware
 ```
 
 ---
 
-# 12. Data Lineage
+# 19. Divergence Policy
 
-Every dataset has an immutable version ID.
+No run is silently dropped.
 
-Keep hidden generator metadata physically or logically separate from discovery-visible data.
-
-Suggested structure:
+Possible statuses:
 
 ```text
-data/
-  public/
-    examples.parquet
-    semantic_features.parquet
-
-  hidden_ground_truth/
-    latent_families.parquet
-    planted_graph.json
+COMPLETE
+INFRA_FAILED
+RETRIED
+DIVERGED
+CANCELLED
 ```
 
-Discovery code must not import or access `hidden_ground_truth`.
+Define prespecified thresholds for:
 
-Evaluation scripts may.
+* NaNs;
+* runaway loss;
+* retry limits;
+* divergence-rate invalidation.
+
+Infrastructure failures may retry.
+
+Scientific divergence remains in the dataset.
 
 ---
 
-# 13. Model Capacity Sweep
+# 20. Capacity Calibration
 
-Generate a small Cartesian sweep:
+At Milestone B, add Hydra because Cartesian sweeps now justify it.
 
-```text
-model_size × token_budget
-```
+Generate:
 
-Use Hydra to produce `RunSpec`s.
+[
+\text{model size}\times\text{token budget}.
+]
 
-Use Optuna only if the search space becomes large.
-
-The capacity calibration output should be a compact table containing:
+Record:
 
 * params;
-* tokens;
 * W score;
 * P score;
 * worst-family score;
@@ -469,130 +563,67 @@ The capacity calibration output should be a compact table containing:
 * learning window;
 * cost.
 
-Automated selection:
-
-```python
-eligible = [
-    row for row in results
-    if row.w >= tau_w
-    and row.p >= tau_p
-    and row.generalization >= tau_g
-    and row.worst_family >= tau_family
-    and row.learning_window >= min_window
-]
-
-chosen = min(eligible, key=lambda x: x.params)
-```
-
-Freeze the resulting configuration.
+Automated selector chooses smallest eligible model.
 
 ---
 
-# 14. Nuisance HPO
+# 21. Nuisance HPO
 
-Tune only:
+Tune only calibration variables such as:
 
 * learning rate;
-* weight decay;
 * batch tokens;
+* weight decay;
 * warmup;
 * source duration;
-* target duration if necessary.
+* target duration.
 
-Use calibration data, not the primary W/P comparison.
+Do not tune separately for:
 
-After tuning, freeze these values.
+[
+W\rightarrow P
+]
 
-Do not tune separately by curriculum.
+and:
+
+[
+P\rightarrow W.
+]
+
+After calibration, freeze nuisance hyperparameters.
 
 ---
 
-# 15. Estimator Unit Tests
+# 22. Null and Power Planner
 
-Before cloud experiments, simulate known learning curves.
-
-For example:
+Implement:
 
 ```python
-curve_control = synthetic_curve(...)
-curve_effect = synthetic_curve(delta=0.05)
+estimate_noise(...)
+plan_power(...)
 ```
 
-Test:
+Inputs:
 
-* AULC estimate;
-* paired difference;
-* CI coverage;
-* threshold censoring logic;
-* hierarchical shrinkage behavior.
+* null paired variance;
+* (\delta_{\min});
+* target power;
+* alpha.
 
-These tests run on CPU.
+Outputs:
+
+* required paired seeds;
+* estimated runs;
+* GPU hours;
+* expected cost.
+
+No confirmatory batch launches before power planning succeeds.
 
 ---
 
-# 16. Null Calibration Runner
+# 23. W/P Experiment Generator
 
-Implement identity-null generation as a first-class experimental family.
-
-```python
-make_null_pair(
-    target="B",
-    prefix_family="neutral",
-    seed_pair=...
-)
-```
-
-Use the same checkpoint, token budgets, and target data as scientific transfer experiments.
-
-Null outputs feed the power estimator.
-
----
-
-# 17. Power Planner
-
-Input:
-
-* pilot paired variance;
-* minimum effect size;
-* alpha;
-* desired power.
-
-Output:
-
-* required seed count;
-* expected GPU hours;
-* estimated dollar cost.
-
-Example output:
-
-```text
-sigma_pair        0.041
-delta_min         0.050
-power             0.90
-required_pairs    9
-
-estimated runs    18
-estimated cost    $4.80
-```
-
-The planner should run before confirmatory batches can be submitted.
-
----
-
-# 18. W/P Experiment Generator
-
-Produce matched branches automatically.
-
-```python
-make_wp_pair(
-    seed_family=s,
-    source_tokens=...,
-    target_tokens=...,
-    washout_tokens=...,
-)
-```
-
-Generated branches include:
+Generate:
 
 ```text
 W → P
@@ -601,61 +632,200 @@ W → P → MIX
 P → W → MIX
 W-only
 P-only
-mixed baseline
+mixed
 ```
 
-All scientific comparisons are declaratively represented in manifest metadata.
+Experiments are immutable manifests.
+
+All pairing relationships are explicit metadata.
 
 ---
 
-# 19. Divergence Policy
+# 24. Checkpointing
 
-Runs must never be silently discarded.
+Orbax is added only when model state must cross:
 
-Define:
+* process boundaries;
+* VM boundaries;
+* long-running jobs.
 
-* NaN threshold;
-* loss-spike threshold;
-* retry count;
-* environment-failure classification;
-* scientific-divergence classification.
+Checkpoint at:
 
-An infrastructure failure may be retried once.
+* developmental phase boundaries;
+* analysis checkpoints;
+* recovery intervals.
 
-A scientifically diverged training run remains in the dataset with status:
+Always keep boundary checkpoints.
+
+Prune redundant recovery checkpoints after durable upload.
+
+---
+
+# 25. Generic Corpus Abstraction
+
+Add only when entering the multi-family stage.
+
+```python
+@dataclass(frozen=True)
+class Document:
+    id: str
+    text: str
+    metadata: Mapping[str, str]
+
+
+@dataclass(frozen=True)
+class Corpus:
+    train: tuple[Document, ...]
+    validation: tuple[Document, ...]
+    test: tuple[Document, ...]
+    version: str
+```
+
+No large ingestion framework is needed.
+
+---
+
+# 26. Corpus Loaders
+
+Initial loaders may support:
+
+* JSONL;
+* Parquet;
+* Hugging Face dataset references;
+* text directory.
+
+All normalize to `Corpus`.
+
+The experiment code should not care about the source format.
+
+---
+
+# 27. Split Before Proposal
+
+Workflow:
 
 ```text
-DIVERGED
+raw corpus
+   ↓
+document-level split
+   ↓
+train / validation / test
+   ↓
+fit proposer on train only
+   ↓
+freeze proposer
+   ↓
+assign held-out documents
 ```
 
-and is analyzed according to a prespecified rule.
+This is a hard invariant.
 
 ---
 
-# 20. Transfer Matrix Execution
+# 28. Family Proposal
 
-For each (D_i,D_j), generate:
+Add:
+
+```python
+propose_families(corpus, proposer_spec)
+```
+
+Version 1 proposers:
+
+* TF-IDF/LSA + clustering;
+* frozen embeddings + clustering.
+
+Optional later:
+
+* semantic classifier;
+* LLM-generated descriptions.
+
+Do not begin with a plugin system.
+
+---
+
+# 29. Family Assignment Artifact
+
+Persist:
 
 ```text
-Di → Dj
-N  → Dj
+family_assignment.parquet
 ```
 
-from the same checkpoint pool.
+Fields:
 
-Checkpoint identity should be modeled as a blocking/random effect.
+```text
+schema_version
+document_id
+split
+family_id
+proposal_version
+representation_version
+assignment_score
+```
 
-All cells of a matrix use comparable checkpoint pools.
+Also persist:
 
-Avoid row-specific ancestral checkpoints unless explicitly modeled.
+```text
+families.json
+```
+
+with summaries and representative documents.
 
 ---
 
-# 21. Partial-Pooling Model
+# 30. Ground-Truth Quarantine
 
-Start with a transparent hierarchical normal model.
+Repository layout:
 
-Possible implementation in NumPyro:
+```text
+data/
+  public/
+  hidden_ground_truth/
+```
+
+Discovery modules must not import hidden ground truth.
+
+CI should include a test preventing prohibited import paths where practical.
+
+Generator truth is used only by evaluation code.
+
+---
+
+# 31. Transfer Experiment Generator
+
+For pair (D_i,D_j):
+
+```text
+shared checkpoint
+      │
+      ├── Di → Dj
+      └── N  → Dj
+```
+
+Store paired observations, not independent arm summaries, as the primary statistical unit.
+
+All cells in one matrix draw from comparable checkpoint pools.
+
+---
+
+# 32. Transfer Model
+
+Start with simple estimators.
+
+First baseline:
+
+[
+\mu+\alpha_i+\beta_j.
+]
+
+Then add:
+
+[
+\gamma_{ij}.
+]
+
+If hierarchical inference is warranted, NumPyro may implement:
 
 [
 y_{ijs}
@@ -666,83 +836,96 @@ y_{ijs}
 ).
 ]
 
-Use posterior means or regularized estimates for graph and curriculum selection.
-
-Raw paired effects remain available.
-
-If NumPyro adds too much complexity initially, approximate with regularized mixed-effects regression and migrate later.
+Do not introduce NumPyro before the transfer pilot demonstrates need.
 
 ---
 
-# 22. Transfer Predictor
+# 33. Prediction Baselines
 
-Implement baseline models first.
+Implement baseline predictors before complex models:
 
 ```text
 global mean
-row mean
-column mean
-row + column
-symmetric estimate
-semantic cosine similarity
+source mean
+target mean
+source + target additive
+symmetric T
+semantic cosine
 embedding kernel
-family size/frequency
+family size
+family frequency
 ```
 
-Then:
+Then compare against:
 
-```text
-ridge regression
-matrix factorization
-low-rank latent model
-```
-
-Only advance to more sophisticated models if predictive performance justifies it.
+* ridge;
+* low-rank factorization;
+* developmental latent model.
 
 ---
 
-# 23. Ontology Representation
+# 34. Directionality Analysis
 
-Use developmental phenotype:
+Implement:
+
+[
+S=\frac{T+T^\top}{2}
+]
+
+and:
+
+[
+A=\frac{T-T^\top}{2}.
+]
+
+Compare antisymmetric magnitude to null-calibrated expectations.
+
+Store both components.
+
+---
+
+# 35. Developmental Phenotype
+
+Represent family (i) as:
 
 [
 \phi_i=
 [T_{i,*},T_{*,i}].
 ]
 
-For low-rank representation:
+If low-rank:
 
 [
 \phi_i=[U_i,V_i].
 ]
 
-Merge/split proposals operate on these phenotypes, not semantic labels alone.
+This representation feeds merge/split proposal code.
 
 ---
 
-# 24. Ontology Search
+# 36. Ontology Revision
 
-Keep version 1 narrow.
+Only after held-out prediction works, add:
 
-### Merge proposal
+```python
+propose_merge(...)
+propose_split(...)
+score_revision(...)
+```
 
-Nearest developmental-phenotype neighbors.
+Version 1 remains narrow.
 
-### Split proposal
+No general ontology engine.
 
-Unsupervised clusters within a family.
+Acceptance uses a frozen validation criterion and complexity penalty.
 
-### Acceptance
-
-Use frozen validation protocol and complexity penalty.
-
-Do not search repeatedly against the final test set.
+Record number of attempted revisions to prevent repeated test-set search.
 
 ---
 
-# 25. Held-Out Evaluation Engine
+# 37. Held-Out Splits
 
-Implement split strategies as reusable functions:
+Implement reusable functions:
 
 ```python
 leave_pair_out(...)
@@ -751,15 +934,29 @@ leave_target_out(...)
 leave_family_out(...)
 ```
 
-Each produces immutable train/test intervention IDs.
+Each split receives a stable ID and seed.
 
-Store the split definition and seed.
+The final test partition is not reused for model-selection iteration.
 
 ---
 
-# 26. Active Selection
+# 38. Higher-Order Check
 
-Later stage only.
+Add a specific experiment constructor for:
+
+[
+A+C\rightarrow B.
+]
+
+This tests whether the pairwise curriculum compiler is adequate.
+
+No general higher-order graph machinery is required initially.
+
+---
+
+# 39. Active Experiment Selection
+
+Only after predictive transfer modeling works.
 
 Version 1 acquisition:
 
@@ -767,46 +964,44 @@ Version 1 acquisition:
 score = uncertainty * importance / estimated_cost
 ```
 
-Batch selection adds a diversity penalty.
+Use batch diversity.
 
-Every candidate carries expected:
-
-* GPU seconds;
-* dollars;
-* information value;
-* checkpoint reuse.
+No Bayesian EIG system until justified.
 
 ---
 
-# 27. Curriculum Compiler
+# 40. Curriculum Compiler
 
-Input:
+Implement:
 
-* shrunk transfer model;
-* ontology;
-* uncertainty;
-* interaction warnings.
+```python
+compile_curriculum(
+    transfer_model,
+    families,
+    uncertainty,
+)
+```
 
-Output:
+Output is a plain serializable artifact:
 
 ```json
 {
   "phases": [
     {"families": ["D1", "D2"], "tokens": 100000},
     {"families": ["D1", "D2", "D3"], "tokens": 150000},
-    {"families": ["D3", "D4", "D5"], "tokens": 200000},
+    {"families": ["D3", "D4"], "tokens": 150000},
     {"families": ["ALL"], "tokens": 300000}
   ]
 }
 ```
 
-Also automatically emit the reversed curriculum.
+Also automatically emit its reverse.
 
 ---
 
-# 28. Fresh Validation Generator
+# 41. Fresh Validation
 
-Generate new run families:
+Generate fresh runs for:
 
 ```text
 discovered
@@ -816,21 +1011,78 @@ random
 semantic/manual
 ```
 
-with fresh initialization seeds.
+with new initialization seeds.
 
 Discovery checkpoints are never reused.
 
 ---
 
-# 29. GCP Executor
+# 42. Portability Integration Test
 
-Preserve the successful operational model of the existing script.
+The generic system should eventually support:
 
-Its current command surface is already simple and useful:
+```python
+result = discover_curriculum(
+    corpus=corpus_b,
+)
+```
 
-`up`, `run`, `logs`, `status`, `fetch`, `down`.
+This is not intended as magic API design.
 
-Evolve it to:
+It is an architectural test that the pipeline does not contain corpus-specific scientific logic.
+
+Internally:
+
+```text
+ingest
+split
+propose
+calibrate
+intervene
+fit
+validate
+revise
+compile
+fresh train
+report
+```
+
+Each stage produces immutable artifacts.
+
+---
+
+# 43. GCP Executor
+
+Reuse and evolve the existing hardened runner rather than replacing it.
+
+The prior script already includes:
+
+* deadman shutdown;
+* shutdown even after failed jobs;
+* explicit billing status checks;
+* zone fallback for scarce L4 capacity;
+* driver bootstrap;
+* memory gating;
+* launch staggering;
+* detached jobs;
+* bounded retries.
+
+## Those are valuable operational lessons.
+
+# 44. GCP Interface
+
+Evolve:
+
+```text
+up
+run
+logs
+status
+fetch
+down
+```
+
+into:
 
 ```text
 up
@@ -844,126 +1096,56 @@ fetch
 down
 ```
 
-### `plan`
+The executor consumes manifests.
 
-Read experiment manifest and report:
-
-* candidate runs;
-* unique prefix runs;
-* checkpoint reuse;
-* GPU hours;
-* storage;
-* estimated spend;
-* reserved spend;
-* remaining budget.
-
-### `submit`
-
-Reserve projected cost and launch the immutable manifest.
-
-### `resume`
-
-Resume only incomplete artifacts.
-
-### `cost`
-
-Read actual and reserved spend from the experiment ledger.
+It does not generate experiments.
 
 ---
 
-# 30. Preserve Existing GCP Safety
+# 45. GCP `plan`
 
-Keep the three-layer protection already encoded in the prior runner:
-
-1. arm shutdown before launch;
-2. power off even if the job fails;
-3. manually verify status afterward.
-
-Continue deleting rather than merely stopping disposable research VMs.
-
-The prior script correctly notes that stopped instances can continue incurring disk costs.
-
----
-
-# 31. GCS Persistence
-
-Change output persistence from “fetch before deleting” to incremental remote storage.
-
-The previous runner warns that results left only on the VM must be fetched before deletion or written to GCS during the run.
-
-For this project:
+Report:
 
 ```text
-manifest
-boundary checkpoint
-evaluation artifact
-run completion record
-cost ledger
+candidate runs
+unique prefix runs
+checkpoint reuse
+estimated GPU hours
+estimated storage
+estimated spend
+reserved spend
+remaining budget
 ```
 
-should upload to GCS as soon as created.
-
-The VM disk becomes cache rather than source of truth.
+No batch launches before planning succeeds.
 
 ---
 
-# 32. Multi-GPU Strategy
+# 46. Budget Reservation
 
-For small models, parallelize experiments rather than one model.
-
-If a VM contains four GPUs:
+Maintain:
 
 ```text
-GPU0 → experiment A
-GPU1 → experiment B
-GPU2 → experiment C
-GPU3 → experiment D
+spent
+reserved
+remaining
 ```
 
-The existing runner already supports GPU pinning with `CUDA_VISIBLE_DEVICES`.
+Launch condition:
 
-Retain that model initially.
+[
+spent+reserved+estimated_{\mathrm{batch}}
+\le
+budget.
+]
 
-Do not use multi-GPU sharding merely because JAX supports it.
-
-Experiment-level replication is the primary scaling axis.
-
----
-
-# 33. Host Memory Protection
-
-Preserve:
-
-* memory gating;
-* launch staggering;
-* bounded retry.
-
-The previous script includes these because simultaneous corpus-loading peaks caused OOM kills in prior work.
-
-For this project, additionally expose the memory threshold through config.
+This prevents multiple parallel launches from each independently seeing the same remaining budget.
 
 ---
 
-# 34. Spot / Preemption Strategy
+# 47. Budget Config
 
-Design runs to tolerate preemption.
-
-Because boundary checkpoints are uploaded to GCS:
-
-```text
-preemption
-→ new VM
-→ restore parent checkpoint
-→ resume incomplete RunSpec
-```
-
-No scientific branch should depend on a VM surviving.
-
----
-
-# 35. Budget System
-
-Configuration:
+Example:
 
 ```yaml
 budget:
@@ -975,29 +1157,19 @@ budget:
   warn_fraction: 0.75
 ```
 
-Maintain:
-
-```text
-spent
-reserved
-remaining
-```
-
-A batch cannot launch unless:
-
-[
-spent+reserved+estimated_{batch}
-\le
-budget.
-]
-
-Reservation is released when a job completes or is cancelled.
+Exact values are project-configurable.
 
 ---
 
-# 36. Cost Ledger
+# 48. Cost Ledger
 
-`cost.parquet`:
+Persist:
+
+```text
+cost.parquet
+```
+
+with:
 
 ```text
 schema_version
@@ -1013,10 +1185,10 @@ disk_gb_hours
 network_bytes
 estimated_usd
 actual_usd
-reservation_usd
+reserved_usd
 ```
 
-Cost per scientific output:
+Derived metrics include:
 
 [
 $/\text{paired effect}
@@ -1027,86 +1199,131 @@ $/\text{transfer cell}
 ]
 
 [
-$/\text{information gain}
+$/\text{information gain}.
 ]
 
-should be derivable.
+---
+
+# 49. GCS Persistence
+
+The VM disk is cache, not source of truth.
+
+Upload incrementally:
+
+* manifest;
+* phase-boundary checkpoint;
+* evaluation artifact;
+* completion record;
+* cost ledger.
+
+The earlier GCP runner explicitly warns that artifacts left only on the VM must be fetched before deletion.
+
+The new system removes that fragility by uploading continuously.
 
 ---
 
-# 37. Colab
+# 50. No Repo / Runtime Coupling
 
-Colab is an alternate execution frontend for the same package.
+Hard invariant:
 
-Notebooks should contain almost no unique research logic.
-
-Example:
-
-```python
-from dsi.experiments import wp
-from dsi.executor import local
-
-specs = wp.generate(config)
-local.run(specs)
+```text
+git repository
+≠
+runtime artifact directory
+≠
+durable object storage
 ```
 
-Use Colab for:
+Do not use symlinks that allow Git operations to replace runtime directories.
 
-* quickstart;
-* capacity pilots;
-* debugging JAX compilation;
-* reproduction;
-* exploratory plots.
-
-Do not rely on Colab for large confirmatory matrices.
+This directly avoids a failure mode from the predecessor project.
 
 ---
 
-# 38. Hugging Face
+# 51. Experiment-Level Parallelism
 
-Use Hugging Face as the dissemination layer.
+For small models:
 
-Publish:
+```text
+GPU0 → experiment A
+GPU1 → experiment B
+GPU2 → experiment C
+GPU3 → experiment D
+```
 
-* synthetic dataset;
-* final checkpoints;
+Do not shard one tiny model across multiple GPUs.
+
+The existing runner's GPU pinning logic is appropriate for this model.
+
+---
+
+# 52. Host Memory Protection
+
+Retain:
+
+* memory gating;
+* startup staggering;
+* bounded retry.
+
+These already exist because simultaneous corpus loading caused OOM failures in earlier experiments.
+
+Expose thresholds through config.
+
+---
+
+# 53. Colab
+
+Colab remains a lightweight frontend to the same package.
+
+Use for:
+
+* local-style quickstart;
+* JAX debugging;
+* estimator demonstration;
+* W/P pilot;
+* reproduction.
+
+Notebooks should import package logic rather than contain unique research code.
+
+---
+
+# 54. Hugging Face
+
+Use as publication/dissemination layer for:
+
+* dataset;
+* model checkpoints;
+* family assignments;
 * developmental graphs;
-* selected Parquet artifacts;
-* model card;
-* reproducibility notebook;
-* interactive research artifact.
+* Parquet results;
+* reproduction notebook;
+* interactive artifact.
 
-The public UI should operate primarily over precomputed artifacts so that continuous GPU hosting is unnecessary.
+The public explorer should rely mostly on precomputed artifacts to minimize serving cost.
 
 ---
 
-# 39. Interactive Interface Architecture
+# 55. UI Architecture
 
-Keep the UI outside the scientific core.
+The UI sits outside training.
 
 ```text
 JAX experiments
       ↓
-GCS / local artifacts
+Parquet / JSON / checkpoints
       ↓
-Parquet + JSON
+query layer
       ↓
-small query layer
-      ↓
-interactive page
+single interactive page
 ```
 
-Start with a lightweight prototype.
+Start with a minimal explorer.
 
-Possible early stack:
-
-* Gradio or Streamlit.
-
-Only build a bespoke frontend after Stage 6/7 demonstrates a compelling phenomenon.
+Build the bespoke HCI version only after the science stabilizes.
 
 ---
 
-# 40. UI Data Contract
+# 56. UI Data Contract
 
 Expose:
 
@@ -1116,6 +1333,8 @@ evaluations.parquet
 learning_curves.parquet
 transfer.parquet
 nulls.parquet
+family_assignment.parquet
+families.json
 developmental_graph.json
 checkpoint_metadata.parquet
 activation_summaries.parquet
@@ -1127,45 +1346,41 @@ The UI never imports training internals.
 
 ---
 
-# 41. UI Views
+# 57. UI Views
 
-## Developmental map
+## Corpus
 
-Linked to actual intervention evidence.
+Representative documents and current family organization.
+
+## Developmental graph
+
+Clickable measured relationships.
+
+## Intervention evidence
+
+Show actual paired experiments behind each edge.
 
 ## Model interrogation
 
-Modes:
-
-```text
-Aligned
-Conflict
-W-only
-P-only
-Counter-evidence
-Custom
-```
+Aligned, conflict, W-only, P-only, counter-evidence, custom.
 
 ## Internal state
 
-Compact:
-
-* layer × signal;
-* W/P probe response;
-* representation similarity;
-* selected feature activation.
+Probe and activation summaries.
 
 ## Developmental timeline
 
 Checkpoint scrubber.
 
-All panels share selection state.
+All views share selection state.
 
 ---
 
-# 42. Paper Figure Contract
+# 58. Figure Contract
 
-Generate every paper figure from code.
+Every empirical paper figure is produced from code.
+
+Example:
 
 ```text
 fig_01_overview.py
@@ -1174,281 +1389,152 @@ fig_03_null_power.py
 fig_04_wp_design.py
 fig_05_wp_trajectories.py
 fig_06_wp_diagnostics.py
-fig_07_transfer_matrix.py
-fig_08_asymmetry.py
-fig_09_developmental_graph.py
+fig_07_corpus_intake.py
+fig_08_transfer_matrix.py
+fig_09_directionality.py
 fig_10_prediction_baselines.py
-fig_11_curriculum_validation.py
+fig_11_ontology_revision.py
+fig_12_curriculum_validation.py
+fig_13_portability.py
 ```
 
-No manually edited experimental numbers.
+No hand-edited experimental values.
 
 ---
 
-# 43. Testing Strategy
+# 59. Testing Strategy
 
 ## Unit tests
 
-* RNG key uniqueness;
-* RunSpec canonicalization;
-* artifact hashing;
-* AULC estimation;
+* RNG uniqueness;
+* pair-sharing contract;
+* null-divergence contract;
+* canonical hashing;
+* AULC;
+* CI coverage;
+* equivalence tests;
+* target (t=0) measurement;
 * threshold censoring;
-* merge/split scoring;
-* budget reservation.
+* budget reservation;
+* corpus split leakage.
 
 ## Integration tests
 
-* same RunSpec twice on same hardware gives metrics within tolerance;
-* same RunSpec across hardware gives distributionally comparable output;
-* checkpoint resume matches uninterrupted training within tolerance;
-* GCS artifact round-trip works.
-
-Do not promise bitwise reproducibility across hardware.
-
----
-
-# 44. Data and Schema Versioning
-
-Every persisted table includes:
-
-```text
-schema_version
-```
-
-Every dataset/eval suite has immutable lineage ID.
-
-Changing a schema does not mutate old artifacts.
-
-Readers migrate old artifacts explicitly.
+* identical `RunSpec` produces identical run ID;
+* checkpoint resume matches uninterrupted run within tolerance;
+* artifacts survive GCS round-trip;
+* discovery cannot access hidden ground truth;
+* generic Corpus B pipeline runs without corpus-specific code.
 
 ---
 
-# 45. Stage-Based Compute Plan
+# 60. Stage-Based Implementation
 
-### Stage 0
+## Milestone A
 
-CPU estimator tests.
+Statistics + RNG + specs + local W/P run.
 
-Target spend:
+## Milestone B
 
-[
-\approx $0.
-]
+Capacity calibration + Hydra.
 
-### Stage 1
+## Milestone C
 
-Small capacity pilot.
+Null/power planning + confirmatory W/P.
 
-### Stage 2
+## Milestone D
 
-Noise/power calibration.
+GCP manifest executor + Orbax + GCS + budget ledger.
 
-### Stage 3
+## Milestone E
 
-W/P confirmatory runs.
+Generic corpus intake + family proposal.
 
-### Stage 4
+## Milestone F
 
-Adjacent-scale replication.
+Transfer matrix + partial pooling + prediction baselines.
 
-### Stage 5
+## Milestone G
 
-Small transfer matrix.
+Ontology revision + held-out intervention prediction.
 
-### Stage 6
+## Milestone H
 
-Held-out prediction and ontology revision.
+Curriculum compiler + reverse + fresh validation.
 
-### Stage 7
+## Milestone I
 
-Fresh curriculum validation.
+Blind Corpus B portability run.
 
-### Stage 8
+## Milestone J
 
-Polished interactive artifact.
+Polished interactive research artifact.
 
-Every stage requires explicit exit criteria before additional compute is authorized.
+Each milestone is earned by the prior scientific gate.
 
 ---
 
-# 46. Implementation Sequence
-
-## Milestone A — Local functional core
-
-Build:
-
-* estimator simulation;
-* RNG role discipline;
-* RunSpec and canonical hashing;
-* model;
-* optimizer;
-* synthetic W/P generator;
-* functional trainer;
-* eval;
-* artifact writer.
-
-Estimator simulation belongs here, not in Milestone B.
-
-Research plan Stage 0 places estimator validation before any other work
-precisely because it gates everything downstream and costs approximately
-nothing. The estimators operate on learning curves as arrays and have no
-dependency on model code, so there is no engineering reason to defer them.
-Clearing Gate A before the first training run rather than after is the
-whole point of the stage.
-
-### Milestone A exit criteria
-
-Milestone A is complete only when all of the following hold:
-
-1. `test_stats` recovers known synthetic effects within prespecified
-   tolerance and demonstrates calibrated interval coverage. This is Gate A.
-
-2. `test_rng` verifies the sharing and divergence contracts:
-
-   * a transfer pair shares init, target-data, and eval streams and differs
-     only on the source-phase corpus;
-   * an identity-null pair shares the same streams and diverges on the
-     source draw alone, via the branch role;
-   * no key is ever reused.
-
-3. `RunSpec` canonicalization is stable. The same specification produces the
-   same `run_id` regardless of field construction order, float
-   representation, or host machine.
-
-4. The target-phase (t=0) evaluation is wired into the interface. Evaluation
-   at zero target tokens is mandatory in `EvalSpec` and is refused if
-   absent. It need not yet be used analytically, but it must be measured,
-   because the offset/rate decomposition of AULC is unrecoverable after the
-   fact.
-
-5. One local (W\rightarrow P) / (P\rightarrow W) paired experiment runs end
-   to end and writes versioned Parquet artifacts.
-
-## Milestone B — Capacity + statistics
-
-Build:
-
-* capacity sweep;
-* null calibration;
-* power planner.
-
-## Milestone C — W/P science
-
-Run:
-
-* W→P;
-* P→W;
-* washout;
-* competence controls;
-* multi-seed inference.
-
-## Milestone D — Cloud execution
-
-Adapt the existing GCP runner for:
-
-* manifests;
-* GCS;
-* budget reservation;
-* resumability.
-
-## Milestone E — Transfer matrix
-
-Build:
-
-* structured corpus;
-* pair generator;
-* pooled estimator;
-* baseline predictors.
-
-## Milestone F — Discovery
-
-Build:
-
-* developmental phenotypes;
-* merge/split;
-* held-out prediction;
-* asymmetry tests.
-
-## Milestone G — Control
-
-Build:
-
-* compiler;
-* reverse compiler;
-* fresh validation.
-
-## Milestone H — HCI artifact
-
-Build the polished linked-view interface only after the scientific phenomenon is established.
-
----
-
-# 47. Minimal Core Loop
-
-Conceptually:
+# 61. Minimal End-to-End Loop
 
 ```python
+validate_estimators()
+
 model_config = calibrate_capacity(corpus)
 
-noise = calibrate_null(
+noise = calibrate_nulls(
     model_config=model_config,
-    corpus=corpus,
 )
 
-design = choose_powered_design(
-    sigma=noise.sigma_pair,
+design = plan_power(
+    sigma_pair=noise.sigma_pair,
     delta_min=config.delta_min,
 )
 
-wp_results = run_wp_experiment(
-    design=design,
+wp_result = run_wp_confirmatory(
     model_config=model_config,
+    design=design,
 )
 
-if not wp_results.persistent_path_dependence:
-    report_negative_result()
-    stop_or_revise()
+if not wp_result.valid:
+    report_invalidated()
+    stop()
 
-families = propose_families(corpus)
+if wp_result.equivalent_after_washout:
+    report_negative_path_dependence()
+    stop_or_narrow_claim()
 
-observations = run_initial_transfer_wave(
+corpus = load_corpus(source)
+
+train, val, test = split_corpus(corpus)
+
+families = propose_families(train)
+
+observations = run_transfer_wave(
     families=families,
     design=design,
 )
 
-while budget.remaining():
+transfer_model = fit_transfer_model(
+    observations,
+)
 
-    transfer_model = fit_partial_pooling_model(
-        observations
-    )
+prediction = evaluate_held_out(
+    transfer_model,
+    baselines=BASELINES,
+)
 
-    prediction = evaluate_held_out(
-        transfer_model,
-        baselines=BASELINES,
-    )
+if not prediction.beats_baselines:
+    report_limited_structure()
+    stop_or_narrow_claim()
 
-    if not prediction.beats_semantic_baseline:
-        break
-
-    families = revise_ontology(
-        families,
-        transfer_model,
-    )
-
-    if prediction.good_enough:
-        break
-
-    batch = select_next_batch(
-        uncertainty=prediction.uncertainty,
-        cost=budget.cost_model,
-    )
-
-    observations += execute(batch)
+families = revise_families(
+    families,
+    transfer_model,
+)
 
 curriculum = compile_curriculum(
-    transfer_model,
     families,
+    transfer_model,
 )
 
 results = fresh_validate(
@@ -1456,58 +1542,74 @@ results = fresh_validate(
     reversed=reverse(curriculum),
     uniform=uniform(),
     random=random_schedule(),
+    semantic=semantic_baseline(),
+)
+
+portability = run_frozen_pipeline(
+    unseen_corpus=corpus_b,
+)
+
+report(
+    wp_result,
+    prediction,
+    results,
+    portability,
 )
 ```
 
 ---
 
-# 48. Final Architecture
-
-The complete system remains intentionally layered:
+# 62. Final Architecture
 
 ```text
                     SCIENCE
 
-candidate corpus structure
-          ↓
-RunSpec generation
-          ↓
-controlled interventions
-          ↓
-effect measurements
-          ↓
-statistical model
-          ↓
+raw corpus
+   ↓
+provisional family proposal
+   ↓
+controlled RunSpecs
+   ↓
+paired training interventions
+   ↓
+raw transfer measurements
+   ↓
+partial-pooled developmental model
+   ↓
 held-out prediction
-          ↓
+   ↓
 ontology revision
-          ↓
-curriculum compiler
+   ↓
+curriculum compilation
+   ↓
+fresh-model validation
+   ↓
+unseen-corpus portability
 
 ────────────────────────────────────
 
-                 EXECUTION
+                  EXECUTION
 
-Local / Colab / GCP
-          ↓
+local / Colab / GCP
+        ↓
 JAX + Equinox + Optax
-          ↓
-Orbax checkpoints
-          ↓
-GCS / local artifacts
-          ↓
-Parquet
+        ↓
+Orbax when needed
+        ↓
+GCS / local artifact store
+        ↓
+Parquet / JSON
 
 ────────────────────────────────────
 
                 INTERACTION
 
 paper figures
-notebooks
-interactive developmental explorer
+reproduction notebooks
+single-page developmental explorer
 Hugging Face release
 ```
 
-The project should remain simple enough that the scientific argument is visible in the code.
+The codebase should remain small enough that the scientific argument is visible by reading it.
 
-Infrastructure should never become the experiment.
+The system should grow only when experimental evidence earns the next abstraction.
