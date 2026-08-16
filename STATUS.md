@@ -104,6 +104,13 @@ arms with Layer-1's validated overlap floor `r = 0.20`, changing that one
 thing only. It separates "forgetting swamped the effect" from "pairwise
 transfer does not compose". 15 units.
 
+Sharpened by the efficiency framing: the comparator is the **interleaved
+arm**, not the reverse arm. The reverse arm remains as the order control, but
+the question that matters is whether any ordering beats interleaving at equal
+compute. Efficiency metrics (tokens- and steps-to-threshold, accuracy at
+fixed budget, min across families, retention) are frozen below and would be
+recorded per unit.
+
 **Against the four questions.**
 
 * *Phenomenon* — **no**, for block-sequential Layer-2 curricula at this dose.
@@ -140,7 +147,60 @@ Standing constraints, recorded now so they are not rediscovered later:
   being considered better.** This is the WikiText standard, applied to
   ontologies.
 * The deliverable is a predictive and actionable developmental ontology. A
-  graph on its own is not the deliverable.
+  graph on its own is not the deliverable, and neither is a curriculum. The
+  deliverable is a developmental model of training that yields **more
+  capability from less data and compute**.
+
+### Efficiency is the terminal metric
+
+Candidate ontologies and representations are judged by concrete training
+outcomes, not by effect size:
+
+* same target performance with **fewer tokens**;
+* a given accuracy in **fewer optimization steps**;
+* intelligent ordering beating shuffled/interleaved **at equal compute**;
+* a better representation needing **less corpus**;
+* identifying redundant or low-value data that can be **omitted** without
+  harming capability;
+* higher final accuracy **at a fixed token/compute budget**.
+
+Once reliable structure exists, subsequent experiments measure sample and
+compute efficiency, not merely effect size.
+
+### The scout already answered one efficiency question
+
+Not the one it asked. At **identical token and compute budget**, and
+identical aggregate family allocation:
+
+    balanced / interleaved   0.9867 mean acc, 0.9510 min acc
+    block-sequential         0.3827 mean acc, 0.1062 min acc
+
+That is a very large capability difference at fixed budget, produced purely
+by **presentation structure**. It is the strongest training-efficiency effect
+this project has measured, and it points the opposite way from the
+hypothesis under test: blocking destroys capability that interleaving
+retains.
+
+The consequence for design is concrete. **Interleaved is the baseline to
+beat, not a control to beat.** Any ordering technique must show an advantage
+*over* interleaving at equal compute, and no result that merely beats
+block-sequential ordering is interesting.
+
+### Efficiency metrics to freeze before the next experiment
+
+Recorded now so they are fixed in advance rather than chosen after:
+
+* **tokens-to-threshold** — tokens to reach accuracy tau on each family, and
+  on all families jointly;
+* **steps-to-threshold** — the same in optimizer steps;
+* **accuracy at fixed budget** — final mean and **min** across families, since
+  a mean hides a destroyed family;
+* **area under the learning curve** per family;
+* **retention** — accuracy at the end of the curriculum against accuracy at
+  the end of that family's own exposure.
+
+The min-across-families metric is the one that matters most: the scout's
+sequential arms looked half-decent on the mean and catastrophic on the min.
 
 ## Infrastructure
 
