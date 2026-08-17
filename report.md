@@ -485,7 +485,7 @@ This suggests a view in which current behavior is only a projection of a richer 
 ## Author Contributions
 
 Patrick Walmsley designed and carried out the experiments, audited the resulting
-claims, and wrote the report.
+claims, and wrote the report independently.
 
 Krysia Koneni, Trevor Harrison, and Augustus acted as a sounding board.
 
