@@ -41,14 +41,15 @@ behavior may not reveal how a model will change under future experience.
 
 We test that directly rather than assume it. Two models can share an
 architecture and similar present competence while having arrived through
-different histories. If those histories leave different internal states,
-identical future data might produce different learning trajectories. This paper
-answers that question — in one controlled setting, with a specific behavioral
-vector — in the *negative*. What we did find is that training history matters a
-great deal for future learning; what we did not find is that it matters
-*invisibly*. We use **developmental state** operationally throughout: whatever
-information in the current model predicts its response to future experience. We
-do not assume it corresponds to consciousness, identity, or welfare.
+different training histories. If those histories leave different internal
+states, identical future data might produce different learning trajectories.
+What we find is more nuanced than a yes or a no. Training history changes future
+learnability a great deal — strongly enough that a single competence score
+misses it entirely — while a richer behavioral measurement captured more of that
+variation than we expected. Throughout, we use **developmental state** to mean
+*history-dependent properties of a checkpoint that affect its response to later
+training*. We do not assume it corresponds to consciousness, identity, or
+welfare.
 
 We began by asking whether pairwise transfer relations could be composed into a
 useful training order. Repeated failures — non-composing transfer effects,
@@ -57,16 +58,30 @@ suggested that data value could not be treated as a fixed property of a corpus
 pair. This motivated $V(S,D)$, the value of future data $D$ conditional on what
 the model has already become.
 
-Our contributions are: (1) **history-dependent developmental readiness**, shown
-on a target whose answer is unavailable to the source model beforehand, so what
-transfers is not the answer; (2) **controls against simpler
-explanations** — the effect is selective rather than generic, survives zero
-shared entity tokens, and persists across a 32× capacity range in exploratory
-runs; (3) **state-dependent future data value**, with ordering reversals in a
-balanced $V(S,D)$ matrix; (4) **behavioral matching that proved more sufficient
-than expected**, the opposite of what we set out to show; and (5) **disciplined
-negatives** that localize the frontier — the phenomenon is measurable, and the
-missing capability is a reliable readout of developmental state.
+Our contributions are:
+
+1. **History-dependent developmental readiness.** Prior training produces a
+   large, selective advantage in acquiring a later capability, demonstrated on a
+   target whose answer is unavailable to the source model beforehand — so what
+   transfers is not the answer.
+2. **Controls against simpler explanations.** The effect is selective rather
+   than generic acceleration, survives zero shared entity tokens between source
+   and target, and persists across a 32× capacity range in exploratory runs.
+3. **State-dependent future data value.** A balanced $V(S,D)$ matrix shows
+   State×Data interaction with ordering reversals, though a strong global corpus
+   advantage remains and our state-aware selector does not beat a state-blind
+   baseline.
+4. **The stronger hidden-state story did not survive.** Preregistered tests
+   detected no excess divergence among behaviorally matched states, no reliable
+   differential future preference, and no localized transition in future
+   learnability; internal geometry that identifies training history did not
+   resolve as a predictor of conditional data value.
+
+The result is a sharper question than the one we started with. Developmental
+readiness is real, consequential, and invisible to a single capability measure —
+yet the measurements that captured it were behavioral, not internal. The open
+problem is therefore: **which present measurements are sufficient to forecast
+what a model is ready to become?**
 
 ## 2. Related Work
 
