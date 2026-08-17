@@ -1,692 +1,429 @@
 # Training History Shapes What Models Are Ready to Learn
 
-**Patrick Walmsley**  
-Walmsley Lab  
-With Apart Research
-
-*Research conducted at the Digital Minds Research Sprint, August 2026.*
+**Patrick Walmsley**
 
 ## Abstract
 
 Prior training changes what a model is *ready* to learn next. In a controlled
-language-model environment we show that a source curriculum $A$ produces a
-large, selective advantage in acquiring a later capability $B$, while a control
-matched on every low-order statistic and a background stream remain at chance.
-The advantage is not memorized content: it is fully retained when source and
-target share **zero entity tokens**. It is not target competence either. On a
-target composed with a fixed derangement — where zero-shot transfer is blocked
-by construction, and confirmed blocked at or below chance — the source arm still
-learns dramatically faster, and does so even across disjoint content. We
-therefore describe the effect as **developmental readiness** rather than task
-transfer. It persists across a 32× capacity increase in exploratory runs.
+language-model environment, a source curriculum $A$ produces a large, selective
+advantage in acquiring a later capability, while a control matched on every
+low-order statistic and a background stream remain at chance. The advantage is
+not memorized content — it survives zero shared entity tokens — and it is not
+target competence: on a target composed with a fixed derangement, where
+zero-shot transfer is blocked by construction and confirmed blocked at or below
+chance, the source arm still learns dramatically faster. We call this
+**developmental readiness** rather than task transfer. Readiness has a
+consequence for data: measuring $V(S,D)$, the value of corpus $D$ from incoming
+state $S$, we find a State×Data interaction with genuine ordering reversals.
 
-Readiness has a consequence for data: measuring $V(S,D)$, the value of training
-on corpus $D$ from incoming state $S$, we find a substantial State×Data
-interaction with genuine ordering reversals, so no single corpus is best from
-every state.
-
-Two pre-registered experiments then tested whether these differences are hidden
-behind present behavior, and **both are null**. States matched on a modest
-behavioral vector neither diverge under an identical future (71 frozen pairs
-against a 376-pair null) nor prefer different futures (16 frozen pairs, interaction
-CI spanning zero at chance sign agreement). The honest reading inverts our
-starting hypothesis: behavioral measurement captured more future-relevant
-variation than we expected.
-
-Our pre-registered mechanistic hypothesis failed confirmatory testing, a
-prospective search for a localized emergence window found none, and internal
-gradient geometry that cleanly identifies training history did not resolve as a
-predictor of conditional data value. History leaves consequential structure, and
-reading that structure well enough to act on it remains open.
+Two pre-registered experiments then asked whether these differences hide behind
+present behavior, and **both are null**. States matched on a modest behavioral
+vector neither diverge under an identical future (71 frozen pairs against a
+376-pair null) nor prefer different futures (16 frozen pairs, interaction CI
+spanning zero at chance sign agreement). The honest reading inverts our starting
+hypothesis: behavior captured more future-relevant variation than we expected. A
+pre-registered mechanistic hypothesis failed, a prospective search for a
+localized emergence window found none, and gradient geometry that cleanly
+identifies training history did not resolve as a predictor of conditional data
+value. History leaves consequential structure; reading it well enough to act on
+remains open.
 
 ## 1. Introduction
 
 A central concern in the study of digital minds is that **behavioral evidence
 may underdetermine what kind of system we are observing**. A model can report
-preferences, describe internal states, or act as though it has stable interests
-without those outputs revealing whether the underlying system has a stable
-latent organization. The same concern extends across time: present behavior may
-not reveal **how a model will change under future experience**.
+preferences or act as though it has stable interests without those outputs
+revealing a stable latent organization. The concern extends across time: present
+behavior may not reveal how a model will change under future experience.
 
-We take that concern seriously enough to test it directly rather than assume it.
-Two models can share an architecture and similar present competence while having
-arrived there through different training histories. If those histories leave
-different internal states, identical future data might produce different learning
-trajectories. That is an empirical question, and this paper answers it — in one
-controlled setting, with a specific behavioral vector — in the *negative*. What
-we did find is that training history matters a great deal for future learning;
-what we did not find is that it matters *invisibly*.
+We test that directly rather than assume it. Two models can share an
+architecture and similar present competence while having arrived through
+different histories. If those histories leave different internal states,
+identical future data might produce different learning trajectories. This paper
+answers that question — in one controlled setting, with a specific behavioral
+vector — in the *negative*. What we did find is that training history matters a
+great deal for future learning; what we did not find is that it matters
+*invisibly*. We use **developmental state** operationally throughout: whatever
+information in the current model predicts its response to future experience. We
+do not assume it corresponds to consciousness, identity, or welfare.
 
-We do not assume that developmental state corresponds to consciousness,
-identity, or welfare. We ask a narrower and testable question: whether future
-learning is a measurable property of a model that its present behavior fails to
-capture. Throughout, we use **developmental state** operationally:
+We began by asking whether pairwise transfer relations could be composed into a
+useful training order. Repeated failures — non-composing transfer effects,
+interference under sequential curricula, and unreliable prospective prediction —
+suggested that data value could not be treated as a fixed property of a corpus
+pair. This motivated $V(S,D)$, the value of future data $D$ conditional on what
+the model has already become.
 
-> whatever information in the current model predicts its response to future
-> experience.
-
-We began with the simpler hypothesis that pairwise transfer relationships could
-be composed into a useful static training order. That program failed reliably
-enough to force a change in framing: pairwise effects did not compose, sequential
-block curricula produced coexistence failures, and balanced interleaving
-dominated fixed orderings. Those failures motivated a more general object:
-
-$$V(S,D) = \text{the future learning value of data }D\text{ from model state }S.$$
-
-Our main contributions are:
-
-1. **History-dependent developmental readiness.** Prior training on $A$ produces
-   a large, selective advantage in acquiring a later capability. Crucially, the
-   advantage appears on a target the source model *cannot answer at all*
-   beforehand — zero-shot performance is blocked by construction and confirmed
-   at or below chance — so what transfers is readiness to learn, not the answer.
-2. **Controls against simpler explanations.** The effect is specific rather than
-   generic acceleration, is fully retained when source and target share zero
-   entity tokens, and persists across a 32× capacity range in exploratory runs.
-3. **Future data has state-dependent value.** A balanced $V(S,D)$ matrix shows
-   substantial State×Data interaction with ordering reversals: the best next
-   corpus is not globally fixed across measured states.
-4. **Behavioral matching is more sufficient than expected.** Two pre-registered
-   experiments find that states matched on a modest behavioral vector neither
-   diverge under identical future training nor prefer different futures. This
-   bounds the preceding results rather than contradicting them, and it is the
-   opposite of what we set out to show.
-5. **Disciplined negatives that localize the frontier.** A pre-registered
-   mechanistic hypothesis failed confirmatory testing; a prospective search for
-   a localized emergence window found none; and internal geometry that
-   identifies training history did not resolve as a predictor of conditional
-   data value. The phenomenon is measurable — the missing capability is a
-   reliable readout of developmental state.
+Our contributions are: (1) **history-dependent developmental readiness**, shown
+on a target the source model cannot answer at all beforehand, so what transfers
+is readiness to learn rather than the answer; (2) **controls against simpler
+explanations** — the effect is selective rather than generic, survives zero
+shared entity tokens, and persists across a 32× capacity range in exploratory
+runs; (3) **state-dependent future data value**, with ordering reversals in a
+balanced $V(S,D)$ matrix; (4) **behavioral matching that is more sufficient than
+expected**, the opposite of what we set out to show; and (5) **disciplined
+negatives** that localize the frontier — the phenomenon is measurable, and the
+missing capability is a reliable readout of developmental state.
 
 ## 2. Related Work
 
-This work sits at the intersection of **curriculum and training-order research**, **developmental learning dynamics**, **training-data attribution and adaptive data selection**, and **methods for reading hidden model state**. Our central claim is narrower than any one of these literatures: we use controlled future learning as an external assay of history-dependent model state, then ask whether the value of future data depends on that state.
+Classical curriculum learning established that ordering examples can alter
+optimization and generalization in non-convex models (Bengio et al., 2009). For
+language models, Skill-It formalizes ordered skill relations and uses
+prerequisite structure for more data-efficient training (Chen et al., 2023), and
+Procedural Pretraining shows that front-loading abstract structured data
+materially accelerates later acquisition of natural language, code, and
+mathematics (Jiang et al., 2026). A separate literature finds that learning is
+often stagewise, with internal development preceding visible behavioral change:
+loss-landscape degeneracy drives distinct developmental stages in transformers
+(Hoogland et al., 2025), and training history can remain directly readable, as
+activations linearly encode training-order recency (Krasheninnikov et al.,
+2025). Mechanistic work connects the emergence of induction heads to a sharp
+transition in in-context learning (Olsson et al., 2022), which motivated — and
+supplied — our first, falsified, mediator hypothesis. These works motivate our
+original pairwise framing, but a fixed prerequisite graph treats data value as
+approximately global or pairwise; we instead ask whether the same future corpus
+has different marginal value from different incoming states.
 
-### 2.1 Curriculum, ordering, and prerequisites
-
-Classical curriculum learning established that ordering examples can alter optimization and generalization in non-convex models (Bengio et al., 2009), while later work automated curriculum choice using learning-progress signals (Graves et al., 2017) and examined when curricula help in deep networks (Hacohen & Weinshall, 2019; Wu et al., 2021). Critical-period work goes further by showing that what happens early in training can change what is learnable later, even when later experience is held fixed (Achille et al., 2019; Frankle et al., 2020).
-
-For language models, Skill-It formalizes ordered skill relations in terms of associated data and uses prerequisite structure for more data-efficient training (Chen et al., 2023). Procedural Pretraining shows that front-loading abstract structured data can materially accelerate subsequent acquisition of natural language, code, and mathematics (Jiang et al., 2026). The Implicit Curriculum Hypothesis finds that skills emerge in reproducible compositional order across model families and that internal representations predict held-out skill trajectories (Liu et al., 2026). Related theoretical and synthetic work studies emergence, compositional skill structure, and hierarchical skill acquisition (Arora & Goyal, 2023; Michaud et al., 2023; Lubana et al., 2024; Liu et al., 2025; Michaud et al., 2025).
-
-These works motivate our original pairwise-transfer framing, but our experiments push toward a different object. A fixed prerequisite graph or curriculum treats data value as approximately global or pairwise. We instead ask whether the same future corpus can have different marginal value from different incoming model states.
-
-### 2.2 Developmental stages, hidden progress, and training history
-
-A separate literature suggests that neural-network learning is often stagewise and that internal development can precede visible behavioral change. Hidden-progress studies show that SGD can make systematic internal progress that is invisible to standard loss and error metrics (Barak et al., 2022), while mechanistic analyses of grokking identify internal progress measures that precede sharp improvements in generalization (Nanda et al., 2023). Developmental-interpretability work links shifts in loss-landscape degeneracy to changes in transformer computation and behavior, identifying distinct developmental stages during training (Hoogland et al., 2025). Factual-learning studies similarly find multi-phase acquisition dynamics tied to circuit formation and data distribution (Zucchet et al., 2025).
-
-Training history can also remain directly readable. Krasheninnikov et al. (2025) show that language-model activations linearly encode the recency/order in which information was acquired. Influence Dynamics and Stagewise Data Attribution argues that training-example influence itself is dynamic: influence can change non-monotonically, including sign reversals and peaks near developmental transitions (Lee et al., 2025). These results support the broader premise that a checkpoint is not adequately summarized by its current loss or behavior.
-
-Our contribution is complementary. Rather than defining hidden state from an internal representation alone, we operationalize it through **counterfactual future plasticity**: if two histories produce models that look similar now but respond differently to identical future training, then present behavior is not a complete description of their developmental state.
-
-### 2.3 Circuits, mechanisms, and developmental readouts
-
-Mechanistic interpretability asks which internal computations support behavior. Olsson et al. (2022) connected the emergence of induction heads to a sharp transition in in-context learning, with strong causal evidence in small attention-only transformers and more correlational evidence in larger models. Goodfire's parameter-interpretation work extends interpretability from activations into parameter space, identifying structured parameter directions and decompositions that can be used to understand and edit behavior (Bushnaq et al., 2026). Mechanistic Data Attribution explicitly connects training samples to the emergence of interpretable circuits, and shows that targeted changes to attributed data can accelerate or suppress circuit formation (Chen et al., 2026).
-
-This line of work motivated our attempt to read developmental state directly. Our first induction-style mediator was falsified, and our later retrieval/gradient markers are treated cautiously: a signal that distinguishes histories is not automatically a signal that predicts which future data is valuable. This distinction is central to our negative result on adaptive selection.
-
-### 2.4 Data attribution, data value, and adaptive pretraining
-
-A broad literature asks which training data matters. Datamodels learn simple surrogates that predict counterfactual model outputs under changes to the training set (Ilyas et al., 2022), and TRAK provides scalable training-data attribution for model behavior (Park et al., 2023). DoReMi optimizes a global domain mixture and demonstrates large pretraining-efficiency gains (Xie et al., 2023), while Rho-1 performs token-level selective language modeling based on estimated utility (Lin et al., 2024). These are strong reminders that useful data selection does not require an explicit developmental-state model.
-
-More directly related to our long-run objective, MATES adapts a learned data-influence model to the evolving pretraining model and selects data predicted to be most useful at the current stage (Yu et al., 2024). Group-MATES learns relational group-level data influence from sampled language-model training trajectories and uses the learned model for group-level selection (Yu et al., 2025). Gu et al. (2025) formulate language-model data selection as an optimal-control problem over training dynamics. Data-mixing-law work likewise shows that outcomes under unseen domain mixtures can sometimes be predicted from a small number of training runs (Ye et al., 2024).
-
-These papers substantially narrow the novelty we claim. We do **not** claim that model-aware data selection, dynamic data utility, or optimal-control views of pretraining are new. Our narrower contribution is to isolate a controlled **State×Data continuation-value** phenomenon and to require a state readout to beat strong global baselines before allowing adaptive control. In our experiments, that second step fails: conditional structure exists, but our current telemetry does not exploit it well enough to steer training.
-
-### 2.5 Digital minds, self-report, and behavioral underdetermination
-
-The digital-minds framing raises a related methodological question: how much can present behavior tell us about a model's underlying state? Perez & Long (2023) argue that model self-reports could eventually contribute evidence about morally significant internal states, while emphasizing that present systems' reports are often spurious and should be corroborated with consistency tests and interpretability. Binder et al. (2025) find evidence of limited privileged self-prediction in language models, but report failures on more complex and out-of-distribution settings. Causal activation-intervention work likewise finds limited but unreliable introspective awareness, while stressing that conversational self-description alone cannot distinguish genuine introspection from confabulation (Lindsey, 2025).
-
-Persona-vector work provides a concrete example of behaviorally relevant internal state: linear activation directions can monitor and control character traits, predict training-induced personality shifts, and flag data likely to cause those shifts (Chen et al., 2025). This does not establish a general theory of model identity, but it shows that training history and future behavioral change can sometimes be connected through readable internal variables.
-
-We therefore treat controlled future learning as a **complementary external assay** rather than a replacement for self-report or mechanistic interpretability. If two models that look similar now diverge under identical future experience, that divergence reveals a hidden difference without requiring the model to describe itself. This is not evidence of consciousness, welfare, or stable preferences by itself; it is a method for testing whether present behavioral equivalence masks differences in future plasticity.
-
-### 2.6 Positioning of the present work
-
-Taken together, prior work already establishes that curricula can matter, learning can proceed in stages, training history can leave readable traces, data influence can vary over training, and model-aware selectors can improve pretraining efficiency. The remaining gap we target is more specific: **can controlled future learning be used to identify consequential hidden state, and can that state eventually support reliable prediction of which data should come next?**
-
-Our current results support the first half more strongly than the second. History changes future learnability, and measured data value depends on incoming state; however, our current state telemetry does not yet outperform a strong global-best baseline. We therefore view this paper as establishing a developmental phenomenon and a disciplined frontier, not as presenting a finished adaptive curriculum algorithm.
+A parallel literature asks which training data matters and substantially narrows
+the novelty we claim. Datamodels learn surrogates predicting counterfactual
+outputs under training-set changes (Ilyas et al., 2022); DoReMi optimizes a
+global domain mixture for large pretraining-efficiency gains (Xie et al., 2023);
+MATES adapts a learned data-influence model to the evolving pretraining model
+and selects data predicted most useful at the current stage (Yu et al., 2024);
+and Gu et al. (2025) formulate data selection as optimal control over training
+dynamics. We do **not** claim that model-aware selection, dynamic data utility,
+or optimal-control views of pretraining are new. Our narrower contribution is to
+isolate a controlled State×Data continuation-value phenomenon and to *require* a
+state readout to beat strong global baselines before allowing adaptive control —
+a step that fails here. On the digital-minds side, Perez & Long (2023) argue
+self-reports could eventually bear on morally significant internal states while
+stressing that present reports are often spurious, and persona-vector work shows
+training history and future behavioral change can sometimes be connected through
+readable internal variables (Chen et al., 2025). We treat controlled future
+learning as a **complementary external assay**: if two models that look similar
+now diverge under identical future experience, that divergence reveals a hidden
+difference without requiring the model to describe itself.
 
 ## 3. Methods
 
-### 3.1 Controlled training environment
+### 3.1 Environment and conditions
 
-We train small decoder-only language models from scratch on synthetic language-like corpora using ordinary next-token prediction. The controlled environment lets us vary source history while holding architecture, token budgets, and downstream data fixed.
+We train small decoder-only language models from scratch on synthetic
+language-like corpora using ordinary next-token prediction, varying source
+history while holding architecture, token budgets, and downstream data fixed.
+Every stream shares one surface template — `the <entity> is <value> .` — so no
+stream is identifiable from surface form; only the *relationship* differs.
 
-The principal source conditions are:
+Source conditions are **$A$**, training that encourages stable entity–value
+retrieval/binding; **$A'$**, a matched control preserving surface statistics
+while disrupting that structure; and **BG**, background training. After source
+training all arms receive the same target continuation.
 
-- **$A$:** training that encourages stable entity–value retrieval/binding structure.
-- **$A'$:** a matched control designed to preserve surface statistics while disrupting the source structure hypothesized to matter.
-- **BG:** background training, providing a non-$A$ baseline.
+Targets: **$B$** is a binding/retrieval task with resampled identities, so
+answers cannot be memorized as fixed associations. **$B_2$** is the critical
+one: retrieval composed with a **fixed derangement**, so the retrieved value is
+never the correct answer. Zero-shot transfer is therefore blocked *by
+construction*, and we confirm it blocked — every arm sits at or below chance
+before target training. Any advantage on $B_2$ cannot be a transferred answer.
+**$C$** is a learnable parametric-association negative control that does not
+require contextual retrieval.
 
-After source training, all arms receive the same target continuation.
+### 3.2 Metrics, controls, and confirmatory discipline
 
-The primary target **$B$** is a novel binding/retrieval task using resampled identities so correct answers cannot be memorized as fixed associations. A negative-control task **$C$** is a learnable parametric association task designed not to require the same contextual retrieval structure.
+We report $t=0$ performance before any target training, AULC, final performance,
+and rate-only quantities ($\mathrm{AULC} - t_0$). The decomposition matters
+because head-start and rate effects move differently; an advantage in rate-only
+with $t=0$ at chance is the pre-declared signature of *readiness*. Controls:
+content-disjointness repeats source→target with zero shared entity identities;
+specificity is tested against $C$, interpreted only once BG demonstrates $C$ is
+learnable; and we replay the core contrast at roughly 1×, 8×, and 32×
+non-embedding capacity.
 
-We report:
-- **$t=0$** target performance before any target training;
-- **AULC**, area under the target learning curve;
-- **final performance**;
-- rate-only quantities where relevant.
+Discovery, calibration, and confirmation seeds are separated; gates, analysis
+plans, and pair selections are frozen and SHA-256 hashed *before* the outcomes
+they govern exist; contaminated runs are discarded rather than salvaged; and
+compound gates fail if any criterion fails. This repeatedly changed conclusions:
+a dramatic single-seed spike in our first mediator vanished on fresh seeds, and
+a later causal ablation returned a null interaction that we report as
+**inconclusive** rather than negative, because an efficacy check showed the
+intervention never measurably reduced the capability it was meant to remove.
 
-This decomposition is important because head-start and learning-rate effects can move differently and can be more reproducible than a single aggregate transfer statistic.
+### 3.3 State-conditioned data value and the prospective tests
 
-### 3.2 Confirmatory discipline
+$V(S,D)$ is the measured learning value of continuing from saved state $S$ on
+corpus $D$, under an identical continuation protocol with fresh optimizer state
+— isolating information carried in the weights. We build a balanced matrix of
+incoming states × candidate corpora and decompose variance into state main
+effect, data main effect, and State×Data interaction. The strongest qualitative
+signature is an **ordering reversal**,
+$\arg\max_D V(S_1,D) \neq \arg\max_D V(S_2,D)$.
 
-Discovery, calibration, and confirmation seeds are separated. Gates are frozen before confirmatory runs. Contaminated runs are discarded rather than salvaged. Compound gates are reported as failed if any required criterion fails.
-
-This discipline mattered repeatedly. A dramatic single-seed spike in our first mediator disappeared on fresh seeds. A later causal ablation produced a null interaction, but an intervention-efficacy check showed that the manipulation did not measurably reduce the capability; we therefore report causal mediation as inconclusive rather than negative.
-
-### 3.3 Content-disjointness and specificity controls
-
-To test memorization/content overlap, we repeat the source→target experiment with zero shared entity identities between source and target.
-
-To test whether $A$ simply improves learning generally, we evaluate the learnable negative-control task $C$. The control is only interpreted once background training demonstrates that $C$ itself is learnable.
-
-### 3.4 Scale
-
-We replay the core behavioral contrast at approximately 1×, 8×, and 32× non-embedding parameter capacity. These runs are exploratory rather than a fully powered scaling study.
-
-### 3.5 State-conditioned data value
-
-We define
-
-$$V(S,D)$$
-
-as the measured learning value of continuing from saved model state $S$ on future corpus $D$, using the same continuation protocol and fresh optimizer state. This isolates the contribution encoded in the model weights; a future extension will compare restored optimizer state.
-
-We construct a balanced matrix of incoming states × candidate corpora and decompose variance into:
-
-1. state main effect;
-2. data main effect;
-3. State×Data interaction.
-
-The strongest qualitative signature is an **ordering reversal**:
-
-$$\arg\max_D V(S_1,D) \neq \arg\max_D V(S_2,D).$$
-
-This demonstrates that a single globally best corpus is insufficient over the measured states.
-
-### 3.6 Prediction gate
-
-We separately test whether telemetry can predict conditional corpus value on held-out states. Leave-one-state-out evaluation is used rather than row-wise splitting to avoid leaking a state’s value profile through measurements on other corpora.
-
-A state-aware selector must beat:
-- random selection; and
-- the **global-best corpus** baseline.
-
-Beating random alone is insufficient: it can be achieved by learning only the data main effect.
-
-### 3.7 Active prospective experiments
-
-**Behavior-matched continuation (P1).** We generate fresh states, select pairs using current observables only (accuracy, loss, capability vector), freeze and hash the pair list before any continuation outcomes exist, and then give each pair identical fresh continuations. The target is to test whether models that look similar now can nevertheless have different future learning trajectories.
-
-**Temporal Replay (P2).** An exploratory held-out model comparison on zero-shot $B$ competence favored a changepoint description near source step $270$. Because competence is not the same as future learnability, we prospectively save dense checkpoints around the preidentified region and give each checkpoint an identical $B$ continuation to measure $V(S_t,B)$ directly.
-
-### 3.x What the model sees, and what it does zero-shot
-
-### What the model actually sees
-
-Every stream shares one template — `the <entity> is <value> .` — so no
-stream is identifiable from surface form. Only the *relationship* differs.
-
-**`BIND`** — the queried entity **appears earlier**; the answer must be retrieved from context
-
-```
-prompt : <bos> the e276 is v54 . the e414 is v22 . the e447 is v1 . the e364 is v9 . the e110 is v8 . the e170 is v19 . the e383 is v60 . the e276 is
-target : v54
-```
-
-**`FACT`** — the queried entity does **not** appear earlier; the answer is a globally fixed association held in the weights
-
-```
-prompt : <bos> the e276 is v54 . the e414 is v22 . the e447 is v1 . the e364 is v9 . the e110 is v8 . the e170 is v19 . the e383 is v60 . the e58 is
-target : v41
-```
-
-**`BINDT`** — as BIND, but the answer is a fixed permutation of the bound value — retrieval alone gives the wrong token
-
-```
-prompt : <bos> the e276 is v54 . the e414 is v22 . the e447 is v1 . the e364 is v9 . the e110 is v8 . the e170 is v19 . the e383 is v60 . the e276 is
-target : v33
-```
-
-### The same prompt across training histories
-
-One example is not evidence at these accuracies, so the table reports 256
-BIND prompts. Neither model has had **any** target-phase training: this is
-zero-shot.
-
-| history | exact answer correct | prediction is a value from the context |
-|---|---|---|
-| `A` | 0.113 | 1.000 |
-| `A_prime` | 0.008 | 0.133 |
-| `BG` | 0.004 | 0.074 |
-| *chance* | 0.016 | 0.109 |
-
-The second column is the more mechanistic one. Getting the exact binding
-right is hard; **restricting the answer to values that appear in the context**
-is the retrieval behavior itself, and it separates the histories much more
-sharply than exact accuracy does.
-
-A single illustrative prompt, chosen as the first of the sample (not for
-outcome). The correct answer is the value bound to the queried entity
-earlier in the same context:
-
-```
-prompt : ... the e276 is ___
-correct: v29
-
-context values available: v29 v55 v16 v52 v21 v36 v62
-
-A        wrong    top-3: v55 0.17  v21 0.17  v16 0.13   (3/3 drawn from context)
-A_prime  wrong    top-3: v46 0.02  v60 0.02  v32 0.02   (0/3 drawn from context)
-BG       wrong    top-3: v50 0.02  v61 0.02  v53 0.02   (0/3 drawn from context)
-```
-
-On this example every model gets the exact value wrong. What differs is
-*where the guesses come from*, which is what the table quantifies.
-
-
-![selective effect](figures/fig1_selectivity.png)
-
-> **Figure 4.** The confirmed selective effect at $t=0$: the source arm lifts the
-> target capability while leaving the negative control at chance. Both controls
-> sit on the chance floor for the target.
-
-![gradient geometry](figures/fig5_gradient_geometry.png)
-
-> **Figure 5.** Gradient geometry separates training histories cleanly. This is a
-> state/history **marker**; it did not resolve as a predictor of $V(S,D)$ (§4.x).
+A selector must beat both random and the **global-best corpus** baseline;
+beating random alone is achievable by learning the data main effect only.
+Validation is leave-one-**state**-out, never row-wise, which would leak a
+state's value profile through its other corpora. Four prospective experiments
+follow. **P1** selects pairs of fresh states on present observables only, freezes
+and hashes the pair list, then gives each pair identical continuations. **Fork**
+branches both members of matched pairs onto the two corpora with the strongest
+prior ordering reversal, pre-registering a difference-in-differences estimand.
+**P2** gives dense checkpoints across a pre-declared source window identical
+continuations, measuring $V(S_t,B)$ directly rather than competence. **E4**
+measures the geometry of the gradient candidate data induces on current weights,
+on identical future minibatches.
 
 ## 4. Results
 
-### 4.0 Evidence ladder
-
-Results are organized by question rather than by the order experiments ran.
-
 | Question | Result |
 |---|---|
-| Does history change future learnability? | **Supported** (§4.1) |
-| Is it generic acceleration? | **No** — control capability unmoved (§4.2) |
-| Is it memorized content reuse? | **No** — survives zero shared tokens (§4.3) |
-| Is it target competence, or readiness? | **Readiness** — zero-shot blocked, learning still accelerated (§4.4) |
-| Does it survive scale? | Exploratory, 32× (§4.5) |
-| Does future data value depend on state? | **Supported** — interaction with ordering reversals (§4.7) |
-| Do behavior-matched states diverge under one future? | **No** — well-powered null (§4.10) |
-| Do behavior-matched states prefer different futures? | **No** — null (§4.11) |
-| Is there a localized emergence window? | **Not found** (§4.12) |
-| Does internal geometry identify history? | **Supported** (§4.9) |
-| Does it predict $V(S,D)$? | **Inconclusive** (§4.8) |
+| Does history change future learnability? | **Supported** |
+| Is it generic acceleration? | **No** — control capability unmoved |
+| Is it memorized content reuse? | **No** — survives zero shared tokens |
+| Is it target competence, or readiness? | **Readiness** — zero-shot blocked, learning still accelerated |
+| Does it survive scale? | Exploratory, 32× |
+| Does future data value depend on state? | **Supported** — interaction with ordering reversals |
+| Do behavior-matched states diverge under one future? | **No** — well-powered null (P1) |
+| Do behavior-matched states prefer different futures? | **No** — null (Fork) |
+| Is there a localized emergence window? | **Not found** (P2) |
+| Does internal geometry identify history? | **Supported** |
+| Does it predict $V(S,D)$? | **Inconclusive** |
 | Can we choose the best next corpus yet? | **No** |
 
-### 4.1 Training history changes future learnability
-
-On fresh confirmatory seeds, $A$ creates a large $B$ advantage before any $B$ training:
-
-| Arm | $B$ at $t=0$ |
-|---|---:|
-| $A$ | $0.1322 \pm 0.0149$ |
-| $A'$ | $0.0156 \pm 0.0087$ |
-| BG | $0.0156 \pm 0.0051$ |
-
-Chance is $0.0156$. The $A$ arm is therefore roughly 8.5× chance while both controls sit at the chance floor.
-
-The learning-curve advantage is also substantial:
-
-$$\mathrm{AULC}(A)-\mathrm{AULC}(A') = +0.5265,$$
-
-with effect/noise $+1.75$.
-
-### 4.2 The effect is selective
-
-The negative-control task $C$ shows little corresponding advantage:
-
-$$\mathrm{AULC}_C(A)-\mathrm{AULC}_C(A') = +0.0395,$$
-
-effect/noise $+0.36$, approximately thirteen times smaller than the $B$ effect.
-
-This null is meaningful because the control is learnable: BG reaches FACT performance $0.410$ against the pre-specified $0.30$ competence gate.
-
-### 4.3 The effect is not memorized entity content
-
-With zero shared entity tokens between source and target, the $B$ head start is fully retained:
-
-$$0.1567_{\text{disjoint}} \quad \text{vs.} \quad 0.1431_{\text{shared}},$$
-
-or 111% retention.
-
-This rules out simple entity memorization/content reuse as the explanation.
-
-### 4.4 Exploratory scale persistence
-
-The zero-shot $B$ advantage persists as capacity increases:
-
-| Scale | $A$ $t=0$ | $A'$ $t=0$ | BG $t=0$ |
-|---|---:|---:|---:|
-| 1× | $0.126 \pm 0.016$ | $0.014 \pm 0.004$ | $0.021 \pm 0.006$ |
-| 8× | $0.157 \pm 0.042$ | $0.012 \pm 0.007$ | $0.017 \pm 0.001$ |
-| 32× | $0.097 \pm 0.037$ | $0.012$ | — |
-
-These runs are exploratory, but they argue against the effect being purely a tiny-model artifact.
-
-### 4.5 Our first mechanistic hypothesis is falsified
-
-We hypothesized that an off-distribution induction-style mediator $M$ would be selectively increased by $A$ and explain the $A\rightarrow B$ advantage.
-
-On fresh confirmatory seeds:
-- amplitude ratio: $1.63$ vs gate $\ge 2.0$;
-- selectivity: $0.76$ vs gate $\ge 2.0$.
-
-The compound gate therefore **fails**.
-
-This falsification is important methodologically. A single preflight seed had shown a visually convincing transient spike, but the effect disappeared across fresh seeds and scales. We retain the behavioral phenomenon and reject the proposed explanation.
-
-### 4.6 State×Data interaction is real
-
-We next measured $V(S,D)$: the value of future corpus $D$ from incoming model state $S$.
-
-In the audited balanced matrix, State×Data interaction accounts for a large share of observed variation, comparable to or larger than the state main effect and much larger than the data main effect under the interpretable mean objective. Corpus ordering reverses across states: different corpora are optimal from different complete incoming states.
-
-**Interpretation:** the value of training data is not globally fixed over the measured state space. Knowing only which corpus is generally best is insufficient to describe all state-conditioned outcomes.
-
-![V(S,D) by incoming state](figures/fig2_vsd_matrix.png)
-
-> **Figure 1.** $V(S,D)$ over complete states and candidate corpora, each row centred on that state's mean so reversals are visible. ★ marks the best corpus for each state; different states select different corpora.
-
-### 4.7 Current telemetry does not exploit the interaction
-
-A state-aware selector evaluated on held-out states fails to beat the global-best corpus baseline.
-
-Under the mean objective:
-
-| Selector | Top-1 | Regret |
-|---|---:|---:|
-| State-aware | 10/12 | 0.0473 |
-| Global-best | 11/12 | 0.0207 |
-| Random | — | 0.0758 |
-
-The predictor beats random but performs substantially worse than global-best. It therefore appears to learn broad corpus quality rather than the State×Data conditionality.
-
-This is a **falsified adaptive-selection claim**, not a failure of the State×Data phenomenon itself. The combination localizes the bottleneck: conditional training structure exists, but our current state representation does not read it well enough to act.
-
-### 4.8 Candidate state marker and causal limitation
-
-An on-distribution retrieval statistic discovered during mechanism search separates $A$ from $A'$ on fresh validation seeds, but specificity against BG does not cleanly replicate. We therefore treat it as a history-associated marker rather than an $A$-specific mediator.
-
-A targeted top-4-head output ablation does not preferentially remove the $A$ advantage. However, the intervention also fails to reduce the underlying zero-shot $B$ capability, despite verified zeroed weights. The necessity test is therefore **inconclusive due to insufficient intervention efficacy**, not evidence against mediation.
-
-### 4.9 Exploratory temporal clue
-
-Before the true temporal replay, we fit frozen temporal descriptions to zero-shot $B$ competence traces at 250-step intervals.
-
-| Model | Held-out RMSE |
-|---|---:|
-| Linear | $0.0331 \pm 0.0037$ |
-| Sigmoid | $0.0353 \pm 0.0038$ |
-| Changepoint | $0.0171 \pm 0.0036$ |
-
-The changepoint description improves held-out RMSE by approximately 48%. **The inferred break location, however, carries no better than 250-step resolution:** the traces were sampled every 250 steps, so the fitted break lies between the first two samples and the agreement across folds measures consistency of that interpolation, not measurement precision. The defensible statement is that competence rises somewhere within the first 250 steps.
-
-This is **not** evidence for a phase transition in future learnability: it models acquired competence, not $V(S_t,B)$. P2 tests the stronger question prospectively.
-
-### 4.10 Behavior-matched states do not diverge under an identical future (P1)
-
-We generated fresh states, selected pairs using **present observables only**
-(zero-shot accuracy and loss on two capabilities), and froze and hashed the pair
-list, the stopping rule, the analysis plan and the interpretation branches before
-any continuation outcome existed. All **71 frozen pairs** completed — a
-contiguous prefix of a run order fixed by a seed declared in advance, so no
-subsampling decision was required.
-
-Against a within-arm null of 376 unmatched pairs, matched pairs do **not** diverge
-more:
-
-| metric | matched (n=71) | null (n=376) | difference | permutation $p$ |
-|---|---|---|---|---|
-| final | 0.2893 | 0.2700 | +0.0193 | 0.704 |
-| rate-only | 0.1325 | 0.1496 | −0.0171 | 0.504 |
-| $t=0$ | 0.0070 | 0.0101 | −0.0032 | 0.005 |
-
-Both informative metrics are flat, and both survive dropping units with a late
-instability dip ($p = 0.951$, $0.701$). The significant $t=0$ result is
-**circular rather than a finding**: zero-shot accuracy is part of the matching
-vector, so matched pairs have similar $t=0$ by construction, and the correlation
-between matching distance and $t=0$ divergence is $+0.802$. The metrics not
-matched on — final and rate-only — show nothing.
-
-Per the pre-registered null branch: training history changes future learnability
-in controlled contrasts, but we did not establish that those differences remain
-hidden among behavior-matched checkpoints.
-
-![matching distance vs divergence](figures/fig3_matching_vs_divergence.png)
-
-> **Figure 3.** Present-state matching distance against future divergence over
-> the 71 frozen pairs. The pre-registered confound check: divergence does not
-> exceed the unmatched null, and the $t=0$ correlation reflects that zero-shot
-> accuracy is itself part of the matching vector.
-
-### 4.11 Behavior-matched states do not prefer different futures (Fork)
-
-A stronger version of the same question: matched states might respond identically
-to *one* future while differing in *which* future suits them. We forked both
-members of 16 frozen matched pairs onto two corpora chosen from the prior
-$V(S,D)$ matrix as the pair with the strongest ordering reversal, giving four
-branches per pair, and pre-registered the difference-in-differences estimand.
-
-The aggregate interaction is **+0.0888, 95% CI $[-0.1173, +0.3162]$** — spanning
-zero, with a standard deviation five times the mean. **8 of 16 pairs share the
-aggregate sign, exactly chance**, so the 8 apparent ordering reversals are what
-random sign assignment produces. Dropping pairs touching an unstable unit gives
-$+0.0295$, CI $[-0.1707, +0.2368]$.
-
-The single most extreme pair looks striking (0.613/0.083 against 0.024/0.528).
-It is the maximum of a noise distribution, and the protocol pre-committed to not
-presenting it as a result.
-
-### 4.12 No localized emergence window (P2)
-
-An exploratory changepoint fit on zero-shot competence had suggested a localized
-change early in source training. Because competence is not learnability, we
-tested the stronger claim prospectively: 48 checkpoints across source steps
-150–450 at 20-step spacing, each given an identical continuation to measure
-$V(S_t,B)$ directly.
-
-Held-out comparison: linear 0.1333, sigmoid 0.1416, changepoint 0.1425. Linear
-wins by 5.8%, inside the band the protocol pre-declared as not distinguishable,
-and $V(S_t,B)$ correlates with training step at $r=-0.199$. The variance is
-training instability, not developmental position.
-
-The experiment also invalidated its own window's premise. The earlier changepoint
-was fitted to traces sampled every 250 steps, so its location was interpolated
-between the first two samples and carries no better than 250-step resolution.
-Per the frozen protocol the window was **not** re-centred.
-
-![temporal replay](figures/fig4_temporal_replay.png)
-
-> **Figure 4.** Source-training step against measured $V(S_t,B)$, 48 checkpoints
-> across three seeds. No localized structure; a linear description wins on
-> held-out fit by 5.8%, inside the pre-declared not-distinguishable band.
-
-### 4.x Gradient/update geometry (E4)
-
-Because the activation-based readout failed to predict conditional data value,
-and because the capability proved redundant across attention heads, we measured
-a different observable family: the geometry of the gradient that candidate
-future data induces on the current weights. For each saved state and each
-candidate corpus, on **identical future minibatches**, we record gradient norm,
-layerwise gradient-mass entropy, alignment between the gradient and the current
-weights, and pairwise alignment between corpora's gradients.
-
-**As a marker of training history, this separates states cleanly.** Gradient
-norm on $B$ is 0.54 for source-trained states against 0.29 for the matched
-control; $\cos(\nabla B,\nabla C)$ is $+0.73$ against $+0.19$.
-
-**As a predictor of $V(S,D)$, the result is inconclusive, and we do not
-promote it.** Under the pre-specified `min` objective the point estimate favours
-the gradient readout (regret 0.0017 against the state-blind global-best rule's
-0.0027; top-1 9/13 against 7/13), which is what the frozen gate asked. We record
-that as the formal outcome and do not retroactively claim that uncertainty
-separation was pre-specified — it was not. We nonetheless treat the result as
-scientifically unresolved, for four reasons stated together: the advantage is
-0.0010 in absolute terms; the `min` objective had already been documented, prior
-to this experiment, as sitting near the chance floor; a bootstrap over the 13
-usable states gives a 95% CI of $[0.00000, +0.00285]$, reaching zero; and the
-`mean` objective points the opposite way (regret 0.0436 against 0.0191, CI
-$[-0.07362, +0.00000]$). Two objectives disagreeing, both with intervals
-touching zero, at $n=13$, is not a readout result.
-
-The binding constraint was the overlap between measured geometry (76 states) and
-complete $V(S,D)$ rows (13 states), not the geometry itself. We did not
-expand the experiment post hoc; a properly powered successor is specified as
-E4b. **Experiment 6, the prospective what-next tournament, remains gated and
-unrun.**
-
-A predictive geometry would be a *readout* result — evidence that the
-information is present and legible — not a mechanism claim.
+### 4.1 Developmental readiness
+
+The clearest result is $B_2$, the deranged target. Because the derangement
+blocks the retrieved answer, every arm begins at or below chance: $A$ scores
+0.0122 (disjoint surface) and 0.0156 (shared) against a chance floor of 0.0156.
+Nothing can be transferred. Yet the source arm learns far faster — a rate-only
+advantage over the matched control of **+0.5438** on the disjoint surface
+(effect/noise 1.86) and **+0.3967** shared (1.63), reaching final accuracy
+**1.0000** against $A'$ at 0.26/0.51 and BG at 0.19/0.32 (24 units, 4 seeds ×
+3 arms × 2 surface conditions). Per the pre-declared reading table, a rate-only
+advantage with $t=0$ at chance is **readiness, not task transfer**. Caveats: $n
+= 4$ per arm, effect/noise 1.6–1.9 rather than overwhelming, and the control arm
+has large between-seed variance (sd 0.14–0.21).
+
+On the ordinary target $B$, $A$ reaches $0.1322 \pm 0.0149$ at $t=0$ against
+$0.0156 \pm 0.0087$ ($A'$) and $0.0156 \pm 0.0051$ (BG) — roughly 8.5× chance
+while both controls sit exactly on the floor — with
+$\mathrm{AULC}(A) - \mathrm{AULC}(A') = +0.5265$ (effect/noise $+1.75$).
+
+![B2 readiness](figures/paper_fig1_readiness.png)
+
+> **Figure 1.** Acquisition of $B_2$ (retrieval ∘ derangement), mean ± sd over 4
+> seeds per arm. Because the derangement blocks the retrieved answer, all arms
+> begin at or below chance, so no answer can be transferred; the source arm
+> nonetheless acquires the capability far faster, and the advantage is if
+> anything larger when source and target share **zero** entity tokens (left).
+
+### 4.2 Specificity, disjointness, and scale
+
+The effect is not generic acceleration: on the negative control $C$ the
+advantage is $+0.0395$ (effect/noise $+0.36$), roughly thirteen times smaller
+than the $B$ effect. This null is meaningful because $C$ is learnable — BG
+reaches 0.410 against a pre-specified 0.30 competence gate. It is not memorized
+content: with zero shared entity tokens the head start is fully retained
+($0.1567$ disjoint vs $0.1431$ shared, 111% retention). It persists with
+capacity — zero-shot $B$ advantage of $0.126 \pm 0.016$ at 1×, $0.157 \pm 0.042$
+at 8×, and $0.097 \pm 0.037$ at 32×, against controls that never leave the floor
+— though these runs are exploratory rather than a powered scaling study.
+
+### 4.3 State×Data interaction, and the readout that cannot exploit it
+
+In the audited balanced matrix (13 complete states × 3 corpora), State×Data
+interaction accounts for a large share of variation, comparable to or larger
+than the state main effect and much larger than the data main effect. Corpus
+ordering does reverse across states, though one corpus dominates globally: FACT
+is optimal for 12 of 13 states and BIND for one, supplying the reversal. The
+value of training data is therefore not globally fixed over the measured state
+space — but a strong data main effect remains.
+
+That caveat proves decisive. A state-aware selector evaluated leave-one-state-out
+beats random (regret 0.0473 vs 0.0758) yet loses badly to the state-blind
+**global-best** baseline (0.0207; top-1 10/12 against 11/12). It learns broad
+corpus quality rather than the conditionality. This is a falsified
+adaptive-selection claim, not a failure of the State×Data phenomenon: the
+conditional structure exists, and our state representation does not read it well
+enough to act.
+
+![V(S,D)](figures/fig2_vsd_matrix.png)
+
+> **Figure 2.** $V(S,D)$ with each row centred on that state's own mean, so cells
+> compare candidate corpora *within* a state rather than absolute value across
+> states. ★ marks the best corpus per state. FACT is globally dominant and
+> optimal for 12/13 states; BIND is optimal for BG-500, yielding the ordering
+> reversal. The interaction is real but was not readable enough for state-aware
+> selection to beat the global-best baseline. (This audited matrix uses three
+> corpora; the powered E4b successor specifies four.)
+
+### 4.4 Boundaries and negative results
+
+**Behavior-matched states do not diverge under an identical future (P1).** We
+froze and hashed the pair list, stopping rule, analysis plan, and interpretation
+branches before any continuation outcome existed; all **71 frozen pairs**
+completed as a contiguous prefix of a pre-declared run order, so no subsampling
+decision arose. Against a within-arm null of 376 unmatched pairs, matched pairs
+do not diverge more: final 0.2893 vs 0.2700 ($+0.0193$, permutation $p = 0.704$)
+and rate-only 0.1325 vs 0.1496 ($-0.0171$, $p = 0.504$). Both survive dropping
+units with a late instability dip ($p = 0.951$, $0.701$). A significant $t=0$
+result ($p = 0.005$) is **circular rather than a finding**: zero-shot accuracy is
+part of the matching vector, and matching distance correlates with $t=0$
+divergence at $+0.802$. The metrics *not* matched on show nothing.
+
+**Nor do they prefer different futures (Fork).** Forking both members of 16
+frozen matched pairs onto the two corpora with the strongest prior ordering
+reversal gives an aggregate interaction of $+0.0888$, 95% CI
+$[-0.1173, +0.3162]$ — spanning zero, with a standard deviation five times the
+mean. **8 of 16 pairs share the aggregate sign, exactly chance**, so the apparent
+reversals are what random sign assignment produces; the stable subset gives
+$+0.0295$, CI $[-0.1707, +0.2368]$. The single most extreme pair looks striking,
+and the protocol pre-committed to not presenting the maximum of a noise
+distribution as a result.
+
+**No localized emergence window (P2).** An exploratory changepoint fit on
+zero-shot competence had suggested a localized early change. Because competence
+is not learnability, we tested prospectively: 48 checkpoints across source steps
+150–450, each given an identical continuation. Held-out comparison gives linear
+0.1333, sigmoid 0.1416, changepoint 0.1425 — linear wins by 5.8%, inside the
+pre-declared not-distinguishable band — and $V(S_t,B)$ correlates with source
+step at only $r = -0.199$. The experiment also invalidated its own window's
+premise: the original changepoint was fitted to traces sampled every 250 steps,
+so its location carries no better than 250-step resolution. Per the frozen
+protocol the window was **not** re-centred.
+
+**Mechanism and geometry.** Our pre-registered induction-style mediator $M$
+failed its compound gate on fresh seeds (amplitude ratio 1.63 and selectivity
+0.76, both against a $\ge 2.0$ gate). A later on-distribution retrieval statistic
+separates $A$ from $A'$ but does not cleanly replicate against BG, so we treat it
+as history-associated rather than $A$-specific. Gradient geometry separates
+histories cleanly — gradient norm on $B$ of 0.54 for source-trained states
+against 0.29 for the matched control, $\cos(\nabla B, \nabla C)$ of $+0.73$
+against $+0.19$ — but as a *predictor* of $V(S,D)$ it is **inconclusive and not
+promoted**. Under the pre-specified `min` objective the point estimate favours it
+(regret 0.0017 vs 0.0027; top-1 9/13 vs 7/13), which is what the frozen gate
+asked, and we do not retroactively claim uncertainty separation was
+pre-specified. We nonetheless treat it as unresolved: the advantage is 0.0010
+absolute; `min` had already been documented before this experiment as near the
+chance floor; the bootstrap CI over 13 states is $[0.00000, +0.00285]$, reaching
+zero; and the `mean` objective points the opposite way (0.0436 vs 0.0191, CI
+$[-0.07362, +0.00000]$). Two objectives disagreeing, both touching zero, at
+$n=13$, is not a readout result. The binding constraint was overlap between
+measured geometry (76 states) and complete $V(S,D)$ rows (13); we did not expand
+post hoc, and the prospective what-next tournament **remains gated and unrun**.
+
+![boundary results](figures/paper_fig3_boundaries.png)
+
+> **Figure 3.** The four results that bound the claim. **(a)** P1: matched-pair
+> divergence does not exceed the within-arm null on either informative metric.
+> **(b)** Fork: the State×Data interaction CI spans zero. **(c)** P2: no
+> localized structure in $V(S_t,B)$; note that all 48 continuations reach BIND
+> accuracy 1.0, so the assay saturates near 0.905 and the visible spread is
+> post-mastery instability rather than differences in what was learnable.
+> **(d)** the state-aware readout loses to the state-blind global-best baseline.
 
 ## 5. Discussion and Limitations
 
-### Discussion
+We began by asking whether training order could be reduced to a static
+curriculum relation. It cannot. The experiments point to a state-dependent
+picture: past data changes the learner, and therefore changes the value of
+future data. That is why $V(S,D)$ exists as an object, and it is the shift the
+results force rather than assume.
 
-We began by asking whether training order could be reduced to a static curriculum
-relation. It cannot. The experiments point instead to a state-dependent picture:
-past data changes the learner, and therefore changes the value of future data.
-That is why $V(S,D)$ exists as an object at all, and it is the shift the results
-force rather than assume.
+**The central synthesis is about what behavior does and does not capture.**
+Simple target competence badly underestimates readiness: on $B_2$ the source
+model performs at or below chance zero-shot — it can do nothing — and
+nonetheless learns the capability far faster than either control, even across
+disjoint content. Judging that model by what it can currently do would miss the
+difference entirely. Yet the *richer* behavioral vector we matched on —
+zero-shot accuracy and loss across two capabilities — captured more
+future-relevant variation than we expected. Two pre-registered experiments, one
+adequately powered at 71 pairs against a 376-pair null, both found nothing.
+These observations are consistent and jointly more informative than either
+alone: readiness is real and consequential, and it is largely *legible* — not in
+a single competence score, but in a modest multi-capability profile. Our
+starting hypothesis was that behavior hides developmental state. In this setting
+it mostly does not.
 
-**The central synthesis is about what behavior does and does not capture.** Simple
-target competence badly underestimates readiness: on a target composed with a
-derangement, the source model performs at or below chance zero-shot — it can do
-nothing — and nonetheless learns the capability far faster than either control,
-even across disjoint content. Judging that model by what it can currently do
-would miss the difference entirely.
+This matters for digital-minds methodology and for training. If two systems with
+similar present behavior respond differently to the same future experience, a
+behavioral snapshot is not a complete characterization — so future plasticity may
+itself be an informative property of model identity, without establishing
+consciousness, welfare, or stable preferences. Practically, a system could
+inspect a checkpoint, predict which candidate data has greatest marginal value,
+train on it, and observe the result. We do **not** demonstrate that controller.
+The trajectory this work traces — static curriculum → state-conditioned value →
+predictive state readout → adaptive control — is complete only through its
+second stage.
 
-Yet the *richer* behavioral vector we used for matching — zero-shot accuracy and
-loss across two capabilities — captured more future-relevant variation than we
-expected. Two pre-registered experiments, one adequately powered at 71 pairs
-against a 376-pair null and one at 16 pairs with four branches each, both found
-nothing: matched states neither diverged under a shared future nor preferred
-different futures.
+**Limitations.** "Developmental state" is operational, not uniquely identified:
+nothing here establishes a low-dimensional latent coordinate, a discrete stage,
+or Markovian dynamics. The behavioral-sufficiency result is a boundary
+condition, not a universal claim — it holds for *this* matching vector, in
+*this* microworld, at *this* scale, over *these* futures, and a richer future
+set, coarser vector, different substrate, or larger model could reverse it. The
+synthetic environment is what makes the controls possible and is also the
+clearest gap between this setting and the phenomena the digital-minds framing
+cares about. Breadth remains unresolved: disjoint identities rule out content
+memorization, but the effect may still be specific to a related computational
+family. Scale evidence is exploratory, mechanism is unresolved, prediction
+failed, and $V(S,D)$ continuations reset optimizer state, measuring information
+in weights rather than full training state. Finally, the P2 assay saturates —
+all 48 continuations reach ceiling — leaving little headroom to distinguish
+"very ready" from "extremely ready."
 
-These two observations are consistent, and together they are more informative
-than either alone. Readiness is real and consequential, and it is largely
-*legible* — not in a single competence score, but in a modest multi-capability
-behavioral profile. Our starting hypothesis was that behavior hides developmental
-state. In this setting it mostly does not.
+### Dual-Use and Ethical Considerations
 
-This matters directly for digital-minds methodology. The sprint asks how we should interpret preferences, self-reports, personas, and identity when behavior alone may be ambiguous. Our results suggest that **future plasticity itself may be an informative property of model identity**. If two systems with similar present behavior respond differently to the same future experience, a behavioral snapshot is not a complete characterization of the system. This does not establish consciousness, welfare, or stable preferences, but it provides a concrete way to probe hidden differences that could matter for those questions.
-
-There is also a practical implication for training. In principle, a system could inspect a checkpoint, predict which candidate data would have the greatest marginal value, train on it, and observe the resulting state. We do **not** demonstrate that controller here. Our state-aware selector fails against the global-best baseline. The important result is narrower and more useful scientifically: the conditional signal exists, while our present readout does not yet capture it.
-
-### Limitations
-
-**"Developmental state" is operational, not uniquely identified.** We use the
-term to denote checkpoint information that influences future learning. Nothing
-here establishes a unique low-dimensional latent coordinate, a discrete
-developmental stage, or that the relevant dynamics are Markovian in any
-representation we measured.
-
-**The behavioral-sufficiency result is bounded.** P1 and the Fork establish that
-*this* matching vector, in *this* microworld, at *this* scale, over *these*
-tested futures, was sufficient to remove measurable divergence. They do not show
-that behavior is sufficient in general. A richer future set, a coarser matching
-vector, a different substrate, or a larger model could all reverse the finding.
-The result is a boundary condition, not a universal claim.
-
-
-**Controlled synthetic environment.** The strongest evidence comes from a deliberately constructed language-like microworld. This gives experimental control but does not establish that the same structure governs large natural-language pretraining.
-
-**Semantic content is deliberately absent.** The microworld strips away social,
-affective, and cultural connotation in order to isolate learning dynamics. That
-is what makes the controls possible, and it is also the clearest gap between
-this setting and the phenomena the digital-minds framing cares about.
-
-**Breadth remains unresolved.** Disjoint entity identities rule out simple content memorization, but the current $A\rightarrow B$ effect may still be specific to a related computational family. A broader target-distance/developmental-radius experiment remains important.
-
-**Scale evidence is exploratory.** Persistence through 32× capacity is encouraging but not a fully powered scaling law.
-
-**Mechanism unresolved.** The first mechanism was falsified. A later retrieval marker is not established as causal, and the head-ablation intervention was too weak to test necessity.
-
-**Prediction failed.** Strong State×Data interaction does not imply that current telemetry can predict the best next corpus. Our selector loses to the global-best baseline.
-
-**Optimizer state reset.** Current $V(S,D)$ continuations restart optimizer state, so the experiment primarily measures information encoded in weights. A future comparison should restore full optimizer/training state.
-
-**Temporal evidence is preliminary.** The initial changepoint result concerns zero-shot competence rather than future learnability. P2 is designed to distinguish those quantities.
+Most experiments were conducted on small, simple models and synthetic tasks
+designed to expose training dynamics directly. Sensitive or welfare-relevant
+topics were not required to elicit history-dependent differences in later
+learning, and the study does not rely on conversational self-report or
+preference elicitation. Instead, we construct the relevant training histories
+directly and intervene on prior experience while holding architecture and
+subsequent training fixed, providing a ground-truth record of developmental
+history and a causal test of whether that history changes later learnability. We
+therefore establish a causal relationship between training history and future
+learning dynamics in this controlled setting. We do **not** establish
+ground-truth preferences, introspective access, subjective experience, moral
+status, or a uniquely identified internal developmental state.
 
 ### Future Work
 
-The sprint’s broader questions about model identity, introspection, and the limits of behavioral evidence suggest a natural extension: treat controlled future learning as an *assay* of hidden model state, then ask whether that state predicts preference stability, self-report reliability, or persona persistence.
-
-A natural next step is to test whether developmental readiness interacts with
-semantically richer environments. The present microworld deliberately strips
-away most social, affective, and cultural connotations in order to isolate
-learning dynamics. In a richer setting, however, early training may establish
-latent dispositions that only become behaviorally meaningful when later
-experience supplies the relevant semantic context. This suggests a **history ×
-environment interaction**: two models exposed to different developmental
-histories could respond differently when placed into the same connotation-rich
-world, even if neither was explicitly trained on the resulting preference,
-persona, or interpretation. Testing this would connect controlled
-developmental-readiness effects to questions about how prior experience shapes
-later preferences, styles, and behavioral tendencies in more naturalistic
-models.
-
-This is future work, not a claim established here. It is also the setting in
-which our behavioral-matching nulls would be most worth revisiting: matching on
-a modest capability profile was sufficient in a world with no connotation to
-carry, and it is an open question whether the same holds where later experience
-can activate dispositions that earlier training laid down.
-
-The next research program is naturally staged:
-
-1. **See development.** Map the temporal structure of $V(S_t,D)$, and measure how far the readiness effect generalizes across target distance.
-2. **Read development.** Search for a state representation that predicts held-out conditional data value. Gradient/update geometry is a high-priority next hypothesis because the same corpus can induce different learning outcomes from different weight states.
-3. **Explain development.** Perturb human-readable corpus properties and test `corpus feature → state change → future learnability`.
-4. **Control development.** Only once state inference beats a global-best baseline should we rerun a frozen prospective “what should come next?” tournament.
-5. **Close the loop.** If one-step prediction succeeds, repeat the observe → predict → choose → train cycle and compare against static curricula/data mixtures.
-
-The long-run goal is an adaptive pretraining system:
-
-$$S_t
-\rightarrow
-\hat V(S_t,D_1),\ldots,\hat V(S_t,D_n)
-\rightarrow
-D^*
-\rightarrow
-S_{t+\Delta}.$$
+The natural next step is to test whether developmental readiness interacts with
+semantically richer environments. The present microworld removes connotation to
+isolate learning dynamics, but in a richer setting early training may establish
+latent dispositions that become behaviorally meaningful only when later
+experience supplies the semantic context — a **history × environment
+interaction**. That is also where our behavioral-matching nulls are most worth
+revisiting: a modest capability profile sufficed in a world with no connotation
+to carry, and it is open whether it suffices where later experience can activate
+dispositions earlier training laid down. Reaching adaptive control requires
+first finding a state representation that predicts held-out conditional data
+value and beats a global-best baseline; only then should the frozen what-next
+tournament be run.
 
 ## 6. Conclusion
 
-Training history changes what a model is ready to learn. In a controlled
-environment, prior exposure produces a large and selective advantage in acquiring
-a later capability — an advantage that survives disjoint content, appears on a
-target the model cannot answer at all beforehand, and persists across a 32×
-capacity range in exploratory runs. The value of future data depends on the state
-that history produced.
+Training history changes what a model is ready to learn: prior exposure produces
+a large, selective advantage in acquiring a later capability — one that survives
+disjoint content, appears on a target the model cannot answer at all beforehand,
+and persists across a 32× capacity range in exploratory runs — and the value of
+future data depends on the state that history produced. Much of what we set out
+to show did not survive testing: our mechanistic hypothesis failed, no localized
+emergence window exists, gradient geometry that identifies history did not
+resolve as a predictor of conditional data value, and two pre-registered
+experiments found that behavior-matched states neither diverge under identical
+future training nor prefer different futures. The methodological implication is a
+distinction worth keeping separate — **measuring what a model can currently do is
+not the same as forecasting what it can become** — with the caveat that in this
+setting, those counterfactual trajectories proved more readable from behavior
+than we expected.
 
-Much of what we set out to show did not survive testing. Our pre-registered
-mechanistic hypothesis failed. A prospective search for a localized emergence
-window found none. Internal geometry that cleanly identifies training history did
-not resolve as a predictor of conditional data value, so we cannot yet choose
-what a model should train on next. And two pre-registered experiments found that
-states matched on a modest behavioral profile neither diverge under identical
-future training nor prefer different futures — the opposite of our starting
-hypothesis, and the clearest result of the study.
-
-The methodological implication is a distinction worth keeping separate:
-**measuring what a model can currently do is not the same as forecasting what it
-can become.** Simple target competence missed the readiness effect entirely,
-while a richer behavioral profile captured it. A model may therefore be
-characterized not only by its present behavior, but by the counterfactual
-learning trajectories available from its present state — and in this setting,
-those trajectories proved more readable from behavior than we expected.
-
-## Code and Data
+## Code, Data, and Licensing
 
 - **Code repository:** https://github.com/walmsley-lab/ml-innovation-3-interpretability-sprint
-- **Data:** Synthetic corpora are generated deterministically from the code and recorded seeds/configurations.
-- **Artifacts:** Headline experiments can be regenerated from frozen protocols and seeds. Cached run artifacts are not required for conceptual reproduction; where available they accelerate exact result regeneration.
-- **Reproducibility:** Frozen protocols, analysis plans, pair selections, and hashes are version-controlled; experiments can be rerun from the recorded specifications. Concretely, the repository tracks the protocol documents under `docs/experiments/` together with their SHA-256 digests and the selection artifacts they govern — including the P1 stopping rule, pair list (71 pairs and their matching distances), analysis plan, interpretation branches, and the counterfactual-fork pair and corpus selections. Each digest was recorded before the outcomes it governs existed, so the ordering of specification and result is checkable by a third party rather than asserted. `scripts/audit_claims.py` recomputes every headline figure from raw units.
+- **Data:** synthetic corpora are generated deterministically from the code and recorded seeds/configurations.
+- **Reproducibility:** frozen protocols, analysis plans, pair selections, and hashes are version-controlled. The repository tracks protocol documents under `docs/experiments/` with their SHA-256 digests and the selection artifacts they govern — including the P1 stopping rule, the 71-pair list and matching distances, the analysis plan, interpretation branches, and the fork pair/corpus selections. Each digest was recorded before the outcomes it governs existed, so the ordering of specification and result is checkable by a third party rather than asserted. `scripts/audit_claims.py` recomputes every headline figure from raw units.
+- **Licensing:** source code is released under the **Apache License 2.0**; this report and other written/figure content are released under **Creative Commons Attribution 4.0 International (CC BY 4.0)**.
 
 ## Author Contributions
 
@@ -697,56 +434,22 @@ This work was carried out during a sprint alongside others in the SF Bay Area.
 Krysia Koneni, Trevor Harrison, Augustus, and Patrick Walmsley acted as sounding
 boards for one another throughout.
 
-AI was used heavily in experimental design and execution; see Appendix B for the
-specific roles.
+AI was used heavily in experimental design and execution; see Appendix B.
 
 ## References
 
-1. Achille, A., Rovere, M., & Soatto, S. (2019). **Critical Learning Periods in Deep Networks.** *International Conference on Learning Representations (ICLR).* https://openreview.net/forum?id=BkeStsCcKQ
-2. Arora, S., & Goyal, A. (2023). **A Theory for Emergence of Complex Skills in Language Models.** arXiv:2307.15936.
-3. Barak, B., Edelman, B. L., Goel, S., Kakade, S., Malach, E., & Zhang, C. (2022). **Hidden Progress in Deep Learning: SGD Learns Parities Near the Computational Limit.** *Advances in Neural Information Processing Systems 35*, 21750–21764. arXiv:2207.08799.
-4. Bengio, Y., Louradour, J., Collobert, R., & Weston, J. (2009). **Curriculum Learning.** *Proceedings of the 26th International Conference on Machine Learning*, 41–48. https://doi.org/10.1145/1553374.1553380
-5. Binder, F. J., Chua, J., Korbak, T., Sleight, H., Hughes, J., Long, R., Perez, E., Turpin, M., & Evans, O. (2025). **Looking Inward: Language Models Can Learn About Themselves by Introspection.** *International Conference on Learning Representations (ICLR).* arXiv:2410.13787.
-6. Bushnaq, L., Braun, D., Clive-Griffin, O., Bussmann, B., Hu, N., Ivanitskiy, M., Linsefors, L., & Sharkey, L. (2026). **Interpreting Language Model Parameters.** Goodfire / MATS Technical Report.
-7. Chen, J., Luo, Y., & Pan, L. (2026). **Mechanistic Data Attribution: Tracing the Training Origins of Interpretable LLM Units.** arXiv:2601.21996.
-8. Chen, M. F., Roberts, N., Bhatia, K., Wang, J., Zhang, C., Sala, F., & Ré, C. (2023). **Skill-It! A Data-Driven Skills Framework for Understanding and Training Language Models.** arXiv:2307.14430.
-9. Chen, R., Arditi, A., Sleight, H., Evans, O., & Lindsey, J. (2025). **Persona Vectors: Monitoring and Controlling Character Traits in Language Models.** arXiv:2507.21509.
-10. Frankle, J., Schwab, D. J., & Morcos, A. S. (2020). **The Early Phase of Neural Network Training.** *International Conference on Learning Representations (ICLR).* https://openreview.net/forum?id=Hkl1iRNFwS
-11. Graves, A., Bellemare, M. G., Menick, J., Munos, R., & Kavukcuoglu, K. (2017). **Automated Curriculum Learning for Neural Networks.** *Proceedings of the 34th International Conference on Machine Learning*, PMLR 70. arXiv:1704.03003.
-12. Gu, Y., Dong, L., Wang, H., Hao, Y., Dong, Q., Wei, F., & Huang, M. (2025). **Data Selection via Optimal Control for Language Models.** *International Conference on Learning Representations (ICLR).* arXiv:2410.07064.
-13. Hacohen, G., & Weinshall, D. (2019). **On the Power of Curriculum Learning in Training Deep Networks.** *Proceedings of the 36th International Conference on Machine Learning*, PMLR 97.
-14. Hoogland, J., Wang, G., Farrugia-Roberts, M., Carroll, L., Wei, S., & Murfet, D. (2025). **Loss Landscape Degeneracy Drives Stagewise Development in Transformers.** *Transactions on Machine Learning Research.* arXiv:2402.02364.
-15. Ilyas, A., Park, S. M., Engstrom, L., Leclerc, G., & Madry, A. (2022). **Datamodels: Predicting Predictions from Training Data.** *Proceedings of the 39th International Conference on Machine Learning.* arXiv:2202.00622.
-16. Jiang, L., Shinnick, Z., van den Hengel, A., Saratchandran, H., & Teney, D. (2026). **Procedural Pretraining: Warming Up Language Models with Abstract Data.** arXiv:2601.21725.
-17. Krasheninnikov, D., Turner, R. E., & Krueger, D. (2025). **Language Models' Activations Linearly Encode Training-Order Recency.** arXiv:2509.14223. (Accepted to ICLR 2026.)
-18. Lee, J. H., Smith, M., Adam, M., & Hoogland, J. (2025). **Influence Dynamics and Stagewise Data Attribution.** arXiv:2510.12071.
-19. Lin, Z., Gou, Z., Gong, Y., Liu, X., Shen, Y., Xu, R., Lin, C., Yang, Y., Jiao, J., Duan, N., & Chen, W. (2024). **Rho-1: Not All Tokens Are What You Need.** arXiv:2404.07965.
-20. Lindsey, J. (2025). **Emergent Introspective Awareness in Large Language Models.** *Transformer Circuits Thread.*
-21. Liu, E., Sun, K., Li, M., Lee, I., Tjuatja, L., Huang, J.-t., & Neubig, G. (2026). **What do Language Models Learn and When? The Implicit Curriculum Hypothesis.** arXiv:2604.08510.
-22. Liu, Z., Liu, Y., Michaud, E. J., Gore, J., & Tegmark, M. (2025). **Physics of Skill Learning.** arXiv:2501.12391.
-23. Lubana, E. S., Kawaguchi, K., Dick, R. P., & Tanaka, H. (2024). **A Percolation Model of Emergence: Analyzing Transformers Trained on a Formal Language.** arXiv:2408.12578.
-24. Michaud, E. J., Liu, Z., Niklasson, U., & Tegmark, M. (2023). **The Quantization Model of Neural Scaling.** *Advances in Neural Information Processing Systems.*
-25. Michaud, E. J., Parker-Sartori, A., & Tegmark, M. (2025). **On the Creation of Narrow AI: Hierarchy and Nonlocality of Neural Network Skills.** *Advances in Neural Information Processing Systems.* arXiv:2505.15811.
-26. Nanda, N., Chan, L., Lieberum, T., Smith, J., & Steinhardt, J. (2023). **Progress Measures for Grokking via Mechanistic Interpretability.** *International Conference on Learning Representations (ICLR).* https://openreview.net/forum?id=9XFSbDPmdW
-27. Olsson, C., Elhage, N., Nanda, N., et al. (2022). **In-context Learning and Induction Heads.** arXiv:2209.11895.
-28. Park, S. M., Georgiev, K., Ilyas, A., Leclerc, G., & Madry, A. (2023). **TRAK: Attributing Model Behavior at Scale.** *Proceedings of the 40th International Conference on Machine Learning*, 27074–27113. arXiv:2303.14186.
-29. Perez, E., & Long, R. (2023). **Towards Evaluating AI Systems for Moral Status Using Self-Reports.** arXiv:2311.08576.
-30. Xie, S. M., Pham, H., Dong, X., Du, N., Liu, H., Lu, Y., Liang, P. S., Le, Q. V., Ma, T., & Yu, A. W. (2023). **DoReMi: Optimizing Data Mixtures Speeds Up Language Model Pretraining.** *Advances in Neural Information Processing Systems 36*, 69798–69818. arXiv:2305.10429.
-31. Ye, J., Liu, P., Sun, T., Zhou, Y., Zhan, J., & Qiu, X. (2024). **Data Mixing Laws: Optimizing Data Mixtures by Predicting Language Modeling Performance.** arXiv:2403.16952.
-32. Yu, Z., Das, S., & Xiong, C. (2024). **MATES: Model-Aware Data Selection for Efficient Pretraining with Data Influence Models.** *Advances in Neural Information Processing Systems 37*, 108735–108759. arXiv:2406.06046.
-33. Yu, Z., Peng, F., Lei, J., Overwijk, A., Yih, W.-t., & Xiong, C. (2025). **Group-Level Data Selection for Efficient Pretraining.** arXiv:2502.14709.
-34. Zucchet, N., Bornschein, J., Chan, S. C. Y., Lampinen, A. K., Pascanu, R., & De, S. (2025). **How Do Language Models Learn Facts? Dynamics, Curricula and Hallucinations.** arXiv:2503.21676.
-
-### Further reading and adjacent precedents
-
-The following works are useful context for readers pursuing the broader themes of hidden learning progress, multiple internal solutions, training dynamics, and data-dependent development:
-
-- Geirhos, R., Jacobsen, J.-H., Michaelis, C., et al. (2020). **Shortcut Learning in Deep Neural Networks.** *Nature Machine Intelligence, 2*, 665–673.
-- Hermann, K. M., & Lampinen, A. K. (2020). **What Shapes Feature Representations? Exploring Datasets, Architectures, and Training.** *Advances in Neural Information Processing Systems.*
-- Nakkiran, P., Kaplun, G., Kalimeris, D., Yang, T., Edelman, B. L., Zhang, F., & Barak, B. (2019). **SGD on Neural Networks Learns Functions of Increasing Complexity.** *Advances in Neural Information Processing Systems 32.* arXiv:1905.11604.
-- Pezeshki, M., Kaba, S.-O., Bengio, Y., Courville, A., Precup, D., & Lajoie, G. (2021). **Gradient Starvation: A Learning Proclivity in Neural Networks.** *Advances in Neural Information Processing Systems.*
-- Shah, H., Tamuly, K., Raghunathan, A., Jain, P., & Netrapalli, P. (2020). **The Pitfalls of Simplicity Bias in Neural Networks.** *Advances in Neural Information Processing Systems.*
-- Wu, X., Dyer, E., & Neyshabur, B. (2021). **When Do Curricula Work?** *International Conference on Learning Representations (ICLR).* 
+1. Bengio, Y., Louradour, J., Collobert, R., & Weston, J. (2009). **Curriculum Learning.** *Proceedings of the 26th International Conference on Machine Learning*, 41–48.
+2. Chen, M. F., Roberts, N., Bhatia, K., Wang, J., Zhang, C., Sala, F., & Ré, C. (2023). **Skill-It! A Data-Driven Skills Framework for Understanding and Training Language Models.** arXiv:2307.14430.
+3. Chen, R., Arditi, A., Sleight, H., Evans, O., & Lindsey, J. (2025). **Persona Vectors: Monitoring and Controlling Character Traits in Language Models.** arXiv:2507.21509.
+4. Gu, Y., Dong, L., Wang, H., Hao, Y., Dong, Q., Wei, F., & Huang, M. (2025). **Data Selection via Optimal Control for Language Models.** *ICLR.* arXiv:2410.07064.
+5. Hoogland, J., Wang, G., Farrugia-Roberts, M., Carroll, L., Wei, S., & Murfet, D. (2025). **Loss Landscape Degeneracy Drives Stagewise Development in Transformers.** *TMLR.* arXiv:2402.02364.
+6. Ilyas, A., Park, S. M., Engstrom, L., Leclerc, G., & Madry, A. (2022). **Datamodels: Predicting Predictions from Training Data.** *ICML.* arXiv:2202.00622.
+7. Jiang, L., Shinnick, Z., van den Hengel, A., Saratchandran, H., & Teney, D. (2026). **Procedural Pretraining: Warming Up Language Models with Abstract Data.** arXiv:2601.21725.
+8. Krasheninnikov, D., Turner, R. E., & Krueger, D. (2025). **Language Models' Activations Linearly Encode Training-Order Recency.** arXiv:2509.14223.
+9. Olsson, C., Elhage, N., Nanda, N., et al. (2022). **In-context Learning and Induction Heads.** arXiv:2209.11895.
+10. Perez, E., & Long, R. (2023). **Towards Evaluating AI Systems for Moral Status Using Self-Reports.** arXiv:2311.08576.
+11. Xie, S. M., Pham, H., Dong, X., Du, N., Liu, H., Lu, Y., Liang, P. S., Le, Q. V., Ma, T., & Yu, A. W. (2023). **DoReMi: Optimizing Data Mixtures Speeds Up Language Model Pretraining.** *NeurIPS 36*, 69798–69818. arXiv:2305.10429.
+12. Yu, Z., Das, S., & Xiong, C. (2024). **MATES: Model-Aware Data Selection for Efficient Pretraining with Data Influence Models.** *NeurIPS 37*, 108735–108759. arXiv:2406.06046.
 
 ## Appendix
 
@@ -755,8 +458,9 @@ The following works are useful context for readers pursuing the broader themes o
 | Claim | Status |
 |---|---|
 | Training history produces a selective future-$B$ advantage | **Supported** |
-| Effect is generic learning acceleration | **Not supported**; $C$ is near null |
-| Effect is simple entity memorization | **Falsified by disjoint-content control** |
+| Effect is generic learning acceleration | **Not supported**; $C$ near null |
+| Effect is simple entity memorization | **Falsified** by disjoint-content control |
+| Effect is readiness rather than task transfer ($B_2$) | **Supported** |
 | Effect persists across 32× capacity | **Exploratory support** |
 | Off-distribution induction mediator $M$ explains the effect | **Falsified** |
 | Retrieval statistic is an $A$-specific causal mediator | **Not established** |
@@ -768,19 +472,37 @@ The following works are useful context for readers pursuing the broader themes o
 | Behavior-matched states prefer different futures | **Falsified** (null, 16 pairs) |
 | Future learnability changes in a localized window | **Falsified** (linear best on held-out fit) |
 
-### B. LLM Usage Statement
+### B. What the model sees
 
-LLMs were used extensively throughout this sprint, in distinct roles:
+All streams share the template `the <entity> is <value> .`; only the relation
+differs. In **BIND** the queried entity appears earlier and the answer must be
+retrieved from context. In **FACT** it does not appear earlier and the answer is
+a globally fixed association held in the weights. In **BINDT** ($B_2$) the answer
+is a fixed derangement of the bound value, so retrieval alone gives the wrong
+token.
 
-- **Claude** — implementation. Wrote and debugged the experimental code, ran and
-  orchestrated the experiments across cloud workers, built the analysis and audit
-  tooling, and drafted documentation.
-- **ChatGPT** — reasoning through the experimental design. Used to pressure-test
-  hypotheses, sequence the experiments, and interrogate what each result could and
-  could not support.
-- **DeepSeek** — used sparingly for inspiration and review.
-- **Kimi K3** and **Perplexity** — used to search for prior work and locate
-  related literature.
+Across 256 zero-shot BIND prompts, with no target-phase training:
+
+| history | exact answer correct | prediction is a value from the context |
+|---|---|---|
+| $A$ | 0.113 | 1.000 |
+| $A'$ | 0.008 | 0.133 |
+| BG | 0.004 | 0.074 |
+| *chance* | 0.016 | 0.109 |
+
+The second column is the more mechanistic one: restricting the answer to values
+appearing in the context *is* the retrieval behavior, and it separates histories
+far more sharply than exact accuracy.
+
+### C. LLM Usage Statement
+
+LLMs were used extensively, in distinct roles. **Claude** — implementation: wrote
+and debugged the experimental code, orchestrated runs across cloud workers, and
+built the analysis and audit tooling. **ChatGPT** — reasoning through
+experimental design: pressure-testing hypotheses, sequencing experiments, and
+interrogating what each result could and could not support. **DeepSeek** — used
+sparingly for inspiration and review. **Kimi K3** and **Perplexity** — literature
+search.
 
 Experimental protocols, frozen gates, raw outputs, and final claims were checked
 against generated artifacts and independent audit scripts. LLM suggestions were

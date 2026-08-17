@@ -142,3 +142,9 @@ Suggested reading order: **README** (what happened and why it matters) →
 | `docs/technical.md`, `docs/risks.md` | system specification and risk register |
 | `docs/archive/` | superseded plans and the original ordering programme, preserved verbatim |
 | `src/dsi/`, `scripts/`, `tests/` | implementation |
+
+## License
+
+- **Code** (`src/`, `scripts/`, tests): [Apache License 2.0](LICENSE)
+- **Written content and figures** (`report.md`, `README.md`, `RESEARCH.md`,
+  `RESULTS.md`, `docs/`, `figures/`): [CC BY 4.0](LICENSE-CC-BY-4.0.md)
