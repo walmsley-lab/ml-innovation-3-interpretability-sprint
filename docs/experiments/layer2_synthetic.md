@@ -24,7 +24,7 @@ enough for almost anything else the program claims.
 | Additive `alpha_i + beta_j` vs interaction `gamma_ij` | **no** | zero interaction degrees of freedom at n=2 |
 
 The additive baseline is the sharpest competitor to the whole developmental
-claim (`RISKS.md` S2), and it is **untestable** with two families. That alone
+claim (`docs/risks.md` S2), and it is **untestable** with two families. That alone
 justifies Layer 2.
 
 ## 1. Candidate skill families

@@ -63,7 +63,8 @@ record.
 | A3 | not explained by memorised content | **confirmed** |
 | A4 | survives a substantial change of scale | exploratory (32×) |
 | A5 | developmental radius — how far does it generalize | open (`B₂`, target-distance ladder) |
-| A6 | an internal state predicts future learnability | marker replicated; **not** predictive of conditional value |
+| A6a | some internal measurement distinguishes history-conditioned states | **marker replicated** prospectively (p = 0.0002 vs the matched control; not separated from background, p = 0.387) |
+| A6b | internal state predicts **conditional corpus value** — which `D` is best from this `S` | **falsified with current telemetry** — loses to a state-blind baseline |
 | A7 | behaviourally matched models have different futures | **pending prospective test** |
 | A8 | when the relevant state emerges | pending true `V(S_t,D)` replay |
 | A9 | the state is causal | **inconclusive** — the intervention had no efficacy |
@@ -103,17 +104,19 @@ These were paid for, mostly the hard way.
   the record can be in.** It means the phenomenon is real and the explanation
   was wrong.
 
-## 4. Mechanism hypotheses, ranked by current plausibility
+## 4. Mechanism hypotheses, in priority order for the next experiment
 
-The evidence argues **against** the relevant state being a small set of
-attention heads: the capability is redundant across heads, and top-k ablation
-is demonstrably inadequate here. Prioritized alternatives:
+What the evidence establishes is **negative**: the relevant state is probably
+not a small set of attention heads, because the capability is redundant across
+heads and top-k ablation is demonstrably inadequate here. It does **not**
+positively identify any alternative. The ordering below is therefore by
+expected information per experiment, not by demonstrated plausibility.
 
-1. **Gradient / update geometry.** Take identical future minibatches and
+1. **Gradient / update geometry — the highest-priority next hypothesis.** Take identical future minibatches and
    compare gradient and update geometry across history-conditioned checkpoints,
    then ask whether those quantities prospectively predict measured `V(S,D)`.
    This addresses why the same data has different value from different weight
-   states more directly than another head search.
+   states more directly than another head search. Untested.
 2. Representation / feature preparation.
 3. Distributed routing across heads and MLPs.
 4. Parameter-subspace readiness.

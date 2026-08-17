@@ -13,7 +13,7 @@ state carry the missing information?**
 Gate C is usually filed as a failure. For this experiment it is the enabling
 result. Under identity-null pairing, the W-first history gave a null sd of
 **12.87 in log-odds**, and two runs differing only in an independent source
-draw produced neutral W-choice rates of **0.000 and 0.996** (`RISKS.md` §2c).
+draw produced neutral W-choice rates of **0.000 and 0.996** (`docs/risks.md` §2c).
 That killed "history determines the preference endpoint" — Claim 1 was never
 run.
 

@@ -34,10 +34,11 @@ structure, serving as a floor rather than a matched comparison.
 
 **It survives 32× scale** (786k → 25.2M non-embedding parameters), exploratory.
 
-**The value of data is conditional on model state.** A 48-cell `V(S,D)` matrix
-shows a substantial State × Data interaction (share 0.381–0.464) with genuine
-**ranking reversals**: the identity of the best next corpus depends on the
-incoming state.
+**The value of data is conditional on model state.** We measured `V(S,D)` — the
+value of training on corpus `D` starting from incoming model state `S` — across
+a 48-cell grid of states and corpora. It shows a substantial State × Data
+interaction (share 0.381–0.464) with genuine **ranking reversals**: the identity
+of the best next corpus depends on the state you start from.
 
 ## What failed?
 
@@ -47,15 +48,20 @@ Kept visible, because the failures are informative and several are load-bearing.
 |---|---|
 | **Static curricula** | Block-sequential training destroys capability at equal compute: 0.383 mean / 0.106 min against interleaved 0.987 / 0.951 |
 | **Composition** | With retention repaired, pairwise transfer does **not** compose into useful orderings (effect/noise −0.15) |
-| **The pre-registered mechanism** | An off-distribution induction-style probe failed its confirmatory gate (selectivity 0.76 against ≥2.0). A striking single-seed preflight transient did not reproduce anywhere |
-| **Causal mediation** | **Inconclusive, not falsified.** The ablation produced no interaction, but also removed none of the capability (zero-shot `B` 0.139 → 0.161) — necessity was never tested at adequate strength |
+| **The pre-registered mechanism** | An off-distribution induction-style probe failed its confirmatory gate (selectivity 0.76 against ≥2.0). A striking single-seed transient did not reproduce anywhere |
 | **Adaptive selection** | A state-aware selector **loses to a state-blind global-best rule** on held-out states (regret 0.047 vs 0.021). It beats random, so it learned the data main effect, not the conditionality |
-| **The preference substrate** | An earlier preference-order task (two skills, either order) could not host a behaviour-matched test — one ordering never reached competence, pass rate 1/6. Detail in [RESULTS.md](RESULTS.md) |
+
+Two further results — the causal mediation test recorded as *inconclusive
+rather than negative*, and an earlier substrate that could not host a
+behaviour-matched test — are in [RESULTS.md](RESULTS.md).
 
 ## Why does it matter?
 
-The failure of adaptive selection is the most useful result, because it
-localizes the problem precisely:
+A strong State × Data interaction **together with** a failed predictor
+localizes the bottleneck precisely. Neither alone would: an interaction without
+a prediction attempt would leave the gap unmeasured, and a failed predictor
+without a demonstrated interaction would just mean there was nothing to
+predict.
 
 > **The conditional training signal exists. State inference is inadequate.**
 
@@ -115,11 +121,15 @@ Every prediction artifact is hashed before the outcomes it predicts exist:
 
 ## Repository layout
 
+Suggested reading order: **README** (what happened and why it matters) →
+**[RESULTS.md](RESULTS.md)** (the evidence) → **[RESEARCH.md](RESEARCH.md)**
+(where it goes next).
+
 | path | contents |
 |---|---|
 | [RESEARCH.md](RESEARCH.md) | the scientific programme, evidence ladder, standing commitments, deferred work with triggers |
 | [RESULTS.md](RESULTS.md) | claim ledger, chronology, barrier log — the canonical record |
 | `docs/experiments/` | per-experiment designs and frozen protocols |
-| `docs/technical.md`, `docs/RISKS.md` | system specification and risk register |
+| `docs/technical.md`, `docs/risks.md` | system specification and risk register |
 | `docs/archive/` | superseded plans and the original ordering programme, preserved verbatim |
 | `src/dsi/`, `scripts/`, `tests/` | implementation |

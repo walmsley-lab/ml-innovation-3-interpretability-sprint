@@ -593,7 +593,7 @@ composition may be revisited once a history comparison has been seen.
 The W/P task is **Layer 1**: the causal primitive, and the environment in
 which blocker diagnostics are run. It is the smallest setting in which
 training order can be manipulated at all, and it is where the catastrophic
-interference described in `RISKS.md` was found.
+interference described in `docs/risks.md` was found.
 
 It is not sufficient for the program. With two families the transfer matrix
 has a single off-diagonal pair, so Claims 2 through 5 are untestable in

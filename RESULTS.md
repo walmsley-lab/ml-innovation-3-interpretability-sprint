@@ -2,7 +2,7 @@
 
 What has actually been measured. This is the canonical results document: it
 merges the former `STATUS.md` barrier log, `report.md` chronology, and the
-`RESULTS.md` ledger into one place.
+`CLAIMS.md` ledger into one place.
 
 **Nothing here has been rewritten to fit the current framing.** Failed and
 inconclusive gates are preserved with their original numbers, because several
@@ -95,7 +95,7 @@ seeds, after a single-seed preflight spike that looked convincing.
 | A3 | B is learnable but does not ceiling (P4) | **Apparatus — passed** | 0.861 at 4000 target steps; recalibrated to TARGET_STEPS=2000 giving BG BIND 0.516, FACT 0.510 |
 | A3b | C is learnable, so the specificity control is non-vacuous | **Apparatus — passed** | FACT was previously never trained (chance 0.008–0.021). With target `BIND+FACT`, FACT reaches 0.510 at step 2000 and 0.864 by 6000 |
 | A4 | A→B beats A′→B, and C does not move (H2.1) | **Supported** | Promoted to H1/H2 above |
-| A4b | A confers a `t=0` head start on B, and it survives scale | **Tentative — positive** | Exploratory scale scout: A `t=0` = 0.126±0.016 (1×), 0.157±0.042 (8×), 0.097±0.037 (32×) against A′ 0.012–0.014 and BG 0.017–0.021, with chance 0.0156. A′/BG at chance at every scale. AULC much noisier (effect/noise ≈1.9). **Strongest alternative explanation: A and B share the computation by construction, so this may be direct task transfer, not readiness — C1 scout running** |
+| A4b | A confers a `t=0` head start on B, and it survives scale | **Tentative — positive** | Exploratory scale scout: A `t=0` = 0.126±0.016 (1×), 0.157±0.042 (8×), 0.097±0.037 (32×) against A′ 0.012–0.014 and BG 0.017–0.021, with chance 0.0156. A′/BG at chance at every scale. AULC much noisier (effect/noise ≈1.9). **Strongest alternative explanation: A and B share the computation by construction, so this may be direct task transfer, not readiness. **Resolved:** the C1 disjoint-pool scout subsequently confirmed the effect survives with zero shared entity tokens (H3), ruling out content transfer |
 | A5 | M rises before B accelerates (H2.2) | **Moot** | Requires an A-selective M. A2b falsified |
 | A5b | The mediator of the confirmed transfer is unidentified | **Open — the central question** | The effect (H1–H4) is real; `M` does not explain it. Finding the actual mediator is now the primary scientific target |
 | A5c | The on-distribution retrieval score distinguishes A from A′ | **Supported for A vs A′ only — NOT established against background** | A vs A′: discovery +0.1157 (p=0.0012), **validation +0.1267 (p=0.0002)** on fresh seeds 700–711. **A vs BG, which had never been tested: discovery +0.1154 (p=0.0012) but validation +0.0465 (p=0.3870) — not significant.** The background arm's retrieval rose to 0.1284 on fresh seeds against A's 0.1749. So the marker separates A from the value-rebinding control but **does not cleanly separate A from background** out of sample. Claim narrowed accordingly: it is an A-vs-A′ discriminator, not a general A-selectivity marker. Not causal (A6b inconclusive), not predictive of conditional data value (X2d falsified), and measured on-distribution |
@@ -104,7 +104,7 @@ seeds, after a single-seed preflight spike that looked convincing.
 | A6 | M ablation preferentially removes the A→B advantage (H2.3) | **Not licensed** | Ablating a mediator that is not selective would test nothing. Runner built; awaits a candidate mediator |
 | A7 | The effect requires ≥2-layer composition at matched capacity (H2.4) | **Untested** | Deferred to V2-c |
 | A8 | Promoting M accelerates B — `do(M+)` (sufficiency) | **Not licensed** | Same reason as A6 |
-| **A9** | **The transfer is broader than computation overlap (readiness)** | **Untested — critical** | B₂ factorial running: target `BINDT` = retrieval ∘ derangement, so zero-shot is blocked by construction. Crossed with disjoint entity pools. Decides whether H1–H4 is computation-specific transfer or developmental readiness |
+| **A9** | **The transfer is broader than computation overlap (readiness)** | **Untested** | *Status at time of writing: B₂ factorial in flight, not completed before the record was cut.* Target `BINDT` = retrieval ∘ derangement, so zero-shot is blocked by construction. Crossed with disjoint entity pools. Decides whether H1–H4 is computation-specific transfer or developmental readiness |
 
 ## Lane B — sprint latent state
 
@@ -112,7 +112,7 @@ seeds, after a single-seed preflight spike that looked convincing.
 |---|---|---|---|
 | B0 | State features are basis-invariant and comparable across inits | **Apparatus — passed** | 137 features, deterministic, no raw activation coordinates; verified 127/137 differ between histories sharing one init |
 | B1 | The pilot regime supports a preference measurement | **Falsified** | 0 of 24 models cleared the competence floor; W_COMPETENCE 0.256 against chance 0.25. Config error (below frozen budget), corrected |
-| B1b | The W/P substrate supports a behaviourally-matched latent-state test | **Falsified** | With the frozen overlap regime, corrected common tail (T1) and a symmetric 2000-step budget: competence pass rate **1/6**. `P_first` reaches W = 0.238–0.293 against a 0.60 floor in every seed — W is only learnable when it gets a pure phase, which `P_first` never provides. `W_first` is itself seed-fragile (0.977 / 0.469 / 0.508), consistent with RISKS.md §2b. **Substrate recorded as unsuitable; Lane B stopped, not redesigned.** |
+| B1b | The W/P substrate supports a behaviourally-matched latent-state test | **Falsified** | With the frozen overlap regime, corrected common tail (T1) and a symmetric 2000-step budget: competence pass rate **1/6**. `P_first` reaches W = 0.238–0.293 against a 0.60 floor in every seed — W is only learnable when it gets a pure phase, which `P_first` never provides. `W_first` is itself seed-fragile (0.977 / 0.469 / 0.508), consistent with `docs/risks.md` §2b. **Substrate recorded as unsuitable; Lane B stopped, not redesigned.** |
 | B2 | Internal state predicts post-intervention outcome better than behaviour (S2) | **Untested — blocked** | Blocked by B1b. The pipeline (generate → extract → analyze, 137 basis-invariant features, hash-verified protocol) is built and validated; it needs a substrate where both skills coexist |
 | B3 | State information survives behavioural matching (S1) | **Untested** | Gated behind B2 and the 20-matched-pair floor |
 | B4 | Behaviour at `t` determines behaviour at `t+Δ` | **Untested** | The null B2 is written against |
@@ -188,7 +188,7 @@ freeze needs more seeds.
 What has actually been measured, in the order it happened. Conclusions live
 here; the scientific program is in [RESEARCH.md](RESEARCH.md), the system
 specification in [docs/technical.md](docs/technical.md), and threats to validity in
-[docs/RISKS.md](docs/RISKS.md).
+[docs/risks.md](docs/risks.md).
 
 Detailed experimental records:
 
@@ -346,7 +346,7 @@ none is claimed.
   excluding a residual cluster, dose fixed at the 20NG level, equal-family
   control weighting, hashed 13/5/3 unordered-pair pools, a 25% prospective
   material-improvement rule.
-* [RESEARCH_V2_CANDIDATE.md](RESEARCH_V2_CANDIDATE.md) is a **draft under
+* [docs/archive/RESEARCH_V2_CANDIDATE.md](docs/archive/RESEARCH_V2_CANDIDATE.md) is a **draft under
   review**, not canonical, and does not revise any result above.
 
 ---

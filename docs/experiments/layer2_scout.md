@@ -103,7 +103,7 @@ model size. The failure is specific to block-sequential presentation.
 ## Most likely failure modes, in order
 
 1. **Catastrophic forgetting / recency dominance.** Already established in
-   Layer 1 (`RISKS.md` 2) and now reproduced in Layer 2. Layer 1's validated
+   Layer 1 (`docs/risks.md` 2) and now reproduced in Layer 2. Layer 1's validated
    remedy was overlapping curricula at floor `r = 0.20`, which restored
    worst-case coexistence to 0.969. The scout used pure block-sequential
    phases with no overlap and reproduced the original pathology.
