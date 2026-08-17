@@ -388,18 +388,20 @@ status, or a uniquely identified internal developmental state.
 
 ### Future Work
 
-The natural next step is to test whether developmental readiness interacts with
-semantically richer environments. The present microworld removes connotation to
-isolate learning dynamics, but in a richer setting early training may establish
-latent dispositions that become behaviorally meaningful only when later
-experience supplies the semantic context — a **history × environment
-interaction**. That is also where our behavioral-matching nulls are most worth
-revisiting: a modest capability profile sufficed in a world with no connotation
-to carry, and it is open whether it suffices where later experience can activate
-dispositions earlier training laid down. Reaching adaptive control requires
-first finding a state representation that predicts held-out conditional data
-value and beats a global-best baseline; only then should the frozen what-next
-tournament be run.
+The next question is whether developmental readiness remains behaviorally
+legible in semantically richer environments. Our microworld removes connotation
+to isolate learning dynamics, but early experience may establish latent
+dispositions that become behaviorally meaningful only when later experience
+supplies the relevant context. This motivates a **history × environment** test:
+vary developmental history, hold the later semantic environment fixed, and ask
+whether identical experience elicits different preferences, interpretations, or
+behavioral tendencies. Such a setting also provides a harder test of our
+behavioral-matching nulls, since a modest capability profile may be sufficient
+in a connotation-free microworld but not where later experience can activate
+dispositions laid down earlier. In parallel, adaptive control requires a state
+representation that predicts held-out $V(S,D)$, adds information beyond
+behavior, and beats a global-best baseline. Only after that succeeds should
+prospective what-next selection be attempted.
 
 ## 6. Conclusion
 
