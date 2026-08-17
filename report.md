@@ -1,4 +1,4 @@
-# Hidden Developmental State: Training History Shapes What Models Learn Next
+# Training History Shapes What Models Are Ready to Learn
 
 **Patrick Walmsley**  
 Walmsley Lab  
@@ -8,32 +8,95 @@ With Apart Research
 
 ## Abstract
 
-Behavioral evidence alone may not fully characterize a digital mind. Two models with the same architecture—and potentially similar present behavior—can arrive there through different training histories, leaving latent differences that only become visible under future experience. We test this possibility in a controlled language-model training environment by measuring how prior training changes subsequent learnability. A source curriculum $A$ produces a large, selective advantage on a later binding task $B$, while matched control $A'$ and background training remain near chance at the start of $B$ training. The effect persists when source and target use disjoint entity identities, is absent on a learnable negative-control task, and survives a 32× model-capacity increase in exploratory runs. Our pre-registered induction-style mechanistic hypothesis fails confirmatory testing. We then measure the value $V(S,D)$ of training on corpus $D$ from incoming model state $S$, finding strong State×Data interaction and ordering reversals: future experience has different value depending on the state produced by prior experience. However, current telemetry fails to predict that conditional value well enough to beat a global-best baseline. The result is a methodological foothold for studying hidden developmental state: history leaves consequential structure, but reading that structure remains an open problem.
+Prior training changes what a model is *ready* to learn next. In a controlled
+language-model environment we show that a source curriculum $A$ produces a
+large, selective advantage in acquiring a later capability $B$, while a control
+matched on every low-order statistic and a background stream remain at chance.
+The advantage is not memorized content: it is fully retained when source and
+target share **zero entity tokens**. It is not target competence either. On a
+target composed with a fixed derangement — where zero-shot transfer is blocked
+by construction, and confirmed blocked at or below chance — the source arm still
+learns dramatically faster, and does so even across disjoint content. We
+therefore describe the effect as **developmental readiness** rather than task
+transfer. It persists across a 32× capacity increase in exploratory runs.
+
+Readiness has a consequence for data: measuring $V(S,D)$, the value of training
+on corpus $D$ from incoming state $S$, we find a substantial State×Data
+interaction with genuine ordering reversals, so no single corpus is best from
+every state.
+
+Two pre-registered experiments then tested whether these differences are hidden
+behind present behavior, and **both are null**. States matched on a modest
+behavioral vector neither diverge under an identical future (71 frozen pairs
+against a 376-pair null) nor prefer different futures (16 frozen pairs, interaction
+CI spanning zero at chance sign agreement). The honest reading inverts our
+starting hypothesis: behavioral measurement captured more future-relevant
+variation than we expected.
+
+Our pre-registered mechanistic hypothesis failed confirmatory testing, a
+prospective search for a localized emergence window found none, and internal
+gradient geometry that cleanly identifies training history did not resolve as a
+predictor of conditional data value. History leaves consequential structure, and
+reading that structure well enough to act on it remains open.
 
 ## 1. Introduction
 
-A central problem in the study of digital minds is that **behavioral evidence may underdetermine what kind of system we are observing**. A model can report preferences, describe internal states, or act as though it has stable interests, yet those outputs may not reveal whether the underlying system has a stable latent organization or is merely producing a context-dependent portrayal. The same concern applies across time: present behavior may not fully reveal **how a model will change under future experience**.
+A central concern in the study of digital minds is that **behavioral evidence
+may underdetermine what kind of system we are observing**. A model can report
+preferences, describe internal states, or act as though it has stable interests
+without those outputs revealing whether the underlying system has a stable
+latent organization. The same concern extends across time: present behavior may
+not reveal **how a model will change under future experience**.
 
-We study this temporal form of underdetermination. Two models can share an architecture and show similar present competence while having arrived there through different training histories. If those histories leave different internal states, then identical future data may produce different learning trajectories. This creates a concrete empirical question:
+We take that concern seriously enough to test it directly rather than assume it.
+Two models can share an architecture and similar present competence while having
+arrived there through different training histories. If those histories leave
+different internal states, identical future data might produce different learning
+trajectories. That is an empirical question, and this paper answers it — in one
+controlled setting, with a specific behavioral vector — in the *negative*. What
+we did find is that training history matters a great deal for future learning;
+what we did not find is that it matters *invisibly*.
 
-> **Does training history leave hidden developmental state that changes the value of future experience?**
+We do not assume that developmental state corresponds to consciousness,
+identity, or welfare. We ask a narrower and testable question: whether future
+learning is a measurable property of a model that its present behavior fails to
+capture. Throughout, we use **developmental state** operationally:
 
-This question is relevant to digital-minds research for two reasons. First, if present behavior does not fully determine future plasticity, then evaluations of preferences, identity, welfare-relevant signals, or self-reports may miss latent differences between otherwise similar model instances. Second, if future data has state-dependent value, then model development is better viewed as a state-transition process than as exposure to a fixed global curriculum.
+> whatever information in the current model predicts its response to future
+> experience.
 
-We began with the simpler hypothesis that pairwise transfer relationships could be composed into a useful static training order. That program failed reliably enough to force a change in framing: pairwise effects did not compose cleanly, sequential block curricula produced coexistence failures, and balanced interleaving often dominated fixed orderings. These failures motivated a more general object:
+We began with the simpler hypothesis that pairwise transfer relationships could
+be composed into a useful static training order. That program failed reliably
+enough to force a change in framing: pairwise effects did not compose, sequential
+block curricula produced coexistence failures, and balanced interleaving
+dominated fixed orderings. Those failures motivated a more general object:
 
 $$V(S,D) = \text{the future learning value of data }D\text{ from model state }S.$$
 
 Our main contributions are:
 
-1. **A replicated history-dependent learnability effect.** Prior training on $A$ produces a large and selective advantage on future task $B$, while matched and background controls remain near chance.
-2. **Controls against simple explanations.** The effect is specific rather than generic, survives disjoint source/target identities, and persists across a 32× capacity range in exploratory scale tests.
-3. **Evidence that future experience is state-dependent.** A balanced $V(S,D)$ matrix shows substantial State×Data interaction and ordering reversals: the best future corpus is not globally fixed across measured states.
-4. **Disciplined negative results that localize the frontier.** Our first mechanistic explanation fails confirmatory testing, and current telemetry fails to predict conditional corpus value well enough to steer training. The phenomenon is measurable; the missing piece is a reliable readout of developmental state.
-
-**[P1 placeholder — Hidden Futures.]** If the prospective matched-state continuation experiment resolves before submission, insert one sentence here summarizing whether models matched on present observables nevertheless diverge under identical future experience.
-
-**[P2 placeholder — Temporal Replay.]** If the prospective replay resolves before submission, insert one sentence here summarizing whether future learnability changes smoothly or within a localized training window.
+1. **History-dependent developmental readiness.** Prior training on $A$ produces
+   a large, selective advantage in acquiring a later capability. Crucially, the
+   advantage appears on a target the source model *cannot answer at all*
+   beforehand — zero-shot performance is blocked by construction and confirmed
+   at or below chance — so what transfers is readiness to learn, not the answer.
+2. **Controls against simpler explanations.** The effect is specific rather than
+   generic acceleration, is fully retained when source and target share zero
+   entity tokens, and persists across a 32× capacity range in exploratory runs.
+3. **Future data has state-dependent value.** A balanced $V(S,D)$ matrix shows
+   substantial State×Data interaction with ordering reversals: the best next
+   corpus is not globally fixed across measured states.
+4. **Behavioral matching is more sufficient than expected.** Two pre-registered
+   experiments find that states matched on a modest behavioral vector neither
+   diverge under identical future training nor prefer different futures. This
+   bounds the preceding results rather than contradicting them, and it is the
+   opposite of what we set out to show.
+5. **Disciplined negatives that localize the frontier.** A pre-registered
+   mechanistic hypothesis failed confirmatory testing; a prospective search for
+   a localized emergence window found none; and internal geometry that
+   identifies training history did not resolve as a predictor of conditional
+   data value. The phenomenon is measurable — the missing capability is a
+   reliable readout of developmental state.
 
 ## 2. Related Work
 
@@ -155,7 +218,7 @@ Beating random alone is insufficient: it can be achieved by learning only the da
 
 ### 3.7 Active prospective experiments
 
-**Hidden Futures (P1).** We generate fresh states, select pairs using current observables only (accuracy, loss, capability vector), freeze and hash the pair list before any continuation outcomes exist, and then give each pair identical fresh continuations. The target is to test whether models that look similar now can nevertheless have different future learning trajectories.
+**Behavior-matched continuation (P1).** We generate fresh states, select pairs using current observables only (accuracy, loss, capability vector), freeze and hash the pair list before any continuation outcomes exist, and then give each pair identical fresh continuations. The target is to test whether models that look similar now can nevertheless have different future learning trajectories.
 
 **Temporal Replay (P2).** An exploratory held-out model comparison on zero-shot $B$ competence favored a changepoint description near source step $270$. Because competence is not the same as future learnability, we prospectively save dense checkpoints around the preidentified region and give each checkpoint an identical $B$ continuation to measure $V(S_t,B)$ directly.
 
@@ -236,6 +299,25 @@ On this example every model gets the exact value wrong. What differs is
 > state/history **marker**; it did not resolve as a predictor of $V(S,D)$ (§4.x).
 
 ## 4. Results
+
+### 4.0 Evidence ladder
+
+Results are organized by question rather than by the order experiments ran.
+
+| Question | Result |
+|---|---|
+| Does history change future learnability? | **Supported** (§4.1) |
+| Is it generic acceleration? | **No** — control capability unmoved (§4.2) |
+| Is it memorized content reuse? | **No** — survives zero shared tokens (§4.3) |
+| Is it target competence, or readiness? | **Readiness** — zero-shot blocked, learning still accelerated (§4.4) |
+| Does it survive scale? | Exploratory, 32× (§4.5) |
+| Does future data value depend on state? | **Supported** — interaction with ordering reversals (§4.7) |
+| Do behavior-matched states diverge under one future? | **No** — well-powered null (§4.10) |
+| Do behavior-matched states prefer different futures? | **No** — null (§4.11) |
+| Is there a localized emergence window? | **Not found** (§4.12) |
+| Does internal geometry identify history? | **Supported** (§4.9) |
+| Does it predict $V(S,D)$? | **Inconclusive** (§4.8) |
+| Can we choose the best next corpus yet? | **No** |
 
 ### 4.1 Training history changes future learnability
 
@@ -347,39 +429,83 @@ The changepoint description improves held-out RMSE by approximately 48%. **The i
 
 This is **not** evidence for a phase transition in future learnability: it models acquired competence, not $V(S_t,B)$. P2 tests the stronger question prospectively.
 
-### 4.10 Pending prospective results
+### 4.10 Behavior-matched states do not diverge under an identical future (P1)
 
-**P1 — Hidden Futures:**  
-`[INSERT FINAL RESULT: frozen-pair matching quality, number of completed pairs, aggregate future-divergence effect, uncertainty/significance, and one sentence interpretation.]`
+We generated fresh states, selected pairs using **present observables only**
+(zero-shot accuracy and loss on two capabilities), and froze and hashed the pair
+list, the stopping rule, the analysis plan and the interpretation branches before
+any continuation outcome existed. All **71 frozen pairs** completed — a
+contiguous prefix of a run order fixed by a seed declared in advance, so no
+subsampling decision was required.
 
-![matching distance vs future divergence](figures/fig3_hidden_futures.png)
+Against a within-arm null of 376 unmatched pairs, matched pairs do **not** diverge
+more:
 
-> **Figure 2.** Present-state matching distance against future divergence for the frozen pairs. The correlation is the confound check named in the analysis plan: if divergence tracked residual mismatch, the effect would be imperfect matching rather than hidden state.
+| metric | matched (n=71) | null (n=376) | difference | permutation $p$ |
+|---|---|---|---|---|
+| final | 0.2893 | 0.2700 | +0.0193 | 0.704 |
+| rate-only | 0.1325 | 0.1496 | −0.0171 | 0.504 |
+| $t=0$ | 0.0070 | 0.0101 | −0.0032 | 0.005 |
 
-**P2 — Temporal Replay:**  
-P2 completed on all three seeds: 48 checkpoints across source steps 150–450 at
-20-step spacing, each given an identical $B$ continuation.
+Both informative metrics are flat, and both survive dropping units with a late
+instability dip ($p = 0.951$, $0.701$). The significant $t=0$ result is
+**circular rather than a finding**: zero-shot accuracy is part of the matching
+vector, so matched pairs have similar $t=0$ by construction, and the correlation
+between matching distance and $t=0$ divergence is $+0.802$. The metrics not
+matched on — final and rate-only — show nothing.
 
-**No localized change in future learnability was found.** Held-out
-leave-one-seed-out comparison: linear RMSE **0.1333**, sigmoid 0.1416,
-changepoint 0.1425. Linear wins by 5.8%, inside the margin the protocol
-pre-declared as *not distinguishable*, and $V(S_t,B)$ correlates with
-training step at $r=-0.199$ across a spread of 0.36–0.91. The variance is
-dominated by training instability rather than by developmental position.
+Per the pre-registered null branch: training history changes future learnability
+in controlled contrasts, but we did not establish that those differences remain
+hidden among behavior-matched checkpoints.
 
-The experiment also invalidated the premise of its own window. Zero-shot
-competence was already $\approx 0.13$ at step 150 and flat thereafter, so
-the competence rise had completed before the window opened. Per the frozen
-protocol, the window was **not** re-centred after this was observed: a break
-outside the tested range is reported, not chased.
+![matching distance vs divergence](figures/fig3_matching_vs_divergence.png)
 
-**Reading:** the temporal-localization hypothesis was tested prospectively and
-not supported. This is a clean negative, and it withdraws the precision of the
-earlier competence-based changepoint estimate.
+> **Figure 3.** Present-state matching distance against future divergence over
+> the 71 frozen pairs. The pre-registered confound check: divergence does not
+> exceed the unmatched null, and the $t=0$ correlation reflects that zero-shot
+> accuracy is itself part of the matching vector.
+
+### 4.11 Behavior-matched states do not prefer different futures (Fork)
+
+A stronger version of the same question: matched states might respond identically
+to *one* future while differing in *which* future suits them. We forked both
+members of 16 frozen matched pairs onto two corpora chosen from the prior
+$V(S,D)$ matrix as the pair with the strongest ordering reversal, giving four
+branches per pair, and pre-registered the difference-in-differences estimand.
+
+The aggregate interaction is **+0.0888, 95% CI $[-0.1173, +0.3162]$** — spanning
+zero, with a standard deviation five times the mean. **8 of 16 pairs share the
+aggregate sign, exactly chance**, so the 8 apparent ordering reversals are what
+random sign assignment produces. Dropping pairs touching an unstable unit gives
+$+0.0295$, CI $[-0.1707, +0.2368]$.
+
+The single most extreme pair looks striking (0.613/0.083 against 0.024/0.528).
+It is the maximum of a noise distribution, and the protocol pre-committed to not
+presenting it as a result.
+
+### 4.12 No localized emergence window (P2)
+
+An exploratory changepoint fit on zero-shot competence had suggested a localized
+change early in source training. Because competence is not learnability, we
+tested the stronger claim prospectively: 48 checkpoints across source steps
+150–450 at 20-step spacing, each given an identical continuation to measure
+$V(S_t,B)$ directly.
+
+Held-out comparison: linear 0.1333, sigmoid 0.1416, changepoint 0.1425. Linear
+wins by 5.8%, inside the band the protocol pre-declared as not distinguishable,
+and $V(S_t,B)$ correlates with training step at $r=-0.199$. The variance is
+training instability, not developmental position.
+
+The experiment also invalidated its own window's premise. The earlier changepoint
+was fitted to traces sampled every 250 steps, so its location was interpolated
+between the first two samples and carries no better than 250-step resolution.
+Per the frozen protocol the window was **not** re-centred.
 
 ![temporal replay](figures/fig4_temporal_replay.png)
 
-> **Figure 3.** Source-training step against measured $V(S_t,B)$, 48 checkpoints across three seeds. No localized structure; a linear description wins on held-out fit by only 5.8%, inside the pre-declared not-distinguishable band.
+> **Figure 4.** Source-training step against measured $V(S_t,B)$, 48 checkpoints
+> across three seeds. No localized structure; a linear description wins on
+> held-out fit by 5.8%, inside the pre-declared not-distinguishable band.
 
 ### 4.x Gradient/update geometry (E4)
 
@@ -422,15 +548,51 @@ information is present and legible — not a mechanism claim.
 
 ### Discussion
 
-Our central result is that **training history changes the future learning dynamics of an otherwise fixed architecture**. This effect is selective, survives disjoint content, and persists across a substantial exploratory capacity range.
+We began by asking whether training order could be reduced to a static curriculum
+relation. It cannot. The experiments point instead to a state-dependent picture:
+past data changes the learner, and therefore changes the value of future data.
+That is why $V(S,D)$ exists as an object at all, and it is the shift the results
+force rather than assume.
 
-More importantly, the State×Data experiment shows that future experience depends on the pairing between model state and data. This moves the question beyond “does curriculum order matter?” A static ordering assumes data has a roughly global value. Our results instead support a conditional object $V(S,D)$: what is useful next depends on what the model has already become.
+**The central synthesis is about what behavior does and does not capture.** Simple
+target competence badly underestimates readiness: on a target composed with a
+derangement, the source model performs at or below chance zero-shot — it can do
+nothing — and nonetheless learns the capability far faster than either control,
+even across disjoint content. Judging that model by what it can currently do
+would miss the difference entirely.
+
+Yet the *richer* behavioral vector we used for matching — zero-shot accuracy and
+loss across two capabilities — captured more future-relevant variation than we
+expected. Two pre-registered experiments, one adequately powered at 71 pairs
+against a 376-pair null and one at 16 pairs with four branches each, both found
+nothing: matched states neither diverged under a shared future nor preferred
+different futures.
+
+These two observations are consistent, and together they are more informative
+than either alone. Readiness is real and consequential, and it is largely
+*legible* — not in a single competence score, but in a modest multi-capability
+behavioral profile. Our starting hypothesis was that behavior hides developmental
+state. In this setting it mostly does not.
 
 This matters directly for digital-minds methodology. The sprint asks how we should interpret preferences, self-reports, personas, and identity when behavior alone may be ambiguous. Our results suggest that **future plasticity itself may be an informative property of model identity**. If two systems with similar present behavior respond differently to the same future experience, a behavioral snapshot is not a complete characterization of the system. This does not establish consciousness, welfare, or stable preferences, but it provides a concrete way to probe hidden differences that could matter for those questions.
 
 There is also a practical implication for training. In principle, a system could inspect a checkpoint, predict which candidate data would have the greatest marginal value, train on it, and observe the resulting state. We do **not** demonstrate that controller here. Our state-aware selector fails against the global-best baseline. The important result is narrower and more useful scientifically: the conditional signal exists, while our present readout does not yet capture it.
 
 ### Limitations
+
+**"Developmental state" is operational, not uniquely identified.** We use the
+term to denote checkpoint information that influences future learning. Nothing
+here establishes a unique low-dimensional latent coordinate, a discrete
+developmental stage, or that the relevant dynamics are Markovian in any
+representation we measured.
+
+**The behavioral-sufficiency result is bounded.** P1 and the Fork establish that
+*this* matching vector, in *this* microworld, at *this* scale, over *these*
+tested futures, was sufficient to remove measurable divergence. They do not show
+that behavior is sufficient in general. A richer future set, a coarser matching
+vector, a different substrate, or a larger model could all reverse the finding.
+The result is a boundary condition, not a universal claim.
+
 
 **Controlled synthetic environment.** The strongest evidence comes from a deliberately constructed language-like microworld. This gives experimental control but does not establish that the same structure governs large natural-language pretraining.
 
@@ -452,7 +614,7 @@ The sprint’s broader questions about model identity, introspection, and the li
 
 The next research program is naturally staged:
 
-1. **See development.** Test behavior-matched hidden futures, map the temporal structure of $V(S_t,D)$, and measure how far the readiness effect generalizes across target distance.
+1. **See development.** Map the temporal structure of $V(S_t,D)$, and measure how far the readiness effect generalizes across target distance.
 2. **Read development.** Search for a state representation that predicts held-out conditional data value. Gradient/update geometry is a high-priority next hypothesis because the same corpus can induce different learning outcomes from different weight states.
 3. **Explain development.** Perturb human-readable corpus properties and test `corpus feature → state change → future learnability`.
 4. **Control development.** Only once state inference beats a global-best baseline should we rerun a frozen prospective “what should come next?” tournament.
@@ -470,11 +632,29 @@ S_{t+\Delta}.$$
 
 ## 6. Conclusion
 
-Training history leaves consequential structure in model weights. In our controlled environment, prior exposure creates a large and selective difference in future learnability that survives disjoint content and exploratory scale-up. The effect persists after our first mechanistic explanation is falsified.
+Training history changes what a model is ready to learn. In a controlled
+environment, prior exposure produces a large and selective advantage in acquiring
+a later capability — an advantage that survives disjoint content, appears on a
+target the model cannot answer at all beforehand, and persists across a 32×
+capacity range in exploratory runs. The value of future data depends on the state
+that history produced.
 
-Most importantly, the value of future training data depends strongly on the incoming model state. Yet our current telemetry cannot exploit that conditionality well enough to beat a global corpus baseline. This combination identifies a concrete frontier: **the developmental signal exists, but we do not yet know how to read it.**
+Much of what we set out to show did not survive testing. Our pre-registered
+mechanistic hypothesis failed. A prospective search for a localized emergence
+window found none. Internal geometry that cleanly identifies training history did
+not resolve as a predictor of conditional data value, so we cannot yet choose
+what a model should train on next. And two pre-registered experiments found that
+states matched on a modest behavioral profile neither diverge under identical
+future training nor prefer different futures — the opposite of our starting
+hypothesis, and the clearest result of the study.
 
-This suggests a view in which current behavior is only a projection of a richer developmental state. For digital-minds research, that raises a concrete methodological possibility: characterize a model not only by what it says or does now, but by how its latent state constrains what it will become under controlled future experience. For training-system design, the same framework points toward adaptive curricula that choose data conditional on model state. We establish the first half of that opportunity—the conditional dynamics—and identify state readout as the unresolved bottleneck.
+The methodological implication is a distinction worth keeping separate:
+**measuring what a model can currently do is not the same as forecasting what it
+can become.** Simple target competence missed the readiness effect entirely,
+while a richer behavioral profile captured it. A model may therefore be
+characterized not only by its present behavior, but by the counterfactual
+learning trajectories available from its present state — and in this setting,
+those trajectories proved more readable from behavior than we expected.
 
 ## Code and Data
 
@@ -559,8 +739,9 @@ The following works are useful context for readers pursuing the broader themes o
 | State×Data interaction exists | **Supported** |
 | Current telemetry predicts conditional corpus value well enough to steer | **Falsified** |
 | Prospective adaptive tournament is licensed | **No** |
-| Hidden present-state differences predict future divergence | **P1 pending** |
-| Future learnability changes near the ~270-step window | **P2 pending** |
+| Behavior-matched states diverge under an identical future | **Falsified** (null, 71 pairs) |
+| Behavior-matched states prefer different futures | **Falsified** (null, 16 pairs) |
+| Future learnability changes in a localized window | **Falsified** (linear best on held-out fit) |
 
 ### B. LLM Usage Statement
 

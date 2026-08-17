@@ -80,7 +80,7 @@ def fig2_hidden_futures(out: Path):
         ax.legend(fontsize=8, frameon=False)
     ax.set_xlabel("present-state matching distance (standardized)")
     ax.set_ylabel("future divergence  |ΔAULC|")
-    ax.set_title(f"Hidden futures: does divergence track residual mismatch?\n"
+    ax.set_title(f"Behavior-matched pairs: divergence vs residual mismatch\n"
                  f"{len(pairs)} of {meta['n_pairs']} frozen pairs complete",
                  fontsize=9.5, loc="left")
     fig.tight_layout(); fig.savefig(out, bbox_inches="tight"); plt.close(fig)
@@ -178,7 +178,7 @@ def main() -> int:
     made = []
     for fn, name in ((fig4_selectivity, "fig1_selectivity.png"),
                      (fig1_vsd, "fig2_vsd_matrix.png"),
-                     (fig2_hidden_futures, "fig3_hidden_futures.png"),
+                     (fig2_hidden_futures, "fig3_matching_vs_divergence.png"),
                      (fig3_temporal, "fig4_temporal_replay.png"),
                      (fig5_geometry, "fig5_gradient_geometry.png")):
         r = fn(args.out / name)
