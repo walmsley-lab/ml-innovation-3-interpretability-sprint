@@ -488,7 +488,9 @@ This suggests a view in which current behavior is only a projection of a richer 
 Patrick Walmsley designed and carried out the experiments, audited the resulting
 claims, and wrote the report independently.
 
-Krysia Koneni, Trevor Harrison, and Augustus acted as a sounding board.
+This work was carried out during a sprint alongside others in the SF Bay Area.
+Krysia Koneni, Trevor Harrison, Augustus, and Patrick Walmsley acted as sounding
+boards for one another throughout.
 
 AI was used heavily in experimental design and execution; see Appendix B for the
 specific roles.
