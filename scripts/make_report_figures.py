@@ -13,6 +13,14 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 CAPS = ("BIND", "FACT", "BINDT")
+# A_prime is a filesystem-safe label, not a name for a reader.
+ARM_LABEL = {"A": "A", "A_prime": "A′", "BG": "BG"}
+
+
+def pretty(label: str) -> str:
+    """Render a state or arm label for display."""
+    arm, _, rest = label.partition("__seed")
+    return f"{ARM_LABEL.get(arm, arm)} {rest}" if rest else ARM_LABEL.get(label, label)
 ARMC = {"A": "#c1272d", "A_prime": "#0b6fa4", "BG": "#7a7a7a"}
 plt.rcParams.update({"figure.dpi": 150, "font.size": 9, "axes.grid": True,
                      "grid.alpha": 0.25, "axes.spines.top": False,
@@ -37,16 +45,22 @@ def fig1_vsd(out: Path):
                    vmin=-np.abs(Mn).max(), vmax=np.abs(Mn).max())
     ax.set_xticks(range(len(corp))); ax.set_xticklabels(corp)
     ax.set_yticks(range(len(states)))
-    ax.set_yticklabels([s.replace("__seed", " ") for s in states], fontsize=7)
+    ax.set_yticklabels([pretty(s) for s in states], fontsize=7)
     best = M.argmax(axis=1)
     for i, j in enumerate(best):
         ax.scatter(j, i, marker="*", s=70, color="black", zorder=3)
-    n_distinct = len(set(best))
-    ax.set_title(f"$V(S,D)$ by incoming state\n"
-                 f"{len(states)} states x {len(corp)} corpora; "
-                 f"{n_distinct} distinct best-corpus outcomes",
-                 fontsize=9.5, loc="left")
-    fig.colorbar(im, ax=ax, fraction=0.045, label="value relative to that state's mean")
+    # Naming the split (12/13 vs 1/13) rather than "2 distinct outcomes":
+    # the latter is true but reads as balanced, when in fact one corpus
+    # dominates globally and a single state supplies the reversal.
+    import collections as _c
+    tally = _c.Counter(best)
+    split = "; ".join(f"{corp[j]} best in {n}/{len(states)}"
+                      for j, n in tally.most_common())
+    ax.set_title("Future data value depends on incoming state\n"
+                 f"Row-centered $V(S,D)$; corpus rankings reverse across states\n"
+                 f"{split}", fontsize=9.5, loc="left")
+    fig.colorbar(im, ax=ax, fraction=0.045,
+                 label="value relative to that state's own mean")
     ax.set_xlabel("★ = best corpus for that state")
     ax.grid(False)
     fig.tight_layout(); fig.savefig(out, bbox_inches="tight"); plt.close(fig)
@@ -72,23 +86,39 @@ def fig2_hidden_futures(out: Path):
     fig, ax = plt.subplots(figsize=(5.6, 4.2))
     ax.scatter(dist, div, s=32, alpha=0.8, color="#0b6fa4", edgecolor="white")
     if len(dist) > 2:
-        r = np.corrcoef(dist, div)[0, 1]
+        # Faint and explicitly diagnostic. Matching distance is partly a
+        # property of how the pairs were constructed, so this slope is not
+        # the estimand; foregrounding it would let a construction artifact
+        # read as the result. The frozen comparison is matched vs null.
         z = np.polyfit(dist, div, 1)
         xs = np.linspace(min(dist), max(dist), 50)
-        ax.plot(xs, np.polyval(z, xs), "--", color="#a33", lw=1.2,
-                label=f"r = {r:+.3f}")
-        ax.legend(fontsize=8, frameon=False)
+        ax.plot(xs, np.polyval(z, xs), "--", color="0.6", lw=1.0, alpha=0.8,
+                label="residual-mismatch trend (diagnostic only)")
+        ax.legend(fontsize=7.5, frameon=False, loc="upper right")
     ax.set_xlabel("present-state matching distance (standardized)")
-    ax.set_ylabel("future divergence  |ΔAULC|")
-    ax.set_title(f"Behavior-matched pairs: divergence vs residual mismatch\n"
-                 f"{len(pairs)} of {meta['n_pairs']} frozen pairs complete",
+    ax.set_ylabel("future divergence  |ΔAULC| between the pair")
+    ax.set_title("Behavior-matched pairs do not show excess future divergence\n"
+                 "71 frozen pairs; matched divergence ≈ within-arm null",
                  fontsize=9.5, loc="left")
     fig.tight_layout(); fig.savefig(out, bbox_inches="tight"); plt.close(fig)
     return out
 
 
 def fig3_temporal(out: Path):
-    """V(S_t,B) against source step — the P2 negative."""
+    """V(S_t,B) against source step — the P2 negative.
+
+    Deliberately **not** a spaghetti plot. Each point is an independently
+    continued checkpoint, so connecting a seed's points implies a temporal
+    trajectory that was never measured: nothing flows from one point to the
+    next. Raw observations are therefore drawn unconnected, and the estimate
+    the reader should attend to — the cross-seed mean at each source step — is
+    the only emphasized series.
+
+    The dashed ceiling matters as much as the scatter. Every one of the 48
+    continuations reaches BIND accuracy 1.0, so AULC saturates near 0.905 and
+    the visible spread is post-mastery instability rather than a difference in
+    what was learnable. That is an assay limitation, recorded as such.
+    """
     traj = {}
     for f in glob.glob("artifacts/temporal_replay_v/units/*.json"):
         d = json.loads(Path(f).read_text()); lab = d["state_label"]
@@ -97,20 +127,55 @@ def fig3_temporal(out: Path):
         traj.setdefault(seed, []).append((t, sum(acc) / len(acc)))
     if not traj:
         return None
-    fig, ax = plt.subplots(figsize=(6.2, 4.2))
-    for k, seed in enumerate(sorted(traj)):
-        v = sorted(traj[seed])
-        ax.plot([t for t, _ in v], [y for _, y in v], "o-", ms=4, lw=1.2,
-                alpha=0.85, color=plt.cm.tab10(k), label=f"seed {seed}")
-    allt = [t for s in traj for t, _ in traj[s]]; ally = [y for s in traj for _, y in traj[s]]
-    r = np.corrcoef(allt, ally)[0, 1]
+
+    pts = sorted((t, y) for s in traj for t, y in traj[s])
+    allt = np.array([t for t, _ in pts]); ally = np.array([y for _, y in pts])
+    r = float(np.corrcoef(allt, ally)[0, 1])
+
+    steps = sorted({t for t, _ in pts})
+    mean = np.array([np.mean([y for t, y in pts if t == s]) for s in steps])
+    sem = np.array([np.std([y for t, y in pts if t == s], ddof=1)
+                    / np.sqrt(len([y for t, y in pts if t == s])) for s in steps])
+
+    fig, ax = plt.subplots(figsize=(6.4, 4.2))
+
+    # Pre-declared evaluation window, drawn before the data so it reads as
+    # context rather than as a result.
+    ax.axvspan(150, 450, color="0.93", zorder=0)
+    ax.text(300, 0.965, "pre-declared 150–450 evaluation window", fontsize=7.5,
+            color="0.45", ha="center", va="top")
+
+    ceiling = float(ally.max())
+    ax.axhline(ceiling, ls="--", lw=1.0, color="0.55", zorder=1)
+    ax.text(452, ceiling, f" AULC ceiling {ceiling:.3f}\n (all runs reach BIND = 1.0)",
+            fontsize=7.5, color="0.45", va="center")
+
+    ax.plot(allt, ally, "o", ms=4.5, color="0.35", alpha=0.30,
+            mew=0, zorder=2, label="individual checkpoints (n = 48)")
+
+    fit = np.poly1d(np.polyfit(allt, ally, 1))
+    xs = np.linspace(min(allt), max(allt), 100)
+    ax.plot(xs, fit(xs), "-", lw=1.8, color="#c44e52", zorder=4,
+            label="linear fit (best on held-out seed)")
+
+    # Markers only, no connecting line: the means are cross-sectional
+    # estimates at independent source steps, and joining them would reinstate
+    # exactly the false trajectory the raw points were unlinked to avoid.
+    # The fitted line, not the eye, carries any trend claim.
+    ax.errorbar(steps, mean, yerr=sem, fmt="o", ms=6.0, capsize=3,
+                color="#2b5d8a", ecolor="#2b5d8a", elinewidth=1.2, zorder=5,
+                label="cross-seed mean ± SEM (3 seeds)")
+
     ax.set_xlabel("source-training step at which the checkpoint was taken")
     ax.set_ylabel("$V(S_t,B)$   (AULC of identical continuation)")
-    ax.set_title("Temporal replay: no localized change in future learnability\n"
-                 f"linear best on held-out fit (by 5.8%); r = {r:+.3f} with step",
-                 fontsize=9.5, loc="left")
-    ax.legend(fontsize=8, frameon=False, ncol=3)
-    fig.tight_layout(); fig.savefig(out, bbox_inches="tight"); plt.close(fig)
+    ax.set_title("Temporal replay finds no reproducible transition "
+                 "in future learnability", fontsize=10, loc="left")
+    ax.set_ylim(0.0, 1.0)
+    # r and the model-comparison RMSEs live in the caption. A figure title
+    # or corner should carry the scientific result, not a diagnostics dump.
+    ax.legend(fontsize=7.5, frameon=False, loc="lower left")
+    fig.tight_layout(); fig.savefig(out, bbox_inches="tight", dpi=200)
+    plt.close(fig)
     return out
 
 
@@ -159,13 +224,14 @@ def fig5_geometry(out: Path):
     if not rows: return None
     fig, ax = plt.subplots(figsize=(5.6, 4.2))
     for arm, v in rows.items():
-        ax.scatter(v["gn"], v["cos"], s=30, alpha=0.8, label=arm,
+        ax.scatter(v["gn"], v["cos"], s=30, alpha=0.8, label=pretty(arm),
                    color=ARMC.get(arm, "#555"), edgecolor="white")
     ax.set_xlabel(r"$\|\nabla_{\mathrm{BIND}}\|$")
     ax.set_ylabel(r"$\cos(\nabla_{\mathrm{BIND}}, \nabla_{\mathrm{FACT}})$")
-    ax.set_title("Gradient geometry separates training histories\n"
-                 "a state/history MARKER — not a predictor of $V(S,D)$",
-                 fontsize=9.5, loc="left")
+    # The caveat belongs in the caption. As a title it reads as an editorial
+    # warning rather than a description of what is plotted.
+    ax.set_title("Gradient geometry encodes training history",
+                 fontsize=10, loc="left")
     ax.legend(fontsize=8, frameon=False)
     fig.tight_layout(); fig.savefig(out, bbox_inches="tight"); plt.close(fig)
     return out
