@@ -432,8 +432,13 @@ behavioral-matching nulls, since a modest capability profile may be sufficient
 in a connotation-free microworld but not where later experience can activate
 dispositions laid down earlier. In parallel, adaptive control requires a state
 representation that predicts held-out $V(S,D)$, adds information beyond
-behavior, and beats a global-best baseline. Only after that succeeds should
-prospective what-next selection be attempted. Toward that end we have
+behavior, and beats a global-best baseline. That experiment will also need a
+**collapse-robust** outcome statistic: every P2 continuation reached ceiling on
+the target and some then destabilised, so a bare final-probe score partly
+measures where an instability happened to fall rather than the value of the
+data, and could let a readout post respectable regret by predicting optimiser
+noise. Only after those conditions are met should prospective what-next
+selection be attempted. Toward that end we have
 implemented a small prospective feasibility prototype of the loop: fresh
 states, readouts fused at the training endpoint, a complete $V(S,D)$ matrix,
 and predictions frozen before held-out outcomes are revealed. It exists to
