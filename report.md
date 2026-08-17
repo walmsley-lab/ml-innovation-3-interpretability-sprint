@@ -484,7 +484,13 @@ This suggests a view in which current behavior is only a projection of a richer 
 
 ## Author Contributions
 
-Patrick Walmsley designed the research program, implemented and ran the experiments with substantial LLM-assisted coding/research support, audited the resulting claims, and wrote the final report.
+Patrick Walmsley designed and carried out the experiments, audited the resulting
+claims, and wrote the report.
+
+Krysia Koneni, Trevor Harrison, and Augustus acted as a sounding board.
+
+AI was used heavily in experimental design and execution; see Appendix B for the
+specific roles.
 
 ## References
 
