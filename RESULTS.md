@@ -145,6 +145,27 @@ what makes it reportable at all, and 4 seeds is not many.
 The binding constraint was never the geometry (76 states measured) but the
 overlap with complete `V(S,D)` rows: only **13** states have both.
 
+### Late exploratory lanes B and C — post-hoc, not on the frozen ladder
+
+Both reuse existing artifacts; neither retrains, and neither may promote a
+claim. They are recorded because they bear on *why* E4b is needed.
+
+| # | Question | Status | Evidence |
+|---|---|---|---|
+| LB | Does internal geometry add predictive value over the behavioral readout? | **Exploratory clean negative** | Behavior-only, geometry-only, and behavior+geometry are indistinguishable within noise (spread 0.0015 against a 0.0019 meaningful-margin threshold; top-1 8/13, 11/13, 8/13; mean regret 0.0451, 0.0436, 0.0448). Combined is *worse* than geometry alone, which is the signature of noise rather than of incremental value — the 0.0003 gap is **not** described as incremental value. All three underperform the state-blind global-best baseline (0.0191). **Interpretation:** internal geometry can identify training history, but neither geometry nor the current behavioral readout predicts `V(S,D)` well enough to beat a simple state-blind baseline in this pilot. Exploratory support for the *need* for a powered E4b; not part of the frozen ladder |
+| LC | Is P1's null an artifact of how much behavior was matched on? | **Exploratory — no** | Recovery of the abandoned sufficiency analysis. The original defect was subset-specific epsilon (matching strictness varied ~50× across subsets, so richer subsets got looser matched sets). Fixed by holding matching pressure constant: four **nested** behavioral feature sets, standardized once, same fixed **K = 71** closest within-arm pairs for every subset, P1's eligibility constraints and same-arm null preserved. `t = 0` excluded as circular (it is a matching variable). **Anchor: the top rung reproduces frozen P1 exactly** (final `+0.0193`, rate_only `−0.0171`), so the ladder measures P1's quantity. One pre-specified trend test across the ladder: Spearman ρ = −0.738 (final, p = 0.26), −0.800 (rate_only, p = 0.20) — not significant. Coarsening from four behavioral numbers to one does not make hidden divergence appear |
+
+Lane C caveat: per-rung permutation tests are reported for transparency and are
+**not** the pre-specified analysis. Across eight rung-by-outcome cells a
+Bonferroni threshold is p < 0.006; the one nominally low cell (p = 0.034) does
+not clear it, is *positive* in direction, and is non-monotone in the ladder.
+Lane C does **not** show behavior is sufficient to predict the future — the
+question it was built to answer needs a design containing divergence to
+titrate, which this data does not have.
+
+Lane D (dose-response) and Lane A (B₂ replication) are reported in their own
+sections; Lane A carries robustness evidence only.
+
 ## Cross-cutting
 
 | # | Claim | Status | Notes |

@@ -596,6 +596,11 @@ The result is a boundary condition, not a universal claim.
 
 **Controlled synthetic environment.** The strongest evidence comes from a deliberately constructed language-like microworld. This gives experimental control but does not establish that the same structure governs large natural-language pretraining.
 
+**Semantic content is deliberately absent.** The microworld strips away social,
+affective, and cultural connotation in order to isolate learning dynamics. That
+is what makes the controls possible, and it is also the clearest gap between
+this setting and the phenomena the digital-minds framing cares about.
+
 **Breadth remains unresolved.** Disjoint entity identities rule out simple content memorization, but the current $A\rightarrow B$ effect may still be specific to a related computational family. A broader target-distance/developmental-radius experiment remains important.
 
 **Scale evidence is exploratory.** Persistence through 32× capacity is encouraging but not a fully powered scaling law.
@@ -611,6 +616,26 @@ The result is a boundary condition, not a universal claim.
 ### Future Work
 
 The sprint’s broader questions about model identity, introspection, and the limits of behavioral evidence suggest a natural extension: treat controlled future learning as an *assay* of hidden model state, then ask whether that state predicts preference stability, self-report reliability, or persona persistence.
+
+A natural next step is to test whether developmental readiness interacts with
+semantically richer environments. The present microworld deliberately strips
+away most social, affective, and cultural connotations in order to isolate
+learning dynamics. In a richer setting, however, early training may establish
+latent dispositions that only become behaviorally meaningful when later
+experience supplies the relevant semantic context. This suggests a **history ×
+environment interaction**: two models exposed to different developmental
+histories could respond differently when placed into the same connotation-rich
+world, even if neither was explicitly trained on the resulting preference,
+persona, or interpretation. Testing this would connect controlled
+developmental-readiness effects to questions about how prior experience shapes
+later preferences, styles, and behavioral tendencies in more naturalistic
+models.
+
+This is future work, not a claim established here. It is also the setting in
+which our behavioral-matching nulls would be most worth revisiting: matching on
+a modest capability profile was sufficient in a world with no connotation to
+carry, and it is an open question whether the same holds where later experience
+can activate dispositions that earlier training laid down.
 
 The next research program is naturally staged:
 

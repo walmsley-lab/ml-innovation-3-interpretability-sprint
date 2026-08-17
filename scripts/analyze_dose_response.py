@@ -68,6 +68,24 @@ def main():
     print("\n    No changepoint or nonlinear shape is fitted; the plan tests")
     print("    monotonic association only.")
 
+    blocked = st.mean(all_t0) <= CHANCE * 2
+    trend = (p < 0.05) and (rho > 0)
+    print("\n  === VERDICT (three-way, fixed in the plan) ===")
+    if not blocked:
+        print("    t=0 RISES with exposure -> zero-shot blocking has failed.")
+        print("    The readiness interpretation is NOT licensed and rate_only")
+        print("    cannot be read as readiness, whatever its trend.")
+    elif trend:
+        print("    t=0 stays at chance AND rate_only rises monotonically ->")
+        print("    prospective support for GRADUAL ACCUMULATION of developmental")
+        print("    readiness: the model becomes readier to learn a capability it")
+        print("    still cannot perform at all.")
+    else:
+        print("    t=0 remains blocked but NO monotonic rate_only trend ->")
+        print("    B2 endpoint readiness remains supported; gradual accumulation")
+        print("    is NOT established. These are different claims and only the")
+        print("    first is carried by the frozen ladder.")
+
 
 if __name__ == "__main__":
     main()
