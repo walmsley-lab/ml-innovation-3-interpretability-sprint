@@ -281,7 +281,7 @@ structure needed for adaptive selection. We establish State×Data variation over
 these unmatched states, but do not establish that our present state
 representation can exploit it.
 
-![V(S,D)](figures/fig2_vsd_matrix.png)
+![V(S,D)](figures/paper_fig2_vsd.png)
 
 > **Figure 2.** Row-centered $V(S,D)$, so colors compare candidate corpora
 > within each incoming state rather than absolute value across states. Stars

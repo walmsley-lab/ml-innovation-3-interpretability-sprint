@@ -31,6 +31,19 @@ ARM_STYLE = {"A": ("#c1272d", "A  (source)"),
              "BG": ("#7a7a7a", "BG  (background)")}
 CHANCE = 1 / 64
 
+# Canonical panel geometry. Every paper figure is at most TWO panels across;
+# a figure with more panels wraps onto additional rows rather than widening,
+# and a single-panel figure occupies one half of the same canvas and is left
+# aligned, so panel width is identical in every figure the reader sees.
+PANEL_W, PANEL_H = 4.8, 3.9
+
+
+def canvas(nrows: int, ncols: int, **kw):
+    """A figure whose panels are the canonical size. ``ncols`` may not exceed 2."""
+    if ncols > 2:
+        raise ValueError(f"paper figures are at most two panels across, got {ncols}")
+    return plt.subplots(nrows, ncols, figsize=(2 * PANEL_W, nrows * PANEL_H), **kw)
+
 
 def _b2_curves(root: str):
     """(arm -> array of per-seed target-accuracy curves), plus the step axis."""
@@ -65,7 +78,7 @@ def fig1_readiness(out: Path):
     panels.sort(key=lambda p: -p[2])
     titles = ["disjoint surface  (zero shared entity tokens)", "shared surface"]
 
-    fig, axes = plt.subplots(1, len(panels), figsize=(9.6, 3.9), sharey=True)
+    fig, axes = canvas(1, len(panels), sharey=True)
     axes = np.atleast_1d(axes)
     for ax, (curves, steps, adv), title in zip(axes, panels, titles):
         for arm in ("A", "Ap", "BG"):
@@ -101,7 +114,8 @@ def fig1_readiness(out: Path):
 
 def fig3_boundaries(out: Path):
     """The four results that bound the claim, in one panel."""
-    fig, axes = plt.subplots(1, 4, figsize=(13.2, 3.4))
+    fig, grid = canvas(2, 2)
+    axes = grid.flat
 
     # (a) P1 -- matched vs within-arm null
     ax = axes[0]
@@ -173,7 +187,61 @@ def fig3_boundaries(out: Path):
 
     fig.suptitle("What bounds the claim: four negative and boundary results",
                  fontsize=11, x=0.005, ha="left")
-    fig.tight_layout(rect=(0, 0, 1, 0.95))
+    fig.tight_layout(rect=(0, 0, 1, 0.96))
+    fig.savefig(out, bbox_inches="tight", dpi=200)
+    plt.close(fig)
+    return out
+
+
+def fig2_vsd(out: Path):
+    """State x Data, as a single panel occupying the left half of the canvas.
+
+    A lone figure is still drawn on the two-across canvas and left aligned, so
+    its panel is exactly as wide as a panel in the other figures. Sizing a
+    solitary plot to the full page would make it read as more important than
+    the two-panel results, which is a claim about emphasis, not about data.
+    """
+    CAPS = ("BIND", "FACT", "BINDT")
+    cells = {}
+    for f in glob.glob("artifacts/vsd_matrix/units/*.json"):
+        d = json.loads(Path(f).read_text())
+        fin = d["trace"][-1]
+        v = [fin[c]["accuracy"] for c in CAPS if c in fin]
+        cells[(d["state_label"], d["tag"])] = sum(v) / len(v)
+    corp = sorted({c for _, c in cells})
+    states = sorted(s for s in {a for a, _ in cells}
+                    if all((s, c) in cells for c in corp))
+    if len(states) < 4:
+        return None
+
+    M = np.array([[cells[(s, c)] for c in corp] for s in states])
+    Mn = M - M.mean(axis=1, keepdims=True)
+
+    fig, axes = canvas(1, 2)
+    ax, blank = axes[0], axes[1]
+    blank.axis("off")                      # reserved, keeps the left alignment
+
+    im = ax.imshow(Mn, aspect="auto", cmap="RdBu_r",
+                   vmin=-np.abs(Mn).max(), vmax=np.abs(Mn).max())
+    ax.set_xticks(range(len(corp))); ax.set_xticklabels(corp)
+    ax.set_yticks(range(len(states)))
+    label = {"A": "A", "A_prime": "A\u2032", "BG": "BG"}
+    pretty = [f"{label.get(s.split('__')[0], s)} {s.split('seed')[1]}" for s in states]
+    ax.set_yticklabels(pretty, fontsize=7)
+    for i, j in enumerate(M.argmax(axis=1)):
+        ax.scatter(j, i, marker="*", s=70, color="black", zorder=3)
+    arms = [s.split("__")[0] for s in states]
+    for i in range(1, len(arms)):
+        if arms[i] != arms[i - 1]:
+            ax.axhline(i - 0.5, color="white", lw=2.5)
+    ax.set_title("Future data value depends on incoming state\n"
+                 "Row-centered $V(S,D)$; corpus rankings reverse across states",
+                 fontsize=9.5, loc="left")
+    ax.set_xlabel("\u2605 = best corpus for that state")
+    ax.grid(False)
+    fig.colorbar(im, ax=ax, fraction=0.045,
+                 label="value relative to that state's own mean")
+    fig.tight_layout()
     fig.savefig(out, bbox_inches="tight", dpi=200)
     plt.close(fig)
     return out
@@ -185,10 +253,10 @@ def main() -> int:
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
     for fn, name in ((fig1_readiness, "paper_fig1_readiness.png"),
+                     (fig2_vsd, "paper_fig2_vsd.png"),
                      (fig3_boundaries, "paper_fig3_boundaries.png")):
         r = fn(args.out / name)
         print(f"  {'wrote ' if r else 'SKIP  '} {name}")
-    print("  reused  fig2_vsd_matrix.png (State x Data)")
     return 0
 
 
