@@ -37,9 +37,11 @@ preferences or act as though it has stable interests without those outputs
 revealing a stable latent organization. The concern extends across time: present
 behavior may not reveal how a model will change under future experience.
 
-We test that directly rather than assume it. Two models can share an
-architecture and similar present competence while having arrived through
-different training histories. If those histories leave different internal
+Rather than assuming that behavioral similarity either does or does not imply
+similarity of underlying state, we test this experimentally by asking whether
+behaviorally matched checkpoints respond differently to controlled future
+experience. Two models can share an architecture and similar present competence
+while having arrived through different training histories. If those histories leave different internal
 states, identical future data might produce different learning trajectories.
 What we find is more nuanced than a yes or a no. Training history changes future
 learnability a great deal — strongly enough that a single competence score
@@ -62,15 +64,15 @@ the model has already become.
 Our contributions are:
 
 1. **History-dependent developmental readiness.** Prior training produces a
-   large, selective advantage in acquiring a later capability, demonstrated on a
-   target whose answer is unavailable to the source model beforehand — so what
-   transfers is not the answer.
+   large, selective advantage in acquiring a later capability, on a target whose
+   answer is unavailable to the source model beforehand — so what transfers is
+   not the answer.
 2. **Controls against simpler explanations.** The effect is selective rather
    than generic acceleration, survives zero shared entity tokens between source
    and target, and persists across a 32× capacity range in exploratory runs.
 3. **State-dependent future data value.** A balanced $V(S,D)$ matrix shows
    State×Data interaction with ordering reversals, though a strong global corpus
-   advantage remains and our state-aware selector does not beat a state-blind
+   advantage remains and state-aware selection does not beat a state-blind
    baseline.
 4. **The stronger hidden-state story did not survive.** Preregistered tests
    detected no excess divergence among behaviorally matched states, no reliable
@@ -133,9 +135,8 @@ We train small decoder-only language models from scratch on synthetic
 language-like corpora under ordinary next-token prediction, varying source
 history while holding architecture, token budgets, and downstream data fixed.
 Every stream shares one surface template — `the <entity> is <value> .` — so no
-stream is identifiable from surface form; only the *relationship* differs. This
-gives a ground-truth record of developmental history and lets us intervene on
-prior experience directly.
+stream is identifiable from surface form; only the *relationship* differs,
+giving a ground-truth record of developmental history.
 
 Source conditions are **$A$**, training that encourages stable entity–value
 retrieval/binding; **$A'$**, a control preserving surface statistics while
@@ -162,14 +163,13 @@ source→target with zero shared entity identities; specificity is tested agains
 $C$ and interpreted only once BG shows $C$ is learnable; and we replay the core
 contrast at roughly 1×, 8×, and 32× non-embedding capacity.
 
-Discovery, calibration, and confirmation seeds are separated. For the
+Discovery, calibration, and confirmation seeds are separated; for the
 prospective experiments, protocols, analysis plans, and selection artifacts were
 **preregistered and hashed before the corresponding outcomes were evaluated**,
-and compound gates are reported as failed if any required criterion fails. This
-discipline changed conclusions more than once — most consequentially, a causal
-ablation returned a null interaction that we report as **inconclusive** rather
-than negative, because an efficacy check showed the intervention never
-measurably reduced the capability it was meant to remove.
+and compound gates fail if any criterion fails. This changed conclusions: a
+causal ablation returned a null interaction that we report as **inconclusive**
+rather than negative, because an efficacy check showed the intervention never
+measurably reduced the capability it targeted.
 
 ### 3.3 State-conditioned data value, prospective tests, and internal readout
 
@@ -235,9 +235,8 @@ on the disjoint surface and **+0.3967** shared, reaching final accuracy
 **1.0000** against $A'$ at 0.26/0.51 and BG at 0.19/0.32, across 24 units (4
 seeds × 3 arms × 2 surface conditions). Per the preregistered reading table, a
 rate-only advantage with $t=0$ at chance **supports a readiness interpretation
-rather than direct answer transfer**. The evidence is real but not
-overwhelming: $n = 4$ per arm, effect/noise 1.6–1.9, and large between-seed
-variance in the control arm (sd 0.14–0.21).
+rather than direct answer transfer**. The evidence is real but not overwhelming
+($n = 4$ per arm, effect/noise 1.6–1.9, control-arm sd 0.14–0.21).
 
 On the ordinary target $B$, used here as supporting evidence, $A$ reaches
 $0.1322 \pm 0.0149$ at $t=0$ against $0.0156 \pm 0.0087$ ($A'$) and
@@ -360,54 +359,58 @@ training data cannot always be treated as intrinsic to the corpus alone; its
 consequences depend on the model state receiving it.
 
 **The central synthesis is about which measurements capture what.** A single
-capability score badly underestimates readiness: on $B_2$ the source model
-performs at or below chance zero-shot — it can do nothing — and nonetheless
-acquires the capability far faster than either control, even across disjoint
-content. Judging that model by what it can currently do would miss the
-difference entirely. Yet the *richer* behavioral vector we matched on —
+capability score badly underestimates readiness: on $B_2$ the source model sits
+at chance zero-shot yet acquires the capability far faster than either control,
+even across disjoint content. Judging it by what it can currently do would miss
+the difference entirely. Yet the *richer* behavioral vector we matched on —
 zero-shot accuracy and loss across two capabilities — was enough that neither
 prospective test detected reliable residual divergence. These carry different
-weight: P1 is well powered, with 71 frozen pairs against a 376-pair null, and is
-the stronger of the two; the Fork, at 16 pairs, is a smaller test whose interval
-is correspondingly wide and which mainly fails to add evidence rather than
-subtracting it. The formulation we can defend is narrow: **developmental
+weight: P1, at 71 pairs against a 376-pair null, is well powered; the Fork, at
+16 pairs, is small enough that its wide interval mainly fails to add evidence
+rather than subtracting it. The formulation we can defend is narrow: **developmental
 readiness can be invisible to a single capability measure without being deeply
 hidden from behavior in general.**
 
 This reframes the digital-minds question from *does behavior hide developmental
 state?* to **which present measurements are sufficient to forecast future
-plasticity?** Our results do not show that behaviorally similar systems harbour
-hidden future divergence; they show that in this setting a modest
-multi-capability profile was already sufficient to account for it, while a
-single competence score was not. Our results suggest that capability evaluation
-and update-risk evaluation are distinct problems: a model can lack a capability
-now while differing substantially in how readily it will acquire that capability
-later. If training history changes what a model is ready to learn, identical
+plasticity?** We do not show that behaviorally similar systems harbour hidden
+future divergence; we show that here a modest multi-capability profile already
+accounted for it where a single competence score did not. The experiments
+illustrate both directions of epistemic error relevant to AI welfare: current
+competence can understate consequential differences in future plasticity, while
+internal differences that reliably encode history can still overstate what we
+know about consequential latent state. Read together, the four instruments —
+target competence, richer behavioral profiles, internal geometry, and
+future-learning assays — capture different properties of the same checkpoints:
+history proved internally readable without being predictively actionable, while
+simple competence missed readiness that richer behavior largely captured.
+
+Two consequences follow. Capability evaluation and update-risk evaluation are
+distinct problems: a model can lack a capability now while differing
+substantially in how readily it will acquire that capability later. And if
+training history changes what a model is ready to learn, identical
 post-training or deployment experience may have different behavioral
-consequences depending on the incoming checkpoint. In safety-relevant settings
-this provides a potential mechanism for alignment drift, although alignment
-drift itself is not tested here. The same distinction bites on the internal
-side: gradient geometry cleanly identifies which history produced a state, and
-that is **history recognition, not prediction of future consequences** — a
-representation can classify the past perfectly and still forecast conditional
-data value at chance. The trajectory this work traces — static curriculum →
-state-conditioned value → predictive state readout → adaptive control — is
-therefore complete only through its first two stages. We do not demonstrate a
-controller, and we do not claim a readout.
+consequences depending on the incoming checkpoint — in safety-relevant settings
+a potential mechanism for alignment drift, although alignment drift itself is
+not tested here. The same distinction bites internally: gradient geometry
+cleanly identifies which history produced a state, and that is **history
+recognition, not prediction of future consequences**. The trajectory this work
+traces — static curriculum → state-conditioned value → predictive state readout
+→ adaptive control — is therefore complete only through its first two stages.
 
 **Limitations.** "Developmental state" is operational, not uniquely identified:
 nothing here establishes a low-dimensional latent coordinate, a discrete stage,
 or Markovian dynamics. The behavioral-sufficiency result is a boundary
-condition, not a universal claim — it holds for *this* matching vector, in
-*this* microworld, at *this* scale, over *these* futures, and a richer future
-set, coarser vector, different substrate, or larger model could reverse it. The
-synthetic environment is what makes the controls possible and is also the
-clearest gap between this setting and the phenomena the digital-minds framing
-cares about. Breadth remains unresolved: disjoint identities rule out content
-memorization, but the effect may still be specific to a related computational
-family. Scale evidence is exploratory, mechanism is unresolved, prediction was
-not achieved, and $V(S,D)$ continuations reset optimizer state, measuring
-information in weights rather than full training state. Finally, the P2 assay
+condition, not a universal claim — it holds for *this* matching vector,
+microworld, scale, and set of futures, and a richer future set, coarser vector,
+different substrate, or larger model could reverse it. The synthetic environment
+is what makes the controls possible and is also the clearest gap between this
+setting and the phenomena the digital-minds framing cares about. Breadth remains
+unresolved: disjoint identities rule out content memorization, but the effect
+may still be specific to a related computational family. Scale evidence is
+exploratory, mechanism is unresolved, prediction was not achieved, and $V(S,D)$
+continuations reset optimizer state, measuring information in weights rather
+than full training state. Finally, the P2 assay
 saturates — all 48 continuations reach ceiling on the target — which leaves
 little headroom to distinguish "very ready" from "extremely ready." That is an
 **assay limitation**: it bounds what P2 could have detected, and it is not
@@ -433,8 +436,8 @@ status, or a uniquely identified internal developmental state.
 The next question is whether developmental readiness remains behaviorally
 legible in semantically richer environments. Our microworld removes connotation
 to isolate learning dynamics, but early experience may establish latent
-dispositions that become behaviorally meaningful only when later experience
-supplies the relevant context. This motivates a **history × environment** test:
+dispositions that become meaningful only when later experience supplies the
+relevant context. This motivates a **history × environment** test:
 vary developmental history, hold the later semantic environment fixed, and ask
 whether identical experience elicits different preferences, interpretations, or
 behavioral tendencies. Such a setting also provides a harder test of our
@@ -448,7 +451,13 @@ implemented a small prospective feasibility prototype of the loop — fresh
 states, readouts fused at the training endpoint, a complete $V(S,D)$ matrix, and
 predictions frozen before held-out outcomes are revealed. It exists to check
 that the experimental loop closes without leakage, not to supply evidence, and
-no results from it are reported here.
+no results from it are reported here. A natural introspection benchmark would
+extend the same controlled ground-truth assay into model-identity research: ask
+whether a model can predict its own future learning value $V(S,D)$, compare that
+self-prediction against external behavioral and mechanistic predictors, and
+score all three against the actual continuation outcome. Nothing of the kind is
+demonstrated here; the point is that the developmental assay supplies the
+ground truth such a benchmark would need.
 
 ## 6. Conclusion
 
@@ -540,9 +549,7 @@ stronger hidden-state hypotheses constrained → predictive readout unresolved.
 | The top-4 ablation adequately tests necessity | **Inconclusive**; intervention ineffective |
 | Gradient geometry predicts conditional data value $V(S,D)$ | **Inconclusive**; objectives disagree at $n=13$ |
 | Current telemetry can steer training | **Not supported**; fails the global-best baseline |
-| The prospective adaptive tournament is licensed | **Not licensed by current evidence** |
-
-### B. What the model sees
+| The prospective adaptive tournament is licensed | **Not licensed by current evidence** |### B. What the model sees
 
 All streams share the template `the <entity> is <value> .`; only the relation
 differs. In **BIND** the queried entity appears earlier and the answer must be
