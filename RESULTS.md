@@ -145,6 +145,20 @@ what makes it reportable at all, and 4 seeds is not many.
 The binding constraint was never the geometry (76 states measured) but the
 overlap with complete `V(S,D)` rows: only **13** states have both.
 
+**Blocking requirement for a powered E4b, recorded 2026-08-17.** Its objective
+must be **collapse-robust**; a bare final-probe statistic is disqualified.
+Continuations here routinely master the target and then destabilise, so `final`
+measures optimiser stability as much as data value. Evidence: the P2 validation
+(all 48 continuations reached BIND 1.0; 21 of 22 low-AULC units were
+post-mastery collapses from 1.0 to ~0.02–0.05) and prototype cell
+`A__seed800 x BIND`, which held accuracy 1.000 for 1750 of 2000 steps and then
+collapsed **on the final probe** to 0.143, scoring 0.0592 against 0.3385 and
+0.3418 for the same state's other corpora. The corpus that taught the target
+best scored worst. Specified in `docs/experiments/e4b_design.md` §4a, which
+also requires collapse frequency to be reported alongside the objective rather
+than absorbed into it. **No frozen protocol was amended:** the prospective
+prototype keeps `mean` final accuracy as frozen and is reported under it.
+
 ### Late exploratory lanes B and C — post-hoc, not on the frozen ladder
 
 Both reuse existing artifacts; neither retrains, and neither may promote a

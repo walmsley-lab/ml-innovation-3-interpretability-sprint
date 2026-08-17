@@ -37,12 +37,59 @@ which also leaves room for a confirmatory holdout (§6).
 
 | element | specification |
 |---|---|
-| **primary objective** | `mean` final accuracy across capabilities. **Not `min`** — `min` sat at the chance floor in every prior use, and E4's only apparent win came from it |
+| **primary objective** | `mean` **collapse-robust** accuracy across capabilities (§4a). **Not bare `final`** — final-probe accuracy is corrupted by post-mastery collapse. **Not `min`** — `min` sat at the chance floor in every prior use, and E4's only apparent win came from it |
 | **secondary** | `min`, reported but not decisive |
 | **competitor** | state-blind **global-best**. Beating `random` is not a result |
 | **validation** | leave-one-**state**-out. Row-wise splitting leaks, because other corpora on the same state reveal its value profile |
 | **primary statistic** | mean regret against global-best, with bootstrap 95% CI over states |
 | **success** | CI on the regret difference **excludes zero** in favour of the readout. Point estimates do not suffice — this is stated here precisely because E4 showed how misleading a bare point estimate is |
+
+### 4a. The objective must be collapse-robust — required, with evidence
+
+**A bare final-probe statistic is disqualified.** Continuations in this
+substrate routinely master the target and then destabilise, so `final`
+measures optimiser stability at one arbitrary probe as much as it measures
+data value.
+
+Two independent observations, both recorded before E4b is run:
+
+* **P2 validation (48 continuations).** Every continuation reached BIND
+  accuracy 1.0, and 21 of the 22 low-AULC units were post-mastery collapses:
+  accuracy 1.0 falling to ~0.02–0.05 with loss rising from ~0.01 to ~4. The
+  AULC ceiling was 0.905 with 26 of 48 units sitting on it.
+* **Prospective prototype, cell `A__seed800 x BIND`** (protocol
+  `018ddd863114f662`). Accuracy 1.000 at loss 0.001–0.002 held for 1750 of
+  2000 steps, then collapsed **on the final probe** to 0.143 at loss 3.682.
+  Under `mean` final accuracy that cell scores 0.0592, against 0.3385 and
+  0.3418 for the `BINDT` and `FACT` cells from the same state. A cell that
+  held the capability for 87% of its run is scored as though it never learned
+  it.
+
+The second case is the sharp one: the corpus that *taught the target best*
+scores worst, purely because an instability event landed on the last probe.
+An E4b inheriting `final` would rank candidate corpora partly by where each
+run's instability happened to fall, and a state readout could then post a
+respectable regret by predicting optimiser noise rather than data value.
+
+**Requirement.** Before E4b runs, its objective must be specified as a
+statistic that is robust to post-mastery collapse, and that specification
+must be frozen and hashed with the rest of the protocol. Candidates, to be
+chosen and fixed *before* outcomes exist:
+
+1. mean accuracy over the last *k* probes, `k` fixed in advance;
+2. post-convergence best, with the convergence criterion fixed in advance;
+3. `final`, but with collapse detected by a prespecified rule and reported as
+   a separate outcome rather than averaged into the objective.
+
+Whichever is chosen, **collapse frequency is reported alongside the
+objective, never silently absorbed into it.** An instability that changes
+which corpus looks best is a result about the substrate and belongs in the
+open, not smoothed away.
+
+**This does not amend any frozen protocol.** The prospective prototype keeps
+`mean` final accuracy as frozen and will be reported under it; changing an
+objective after outcomes exist is the researcher degree of freedom this
+project refuses. The requirement above binds E4b, which is unrun.
 
 ## 5. Candidate representations, declared in advance
 
