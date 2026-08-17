@@ -177,17 +177,17 @@ on identical future minibatches.
 | Question | Result |
 |---|---|
 | Does history change future learnability? | **Supported** |
-| Is it generic acceleration? | **No** — control capability unmoved |
-| Is it memorized content reuse? | **No** — survives zero shared tokens |
+| Is it generic acceleration? | **Not supported** — control capability unmoved |
+| Is it memorized content reuse? | **Ruled out** — survives zero shared tokens |
 | Is it target competence, or readiness? | **Readiness** — zero-shot blocked, learning still accelerated |
-| Does it survive scale? | Exploratory, 32× |
+| Does it survive scale? | **Supported (exploratory)**, 32× |
 | Does future data value depend on state? | **Supported** — interaction with ordering reversals |
-| Do behavior-matched states diverge under one future? | **No** — well-powered null (P1) |
-| Do behavior-matched states prefer different futures? | **No** — null (Fork) |
-| Is there a localized emergence window? | **Not found** (P2) |
+| Do behavior-matched states diverge under one future? | **None detected** — well-powered null (P1) |
+| Do behavior-matched states prefer different futures? | **None detected** (Fork) |
+| Is there a localized emergence window? | **None detected** in the pre-registered window (P2) |
 | Does internal geometry identify history? | **Supported** |
 | Does it predict $V(S,D)$? | **Inconclusive** |
-| Can we choose the best next corpus yet? | **No** |
+| Can we choose the best next corpus yet? | **Not yet** — loses to the state-blind baseline |
 
 ### 4.1 Developmental readiness
 
@@ -241,10 +241,10 @@ space — but a strong data main effect remains.
 That caveat proves decisive. A state-aware selector evaluated leave-one-state-out
 beats random (regret 0.0473 vs 0.0758) yet loses badly to the state-blind
 **global-best** baseline (0.0207; top-1 10/12 against 11/12). It learns broad
-corpus quality rather than the conditionality. This is a falsified
-adaptive-selection claim, not a failure of the State×Data phenomenon: the
-conditional structure exists, and our state representation does not read it well
-enough to act.
+corpus quality rather than the conditionality. This does not support the
+adaptive-selection claim, and it is not a failure of the State×Data phenomenon:
+the conditional structure exists, and our state representation does not read it
+well enough to act.
 
 ![V(S,D)](figures/fig2_vsd_matrix.png)
 
@@ -455,22 +455,45 @@ AI was used heavily in experimental design and execution; see Appendix B.
 
 ### A. Claim-status summary
 
+Statuses use four distinct labels, because a null, a rejected hypothesis, and an
+ineffective intervention do not license the same conclusion. **Supported**;
+**Ruled out / Rejected by valid test** — a test with demonstrated power returned
+against the claim; **No reliable evidence detected / Not supported** — a
+well-executed test found nothing, which bounds rather than refutes;
+**Inconclusive / Not established** — the test could not adjudicate. The
+progression is: phenomenon established → simple explanations ruled out →
+stronger hidden-state hypotheses constrained → predictive readout unresolved.
+
+**Established**
+
 | Claim | Status |
 |---|---|
 | Training history produces a selective future-$B$ advantage | **Supported** |
-| Effect is generic learning acceleration | **Not supported**; $C$ near null |
-| Effect is simple entity memorization | **Falsified** by disjoint-content control |
-| Effect is readiness rather than task transfer ($B_2$) | **Supported** |
-| Effect persists across 32× capacity | **Exploratory support** |
-| Off-distribution induction mediator $M$ explains the effect | **Falsified** |
-| Retrieval statistic is an $A$-specific causal mediator | **Not established** |
-| Top-4 targeted ablation tests necessity adequately | **Falsified**; intervention ineffective |
+| The effect is readiness rather than task transfer ($B_2$) | **Supported** |
 | State×Data interaction exists | **Supported** |
-| Current telemetry predicts conditional corpus value well enough to steer | **Falsified** |
-| Prospective adaptive tournament is licensed | **No** |
-| Behavior-matched states diverge under an identical future | **Falsified** (null, 71 pairs) |
-| Behavior-matched states prefer different futures | **Falsified** (null, 16 pairs) |
-| Future learnability changes in a localized window | **Falsified** (linear best on held-out fit) |
+| Gradient geometry identifies training history | **Supported** |
+| Effect persists across 32× capacity | **Supported (exploratory)** |
+
+**Boundaries and rejected explanations**
+
+| Claim | Status |
+|---|---|
+| The effect is generic learning acceleration | **Not supported**; specificity control near-null |
+| The effect is simple entity memorization | **Ruled out** by disjoint-content control |
+| An off-distribution induction mediator $M$ explains the effect | **Rejected by confirmatory test** |
+| Behavior-matched states diverge under an identical future (P1) | **No excess future divergence detected** (71 matched pairs) |
+| Behavior-matched states prefer different futures (Fork) | **No reliable differential future preference detected** (16 pairs) |
+| Future learnability changes in a localized window (P2) | **No localized change detected** in the pre-registered window |
+
+**Unresolved**
+
+| Claim | Status |
+|---|---|
+| The retrieval statistic is an $A$-specific causal mediator | **Not established** |
+| The top-4 ablation adequately tests necessity | **Inconclusive**; intervention ineffective |
+| Gradient geometry predicts conditional data value $V(S,D)$ | **Inconclusive**; objectives disagree at $n=13$ |
+| Current telemetry can steer training | **Not supported**; fails the global-best baseline |
+| The prospective adaptive tournament is licensed | **Not licensed by current evidence** |
 
 ### B. What the model sees
 
