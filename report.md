@@ -44,7 +44,10 @@ states, identical future data might produce different learning trajectories.
 What we find is more nuanced than a yes or a no. Training history changes future
 learnability a great deal — strongly enough that a single competence score
 misses it entirely — while a richer behavioral measurement captured more of that
-variation than we expected. Throughout, we use **developmental state** to mean
+variation than we expected. For AI safety, this matters because evaluations at
+one point in training may not fully characterize how a model will respond to
+later fine-tuning, continued pretraining, or deployment experience. Throughout,
+we use **developmental state** to mean
 *history-dependent properties of a checkpoint that affect its response to later
 training*. We do not assume it corresponds to consciousness, identity, or
 welfare.
@@ -352,7 +355,9 @@ We began by asking whether training order could be reduced to a static
 curriculum relation. Our experiments pushed us beyond one: past data changes the
 learner, and therefore changes the value of future data. That is why $V(S,D)$
 exists as an object here, and it is a shift the results forced rather than one
-we assumed.
+we assumed. The State×Data interaction suggests that the effect of future
+training data cannot always be treated as intrinsic to the corpus alone; its
+consequences depend on the model state receiving it.
 
 **The central synthesis is about which measurements capture what.** A single
 capability score badly underestimates readiness: on $B_2$ the source model
@@ -374,8 +379,10 @@ state?* to **which present measurements are sufficient to forecast future
 plasticity?** Our results do not show that behaviorally similar systems harbour
 hidden future divergence; they show that in this setting a modest
 multi-capability profile was already sufficient to account for it, while a
-single competence score was not. The same distinction bites on the internal
-side: gradient geometry cleanly identifies which history produced a state, and
+single competence score was not. Our results suggest that capability evaluation
+and update-risk evaluation are distinct problems: a model can lack a capability
+now while differing substantially in how readily it will acquire that capability
+later. The same distinction bites on the internal side: gradient geometry cleanly identifies which history produced a state, and
 that is **history recognition, not prediction of future consequences** — a
 representation can classify the past perfectly and still forecast conditional
 data value at chance. The trajectory this work traces — static curriculum →
