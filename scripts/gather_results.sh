@@ -12,7 +12,7 @@ if [ -z "$VMS" ]; then
   echo "  DSI_WORKERS=\"worker-a worker-b\" DSI_ZONE=us-west1-a $0" >&2
   exit 2
 fi
-DIRS="fork vsd_matrix mediator_validation mediator_discovery hf_states temporal_replay_v p1_continuations b2_factorial_h1 b2_factorial_h2 h23"
+DIRS="g1 c1_scout fork vsd_matrix mediator_validation mediator_discovery hf_states temporal_replay_v p1_continuations b2_factorial_h1 b2_factorial_h2 h23"
 for VM in $VMS; do
   for a in 1 2 3; do
     if $GC compute ssh "$VM" --zone $ZONE --ssh-flag="-o ConnectTimeout=20" --command \

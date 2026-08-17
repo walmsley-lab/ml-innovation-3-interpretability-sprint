@@ -11,6 +11,10 @@ subsequent data, and whether that state can be read from the model itself.
 
 ## What did we find?
 
+![demo](figures/demo.png)
+
+
+
 **Training history produces a large, selective difference in future
 learnability.** In a controlled language micro-world under ordinary next-token
 prediction, a model trained on source `A` reaches **0.1322 ± 0.0149** zero-shot

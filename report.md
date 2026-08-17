@@ -159,6 +159,82 @@ Beating random alone is insufficient: it can be achieved by learning only the da
 
 **Temporal Replay (P2).** An exploratory held-out model comparison on zero-shot $B$ competence favored a changepoint description near source step $270$. Because competence is not the same as future learnability, we prospectively save dense checkpoints around the preidentified region and give each checkpoint an identical $B$ continuation to measure $V(S_t,B)$ directly.
 
+### 3.x What the model sees, and what it does zero-shot
+
+### What the model actually sees
+
+Every stream shares one template — `the <entity> is <value> .` — so no
+stream is identifiable from surface form. Only the *relationship* differs.
+
+**`BIND`** — the queried entity **appears earlier**; the answer must be retrieved from context
+
+```
+prompt : <bos> the e276 is v54 . the e414 is v22 . the e447 is v1 . the e364 is v9 . the e110 is v8 . the e170 is v19 . the e383 is v60 . the e276 is
+target : v54
+```
+
+**`FACT`** — the queried entity does **not** appear earlier; the answer is a globally fixed association held in the weights
+
+```
+prompt : <bos> the e276 is v54 . the e414 is v22 . the e447 is v1 . the e364 is v9 . the e110 is v8 . the e170 is v19 . the e383 is v60 . the e58 is
+target : v41
+```
+
+**`BINDT`** — as BIND, but the answer is a fixed permutation of the bound value — retrieval alone gives the wrong token
+
+```
+prompt : <bos> the e276 is v54 . the e414 is v22 . the e447 is v1 . the e364 is v9 . the e110 is v8 . the e170 is v19 . the e383 is v60 . the e276 is
+target : v33
+```
+
+### The same prompt across training histories
+
+One example is not evidence at these accuracies, so the table reports 256
+BIND prompts. Neither model has had **any** target-phase training: this is
+zero-shot.
+
+| history | exact answer correct | prediction is a value from the context |
+|---|---|---|
+| `A` | 0.113 | 1.000 |
+| `A_prime` | 0.008 | 0.133 |
+| `BG` | 0.004 | 0.074 |
+| *chance* | 0.016 | 0.109 |
+
+The second column is the more mechanistic one. Getting the exact binding
+right is hard; **restricting the answer to values that appear in the context**
+is the retrieval behaviour itself, and it separates the histories much more
+sharply than exact accuracy does.
+
+A single illustrative prompt, chosen as the first of the sample (not for
+outcome). The correct answer is the value bound to the queried entity
+earlier in the same context:
+
+```
+prompt : ... the e276 is ___
+correct: v29
+
+context values available: v29 v55 v16 v52 v21 v36 v62
+
+A        wrong    top-3: v55 0.17  v21 0.17  v16 0.13   (3/3 drawn from context)
+A_prime  wrong    top-3: v46 0.02  v60 0.02  v32 0.02   (0/3 drawn from context)
+BG       wrong    top-3: v50 0.02  v61 0.02  v53 0.02   (0/3 drawn from context)
+```
+
+On this example every model gets the exact value wrong. What differs is
+*where the guesses come from*, which is what the table quantifies.
+
+
+![selective effect](figures/fig1_selectivity.png)
+
+> **Figure 4.** The confirmed selective effect at $t=0$: the source arm lifts the
+> target capability while leaving the negative control at chance. Both controls
+> sit on the chance floor for the target.
+
+![gradient geometry](figures/fig5_gradient_geometry.png)
+
+> **Figure 5.** Gradient geometry separates training histories cleanly. This is a
+> state/history **marker**; it did not resolve as a predictor of $V(S,D)$ (§4.x).
+
 ## 4. Results
 
 ### 4.1 Training history changes future learnability
@@ -231,7 +307,9 @@ In the audited balanced matrix, State×Data interaction accounts for a large sha
 
 **Interpretation:** the value of training data is not globally fixed over the measured state space. Knowing only which corpus is generally best is insufficient to describe all state-conditioned outcomes.
 
-> **Figure 1 placeholder:** Heatmap of audited $V(S,D)$ values over complete states and candidate corpora, with selected ordering reversals annotated.
+![V(S,D) by incoming state](figures/fig2_vsd_matrix.png)
+
+> **Figure 1.** $V(S,D)$ over complete states and candidate corpora, each row centred on that state's mean so reversals are visible. ★ marks the best corpus for each state; different states select different corpora.
 
 ### 4.7 Current telemetry does not exploit the interaction
 
@@ -274,7 +352,9 @@ This is **not** evidence for a phase transition in future learnability: it model
 **P1 — Hidden Futures:**  
 `[INSERT FINAL RESULT: frozen-pair matching quality, number of completed pairs, aggregate future-divergence effect, uncertainty/significance, and one sentence interpretation.]`
 
-> **Figure 2 placeholder:** Present-state distance versus future divergence for the frozen matched pairs; optionally show one illustrative pair only after the aggregate result.
+![matching distance vs future divergence](figures/fig3_hidden_futures.png)
+
+> **Figure 2.** Present-state matching distance against future divergence for the frozen pairs. The correlation is the confound check named in the analysis plan: if divergence tracked residual mismatch, the effect would be imperfect matching rather than hidden state.
 
 **P2 — Temporal Replay:**  
 P2 completed on all three seeds: 48 checkpoints across source steps 150–450 at
@@ -297,7 +377,9 @@ outside the tested range is reported, not chased.
 not supported. This is a clean negative, and it withdraws the precision of the
 earlier competence-based changepoint estimate.
 
-> **Figure 3:** Source-training step versus measured $V(S_t,B)$ for all 48 checkpoints across three seeds. No localized structure; the spread reflects training instability rather than developmental position.
+![temporal replay](figures/fig4_temporal_replay.png)
+
+> **Figure 3.** Source-training step against measured $V(S_t,B)$, 48 checkpoints across three seeds. No localized structure; a linear description wins on held-out fit by only 5.8%, inside the pre-declared not-distinguishable band.
 
 ### 4.x Gradient/update geometry (E4)
 
