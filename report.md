@@ -22,8 +22,8 @@ vector neither diverge under an identical future (71 frozen pairs against a
 376-pair null) nor prefer different futures (16 frozen pairs, interaction CI
 spanning zero at chance sign agreement). The honest reading inverts our starting
 hypothesis: behavior captured more future-relevant variation than we expected. A
-pre-registered mechanistic hypothesis failed, a prospective search for a
-localized emergence window found none, and gradient geometry that cleanly
+pre-registered mechanistic hypothesis failed, a prospective search detected no
+localized transition in future learnability, and gradient geometry that cleanly
 identifies training history did not resolve as a predictor of conditional data
 value. History leaves consequential structure; reading it well enough to act on
 remains open.
@@ -184,7 +184,7 @@ on identical future minibatches.
 | Does future data value depend on state? | **Supported** — interaction with ordering reversals |
 | Do behavior-matched states diverge under one future? | **None detected** — well-powered null (P1) |
 | Do behavior-matched states prefer different futures? | **None detected** (Fork) |
-| Is there a localized emergence window? | **None detected** in the pre-registered window (P2) |
+| Is there a localized transition in future learnability? | **None detected** in the pre-registered window (P2) |
 | Does internal geometry identify history? | **Supported** |
 | Does it predict $V(S,D)$? | **Inconclusive** |
 | Can we choose the best next corpus yet? | **Not yet** — loses to the state-blind baseline |
@@ -280,7 +280,7 @@ $+0.0295$, CI $[-0.1707, +0.2368]$. The single most extreme pair looks striking,
 and the protocol pre-committed to not presenting the maximum of a noise
 distribution as a result.
 
-**No localized emergence window (P2).** An exploratory changepoint fit on
+**No localized transition detected (P2).** An exploratory changepoint fit on
 zero-shot competence had suggested a localized early change. Because competence
 is not learnability, we tested prospectively: 48 checkpoints across source steps
 150–450, each given an identical continuation. Held-out comparison gives linear
@@ -403,20 +403,18 @@ tournament be run.
 
 ## 6. Conclusion
 
-Training history changes what a model is ready to learn: prior exposure produces
-a large, selective advantage in acquiring a later capability — one that survives
-disjoint content, appears on a target the model cannot answer at all beforehand,
-and persists across a 32× capacity range in exploratory runs — and the value of
-future data depends on the state that history produced. Much of what we set out
-to show did not survive testing: our mechanistic hypothesis failed, no localized
-emergence window exists, gradient geometry that identifies history did not
-resolve as a predictor of conditional data value, and two pre-registered
-experiments found that behavior-matched states neither diverge under identical
-future training nor prefer different futures. The methodological implication is a
-distinction worth keeping separate — **measuring what a model can currently do is
-not the same as forecasting what it can become** — with the caveat that in this
-setting, those counterfactual trajectories proved more readable from behavior
-than we expected.
+Training history changes not only what a model can do, but what it is ready to
+learn next. We find a large, selective readiness advantage that survives
+disjoint content and appears even when the target capability is absent before
+training, while future data value varies with incoming model state. Yet the
+stronger hidden-state story did not survive: behavior-matched states showed no
+reliable residual divergence, no localized transition in future learnability was
+detected, and internal geometry that encoded history did not reliably forecast
+conditional data value. The resulting distinction is sharper than our starting
+hypothesis: present competence can miss consequential readiness, but those
+consequences may be more behaviorally legible than expected. The open problem is
+therefore not merely to detect training history, but to identify measurements
+sufficient to predict how a model will respond to future experience.
 
 ## Code, Data, and Licensing
 
