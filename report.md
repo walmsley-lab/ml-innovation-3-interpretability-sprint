@@ -12,8 +12,8 @@ target is composed with a fixed derangement that blocks direct zero-shot answer
 transfer: source-trained models begin at chance yet subsequently learn
 substantially faster. We call this **developmental readiness**.
 
-We then measure $V(S,D)$, the value of future corpus $D$ from incoming model
-state $S$, and find State×Data interaction with corpus-ranking reversals across
+We then measure $V(S,D)$, the value of future corpus $D$ from incoming model state
+$S$, and find State×Data interaction with corpus-ranking reversals across
 measured states. However, the stronger hypothesis that consequential
 developmental differences remain hidden from present behavior does not survive
 testing. In two prospectively specified experiments, behavior-matched states
@@ -52,8 +52,8 @@ We began by asking whether pairwise transfer relations could be composed into a
 useful training order. Repeated failures (non-composing transfer effects,
 interference under sequential curricula, and unreliable prospective prediction)
 suggested that data value could not be treated as a fixed property of a corpus
-pair. This motivated $V(S,D)$, the value of future data $D$ conditional on what
-the model has already become.
+pair. This motivated $V(S,D)$, the value of future data $D$ conditional on what the
+model has already become.
 
 Our contributions are: **history-dependent developmental readiness**, shown on
 a target whose answer is unavailable to the source model beforehand, so what
@@ -131,10 +131,10 @@ disrupting that structure; and **BG**, background training. All arms then
 receive the same target continuation.
 
 Targets: **$B$** is a binding/retrieval task with resampled identities, so
-answers cannot be memorized as fixed associations. **$B_2$** is the
-centerpiece: retrieval composed with a **fixed derangement**, so the retrieved
-value is never the correct answer. This **blocks direct transfer of the target
-answer**, and we confirm it blocked, with every arm at or below chance before
+answers cannot be memorized as fixed associations. **$B_2$** is the centerpiece:
+retrieval composed with a **fixed derangement**, so the retrieved value is
+never the correct answer. This **blocks direct transfer of the target answer**,
+and we confirm it blocked, with every arm at or below chance before
 continuation. It does not block transfer of procedure or structure, which may
 be part of what readiness consists of. **$C$** is a learnable
 parametric-association negative control that does not require contextual
@@ -142,14 +142,14 @@ retrieval.
 
 ### 3.2 Readiness metrics, controls, and prospective specification
 
-We report $t=0$ performance before any target training, AULC, final
-performance, and rate-only ($\mathrm{AULC} - t_0$). The decomposition matters
-because head-start and rate effects move differently: an advantage in rate-only
-while $t=0$ sits at chance **supports a readiness interpretation rather than
-direct answer transfer**. Controls: a content-disjointness condition uses zero
-shared entity identities; specificity is tested against $C$, interpreted only
-once BG shows $C$ is learnable; and we replay the core contrast at roughly 1×,
-8×, and 32× non-embedding capacity.
+We report $t=0$ performance before any target training, AULC, final performance,
+and rate-only ($\mathrm{AULC} - t_0$). The decomposition matters because head-start and rate
+effects move differently: an advantage in rate-only while $t=0$ sits at chance
+**supports a readiness interpretation rather than direct answer transfer**.
+Controls: a content-disjointness condition uses zero shared entity identities;
+specificity is tested against $C$, interpreted only once BG shows $C$ is
+learnable; and we replay the core contrast at roughly 1×, 8×, and 32×
+non-embedding capacity.
 
 Discovery, calibration, and confirmation seeds are separated; for the
 prospective experiments, protocols, analysis plans, and selection artifacts
@@ -162,16 +162,16 @@ measurably reduced the capability it targeted.
 
 ### 3.3 State-conditioned data value, prospective tests, and internal readout
 
-$V(S,D)$ is the measured learning value of continuing from saved state $S$ on
-corpus $D$, under an identical continuation protocol with fresh optimizer
-state, isolating information carried in the weights. We build a balanced matrix
-of incoming states × candidate corpora and decompose variance into state main
+$V(S,D)$ is the measured learning value of continuing from saved state $S$ on corpus
+$D$, under an identical continuation protocol with fresh optimizer state,
+isolating information carried in the weights. We build a balanced matrix of
+incoming states × candidate corpora and decompose variance into state main
 effect, data main effect, and State×Data interaction, whose strongest
-qualitative signature is an **ordering reversal**, $\arg\max_D V(S_1,D) \neq
-\arg\max_D V(S_2,D)$. A selector must beat both random and the **state-blind
-global-best corpus**; beating random alone is achievable by learning the data
-main effect. Validation is leave-one-**state**-out, never row-wise, which would
-leak a state's value profile through its other corpora.
+qualitative signature is an **ordering reversal**, $\arg\max_D V(S_1,D) \neq \arg\max_D V(S_2,D)$. A selector must beat
+both random and the **state-blind global-best corpus**; beating random alone is
+achievable by learning the data main effect. Validation is
+leave-one-**state**-out, never row-wise, which would leak a state's value
+profile through its other corpora.
 
 Three **prospective continuation tests** follow, each giving matched or dense
 states controlled future experience. **P1** asks whether behaviorally matched
@@ -180,8 +180,8 @@ only and freezing the pair list before any continuation. **Fork** asks whether
 they prefer *different* futures, branching both members onto two corpora chosen
 for the strongest prior ordering reversal under a preregistered
 difference-in-differences estimand. **P2** asks whether future learnability
-changes at a localized point in training, measuring $V(S_t,B)$ directly rather
-than competence across a preregistered source window.
+changes at a localized point in training, measuring $V(S_t,B)$ directly rather than
+competence across a preregistered source window.
 
 Separately, **E4** is an **internal-state readout** experiment rather than a
 continuation test: for each saved state and candidate corpus, on identical
@@ -214,8 +214,8 @@ testing.
 
 ### 4.1 Developmental readiness
 
-The centerpiece is $B_2$, the deranged target. Because the derangement blocks
-the retrieved answer, every arm begins at or below chance: $A$ scores 0.0122
+The centerpiece is $B_2$, the deranged target. Because the derangement blocks the
+retrieved answer, every arm begins at or below chance: $A$ scores 0.0122
 (disjoint surface) and 0.0156 (shared) against a chance floor of 0.0156, so the
 target answer is unavailable before continuation. The source arm nonetheless
 learns far faster: a rate-only advantage over the matched control of
@@ -227,10 +227,9 @@ rate-only advantage with $t=0$ at chance **supports a readiness interpretation
 rather than direct answer transfer**. The evidence is real but not overwhelming
 ($n = 4$ per arm, effect/noise 1.6–1.9, control-arm sd 0.14–0.21).
 
-On the ordinary target $B$, as supporting evidence, $A$ reaches $0.1322 \pm
-0.0149$ at $t=0$ against $0.0156 \pm 0.0087$ ($A'$) and $0.0156 \pm 0.0051$
-(BG), roughly 8.5× chance, with controls at the floor, and $\mathrm{AULC}(A) -
-\mathrm{AULC}(A') = +0.5265$.
+On the ordinary target $B$, as supporting evidence, $A$ reaches $0.1322 \pm 0.0149$ at $t=0$
+against $0.0156 \pm 0.0087$ ($A'$) and $0.0156 \pm 0.0051$ (BG), roughly 8.5× chance, with controls at the
+floor, and $\mathrm{AULC}(A) - \mathrm{AULC}(A') = +0.5265$.
 
 ![B2 readiness](figures/paper_fig1_readiness.png)
 
@@ -244,14 +243,14 @@ On the ordinary target $B$, as supporting evidence, $A$ reaches $0.1322 \pm
 ### 4.2 Specificity, disjointness, and scale
 
 The effect is not generic acceleration: on the negative control $C$ the
-advantage is $+0.0395$, roughly thirteen times smaller than the $B$ effect.
-This null is meaningful because $C$ is learnable: BG reaches 0.410 against a
-prespecified 0.30 competence gate. It is not memorized content: with zero
-shared entity tokens the head start is fully retained ($0.1567$ disjoint vs
-$0.1431$ shared, 111% retention). It persists with capacity: zero-shot $B$
-advantage of $0.126 \pm 0.016$ at 1×, $0.157 \pm 0.042$ at 8×, and $0.097 \pm
-0.037$ at 32×, with controls remaining near chance on zero-shot $B$ throughout,
-though these runs are exploratory rather than a powered scaling study.
+advantage is $+0.0395$, roughly thirteen times smaller than the $B$ effect. This null
+is meaningful because $C$ is learnable: BG reaches 0.410 against a prespecified
+0.30 competence gate. It is not memorized content: with zero shared entity
+tokens the head start is fully retained ($0.1567$ disjoint vs $0.1431$ shared, 111%
+retention). It persists with capacity: zero-shot $B$ advantage of $0.126 \pm 0.016$ at 1×,
+$0.157 \pm 0.042$ at 8×, and $0.097 \pm 0.037$ at 32×, with controls remaining near chance on zero-shot
+$B$ throughout, though these runs are exploratory rather than a powered
+scaling study.
 
 ### 4.3 State×Data interaction exists, but is not yet actionable
 
@@ -284,32 +283,31 @@ representation can exploit it.
 **No excess divergence under a common future (P1).** Pairs matched on present
 observables, frozen before any outcome existed, do not diverge more than
 unmatched same-arm pairs when given identical continuations: final 0.2893 vs
-0.2700 (permutation $p = 0.704$) and rate-only 0.1325 vs 0.1496 ($p = 0.504$),
-over 71 matched pairs against a 376-pair null. A significant $t=0$ result is
-circular rather than a finding, since zero-shot accuracy is itself part of the
-matching vector; the metrics *not* matched on show nothing. This is the
-better-powered of the two matched-state tests.
+0.2700 (permutation $p = 0.704$) and rate-only 0.1325 vs 0.1496 ($p = 0.504$), over 71 matched
+pairs against a 376-pair null. A significant $t=0$ result is circular rather than
+a finding, since zero-shot accuracy is itself part of the matching vector; the
+metrics *not* matched on show nothing. This is the better-powered of the two
+matched-state tests.
 
 **No reliable differential future preference (Fork).** Matched states might
 respond alike to one future while differing in *which* future suits them.
 Forking 16 frozen pairs onto the two corpora with the strongest prior ordering
-reversal gives an interaction of $+0.0888$, 95% CI $[-0.1173, +0.3162]$,
-spanning zero, with 8 of 16 pairs sharing the aggregate sign, exactly chance.
-Reversals do occur; what we cannot detect is a *reliable* differential
-preference. At 16 pairs the interval is wide enough that this test mainly fails
-to add evidence rather than subtracting it.
+reversal gives an interaction of $+0.0888$, 95% CI $[-0.1173, +0.3162]$, spanning zero, with 8 of 16
+pairs sharing the aggregate sign, exactly chance. Reversals do occur; what we
+cannot detect is a *reliable* differential preference. At 16 pairs the interval
+is wide enough that this test mainly fails to add evidence rather than
+subtracting it.
 
 **No localized change detected in the tested window (P2).** An exploratory
 changepoint fit on zero-shot competence had suggested a localized early change.
 Because competence is not learnability, we tested prospectively: 48 checkpoints
 across source steps 150–450, each given an identical continuation. Held-out
 comparison gives linear 0.1333, sigmoid 0.1416, changepoint 0.1425; linear wins
-by 5.8%, inside the preregistered not-distinguishable band, and $V(S_t,B)$
-correlates with source step at only $r = -0.199$. The original changepoint was
-fitted to traces sampled every 250 steps and carries no better than 250-step
-resolution; per the frozen protocol the window was not re-centred. This bounds
-detection within the tested window rather than establishing that no transition
-exists.
+by 5.8%, inside the preregistered not-distinguishable band, and $V(S_t,B)$ correlates
+with source step at only $r = -0.199$. The original changepoint was fitted to traces
+sampled every 250 steps and carries no better than 250-step resolution; per the
+frozen protocol the window was not re-centred. This bounds detection within the
+tested window rather than establishing that no transition exists.
 
 **Mechanism, readout, and control.** Our preregistered induction-style mediator
 failed its confirmatory gate on fresh seeds; a later retrieval statistic
@@ -317,15 +315,14 @@ separates $A$ from $A'$ without cleanly replicating against BG, so we treat it
 as history-associated rather than $A$-specific, and the necessity test is
 inconclusive because the intervention never reduced the capability. Gradient
 geometry separates histories cleanly: gradient norm on $B$ of 0.54 against 0.29
-for the matched control, $\cos(\nabla B, \nabla C)$ of $+0.73$ against $+0.19$,
-yet as a *predictor* of $V(S,D)$ it is **inconclusive and not promoted**: the
-two prespecified objectives disagree in direction, both bootstrap intervals
-touch zero, and only 13 states have both geometry and a complete $V(S,D)$ row.
-This is the core boundary of the paper: **identifying which history produced a
-state is not the same as predicting the future consequences of that state**,
-and it is why the prospective what-next tournament remains gated and unrun.
-Full gate criteria, outlier analyses, and per-experiment archaeology are in
-`RESULTS.md`.
+for the matched control, $\cos(\nabla B, \nabla C)$ of $+0.73$ against $+0.19$, yet as a *predictor* of $V(S,D)$ it
+is **inconclusive and not promoted**: the two prespecified objectives disagree
+in direction, both bootstrap intervals touch zero, and only 13 states have both
+geometry and a complete $V(S,D)$ row. This is the core boundary of the paper:
+**identifying which history produced a state is not the same as predicting the
+future consequences of that state**, and it is why the prospective what-next
+tournament remains gated and unrun. Full gate criteria, outlier analyses, and
+per-experiment archaeology are in `RESULTS.md`.
 
 ![boundary results](figures/paper_fig3_boundaries.png)
 
@@ -431,24 +428,23 @@ behavioral tendencies. Such a setting also provides a harder test of our
 behavioral-matching nulls, since a modest capability profile may be sufficient
 in a connotation-free microworld but not where later experience can activate
 dispositions laid down earlier. In parallel, adaptive control requires a state
-representation that predicts held-out $V(S,D)$, adds information beyond
-behavior, and beats a global-best baseline. That experiment will also need a
+representation that predicts held-out $V(S,D)$, adds information beyond behavior,
+and beats a global-best baseline. That experiment will also need a
 **collapse-robust** outcome statistic: every P2 continuation reached ceiling on
 the target and some then destabilised, so a bare final-probe score partly
 measures where an instability happened to fall rather than the value of the
 data, and could let a readout post respectable regret by predicting optimiser
 noise. Only after those conditions are met should prospective what-next
-selection be attempted. Toward that end we have
-implemented a small prospective feasibility prototype of the loop: fresh
-states, readouts fused at the training endpoint, a complete $V(S,D)$ matrix,
-and predictions frozen before held-out outcomes are revealed. It exists to
-check that the experimental loop closes without leakage, not to supply
-evidence, and no results from it are reported here. The same assay would also
-support an introspection benchmark, extending controlled ground truth into
-model-identity research: ask whether a model can predict its own future
-learning value $V(S,D)$, compare that self-prediction against external
-behavioral and mechanistic predictors, and score all three against the actual
-continuation outcome. Nothing of the kind is demonstrated here.
+selection be attempted. Toward that end we have implemented a small prospective
+feasibility prototype of the loop: fresh states, readouts fused at the training
+endpoint, a complete $V(S,D)$ matrix, and predictions frozen before held-out
+outcomes are revealed. It exists to check that the experimental loop closes
+without leakage, not to supply evidence, and no results from it are reported
+here. The same assay would also support an introspection benchmark, extending
+controlled ground truth into model-identity research: ask whether a model can
+predict its own future learning value $V(S,D)$, compare that self-prediction against
+external behavioral and mechanistic predictors, and score all three against the
+actual continuation outcome. Nothing of the kind is demonstrated here.
 
 ## 6. Conclusion
 
