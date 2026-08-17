@@ -3,9 +3,9 @@
 `make_report_figures.py` renders one figure per result and stays as the full
 set. This script renders only what the paper carries, at the paper's framing:
 
-1. ``paper_fig1_readiness.png``  — B2: readiness, not task transfer
-2. ``figures/fig2_vsd_matrix.png`` — State x Data (reused unchanged)
-3. ``paper_fig3_boundaries.png`` — the four negative/boundary results in one panel
+1. ``paper_fig1_readiness.png``   B2: readiness, not task transfer
+2. ``paper_fig2_vsd.png``         State x Data, single panel, left aligned
+3. ``paper_fig3_boundaries.png``  the four negative/boundary results, 2x2
 
 Figures that merely duplicate prose are deliberately absent.
 """
