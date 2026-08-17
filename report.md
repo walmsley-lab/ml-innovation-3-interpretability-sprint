@@ -555,4 +555,20 @@ The following works are useful context for readers pursuing the broader themes o
 
 ### B. LLM Usage Statement
 
-LLMs, primarily Claude and ChatGPT, were used extensively during the sprint to brainstorm experimental designs, critique hypotheses, implement and debug code, audit claims, and help draft documentation. Experimental protocols, frozen gates, raw outputs, and final claims were checked against generated artifacts and independent audit scripts. LLM suggestions were not treated as evidence; claims were promoted only when supported by the corresponding experiments.
+LLMs were used extensively throughout this sprint, in distinct roles:
+
+- **Claude** — implementation. Wrote and debugged the experimental code, ran and
+  orchestrated the experiments across cloud workers, built the analysis and audit
+  tooling, and drafted documentation.
+- **ChatGPT** — reasoning through the experimental design. Used to pressure-test
+  hypotheses, sequence the experiments, and interrogate what each result could and
+  could not support.
+- **DeepSeek** — used sparingly for inspiration and review.
+- **Kimi K3** and **Perplexity** — used to search for prior work and locate
+  related literature.
+
+Experimental protocols, frozen gates, raw outputs, and final claims were checked
+against generated artifacts and independent audit scripts. LLM suggestions were
+not treated as evidence; claims were promoted only when supported by the
+corresponding experiments, and several LLM-proposed framings were discarded when
+the frozen criteria did not support them.
