@@ -204,6 +204,43 @@ recorded, and it has since caught two substantive drifts: the inflated
 distinct-argmax count in X2c (incomplete states counted as reversals) and the
 untested A-vs-BG comparison in A5c. **Run it before quoting any number.**
 
+### Unfetched worker artifacts, audited 2026-08-17
+
+Syncing the cloud workers before releasing them recovered **338 unit files that
+existed only on the VMs**. The local tree went from 599 to 937 units. Affected
+directories: `wikitext_transfer` (108), `vsd_matrix` (60), `natural_transfer`
+(36), `natural_common_control` (36), `b2_replication` (24), `exploratory_scale`
+(22), `dose_response_v` (20), `layer2_scout` (15), `layer2_overlap` (15),
+`calibration` (2).
+
+**This changes the size of the `V(S,D)` matrix that was available, though not
+the matrix that was analysed.** With everything fetched:
+
+| quantity | analysed | actually available |
+|---|---:|---:|
+| `vsd_matrix` cells | 49 | **109** |
+| complete 3-corpus states | 13 | **33** |
+| states with geometry *and* a complete row | 13 | **33** |
+
+Every one of the 109 cells shares the same protocol (`target_steps` 2000,
+`data_key` 777), so these are the same experiment, not a different one. The
+`n = 13` that made E4 inconclusive, and that `e4b_design.md` §2 identifies as
+*the* binding constraint, was therefore partly an artifact of results left on
+worker disks rather than a property of the experiment.
+
+**No claim is revised and no analysis is rerun on the recovered data.**
+Expanding E4 after seeing its outcome is precisely the move this project
+refuses, and the reported numbers stay as computed on the 13 states that were
+present when the frozen analysis ran. Two further cautions on the recovered
+set: the 33 complete states are badly arm-imbalanced (A 26, A′ 4, BG 3), so
+they carry far less information than `n = 33` suggests, and `e4b_design.md` §4a
+now disqualifies the bare-final objective these cells were scored under.
+
+The practical consequence is for the *next* experiment: a powered E4b may not
+need the full regeneration its design assumes, since 33 states with both
+geometry and complete rows already exist. That is for its own preregistration
+to specify, before any of it is analysed.
+
 ### Freeze-record integrity, audited 2026-08-17
 
 `tests/test_repo_invariants.py` verifies every `artifacts/*.sha256` against the
