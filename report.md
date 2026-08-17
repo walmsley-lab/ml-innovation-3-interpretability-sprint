@@ -1,4 +1,4 @@
-# Training History Shapes What Models Are Ready to Learn
+# Training History Shapes Developmental Readiness
 
 **Patrick Walmsley**
 
@@ -382,7 +382,12 @@ multi-capability profile was already sufficient to account for it, while a
 single competence score was not. Our results suggest that capability evaluation
 and update-risk evaluation are distinct problems: a model can lack a capability
 now while differing substantially in how readily it will acquire that capability
-later. The same distinction bites on the internal side: gradient geometry cleanly identifies which history produced a state, and
+later. If training history changes what a model is ready to learn, identical
+post-training or deployment experience may have different behavioral
+consequences depending on the incoming checkpoint. In safety-relevant settings
+this provides a potential mechanism for alignment drift, although alignment
+drift itself is not tested here. The same distinction bites on the internal
+side: gradient geometry cleanly identifies which history produced a state, and
 that is **history recognition, not prediction of future consequences** — a
 representation can classify the past perfectly and still forecast conditional
 data value at chance. The trajectory this work traces — static curriculum →
