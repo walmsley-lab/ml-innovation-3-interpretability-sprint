@@ -1,4 +1,4 @@
-# Training History Shapes Developmental Readiness
+# Training History Shapes Development
 
 **Patrick Walmsley**
 

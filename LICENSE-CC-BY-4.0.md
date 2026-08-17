@@ -12,8 +12,7 @@ indicate if changes were made.
 Full license text: https://creativecommons.org/licenses/by/4.0/legalcode
 Summary: https://creativecommons.org/licenses/by/4.0/
 
-Attribution: Patrick Walmsley, "Training History Shapes Developmental
-Readiness" (2026).
+Attribution: Patrick Walmsley, "Training History Shapes Development" (2026).
 
 Source code in this repository is licensed separately under the Apache License
 2.0; see `LICENSE`.
