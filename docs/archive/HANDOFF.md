@@ -7,6 +7,64 @@ controlled for, and where it can go next.
 
 ---
 
+## 0. Where the project actually is (2026-08-17)
+
+**Read this before section 1, which describes a superseded run.**
+
+The static-ordering programme failed and those results stand unrevised. The
+project pivoted to developmental state in a language micro-world under ordinary
+next-token prediction. Full barrier record in [STATUS.md](STATUS.md), claim-by-
+claim status in [CLAIMS.md](CLAIMS.md).
+
+    static ordering failed -> developmental-state hypothesis
+      -> history-dependent learnability [CONFIRMED]
+      -> state-conditioned data value   [SUPPORTED]
+      -> prediction of it               [FAILED]
+      -> adaptive training              [not licensed]
+
+**Confirmed:** training history produces a large, selective difference in future
+learnability (`t=0` 0.1322 vs both controls at the 0.0156 chance floor); it
+survives disjoint content entirely; exploratorily it survives 32x scale.
+
+**Falsified / inconclusive, and kept visible:** the pre-registered
+induction-style mechanism failed its gate; causal mediation of the surviving
+retrieval marker is **inconclusive** because the ablation had no measurable
+efficacy; state-aware data selection **lost to global-best**, so adaptive
+scheduling is not licensed.
+
+**The honest one-liner:** data value is conditional on model state, and we
+cannot yet read that state well enough to exploit it. The bottleneck is state
+inference, not the phenomenon.
+
+### Reproducing the current results
+
+```bash
+uv venv && uv pip install -e ".[dev]"
+PYTHONPATH=src python scripts/preflight_microworld.py      # substrate checks P1/P2/P6/P7
+PYTHONPATH=src python scripts/audit_microworld_shortcuts.py  # A/A' shortcut audit
+PYTHONPATH=src python scripts/audit_claims.py             # recompute every headline number
+```
+
+Key frozen objects, all hashed before the runs they govern:
+
+| object | sha256 (first 16) |
+|---|---|
+| V2.1 spec | `f92f5831bece0d91` |
+| what-next tournament protocol (unrun) | `f9da9fe23b1b2400` |
+| downstream protocols (hidden futures, replay) | `8fc78c4087e2f87b` |
+| Lane B latent-state protocol | `afd0bf5174cd8073` |
+
+### Two lessons that cost the most
+
+1. **An intervention that does not move the capability cannot test necessity.**
+   Removing the top 4 of 16 heads left zero-shot competence unchanged. Report
+   the efficacy check before the interaction.
+2. **Machine-check the ledger.** `scripts/audit_claims.py` caught an inflated
+   reversal count (incomplete states counted as argmax) and an untested
+   A-vs-background comparison, both after they had been reported as results.
+
+---
+
 ## 1. What is running right now
 
 **The `r = 0.20` overlap diagnostic**, manifest

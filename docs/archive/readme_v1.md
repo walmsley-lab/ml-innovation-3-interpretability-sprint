@@ -133,3 +133,30 @@ The recorded smoke run fails its competence gate and is retained as an
 first, so the apparent order effect is recency — the confound the washout
 phase exists to control. Nothing measured in that regime, including its
 `P→W` retention gradient, may be used to tune the confirmatory design.
+
+
+---
+
+## Current results (2026-08-17)
+
+The static-ordering programme failed and is preserved above and in
+[STATUS.md](STATUS.md). What replaced it:
+
+| finding | status |
+|---|---|
+| History produces a large, **selective** difference in future learnability | **Confirmed** (fresh seeds, frozen criteria) |
+| Effect survives **disjoint content** (zero shared tokens) | **Confirmed** |
+| Effect survives **32× scale** | Exploratory |
+| Pre-registered OOD induction-style mechanism | **Falsified** |
+| Retrieval state marker, source vs rebinding control | Prospectively replicated (p = 0.0002); **not** separated from background (p = 0.387) |
+| Causal mediation of retrieval | **Inconclusive** — the intervention had no measurable efficacy |
+| **State × Data interaction / ranking reversals** | **Supported** |
+| State-aware selection beating global-best | **Failed** — adaptive scheduling not licensed |
+| Temporal changepoint at ~270 steps | Exploratory, competence proxy only |
+
+    static ordering failed -> developmental-state hypothesis
+      -> history-dependent learnability -> state-conditioned data value
+      -> prediction missing -> future adaptive training
+
+Claim-by-claim status with evidence is in [CLAIMS.md](CLAIMS.md); every
+quantitative figure is recomputable via `scripts/audit_claims.py`.

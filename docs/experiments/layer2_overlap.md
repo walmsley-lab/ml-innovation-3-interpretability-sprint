@@ -75,7 +75,7 @@ Not another ordering variant. The next experiment is the
 below ceiling so an efficiency difference can be detected at all — at this
 dose interleaving reaches 0.987 mean and 0.951 min, leaving no headroom.
 
-The candidate methods stand as recorded in `STATUS.md`: uniform interleaving,
+The candidate methods stand as recorded in `RESULTS.md`: uniform interleaving,
 randomized interleaving, simple heuristic schedules, and a crude
 state-dependent adaptive scheduler. No pairwise-derived static ordering
 survives this diagnostic to be carried forward.

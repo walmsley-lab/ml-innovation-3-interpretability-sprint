@@ -348,3 +348,89 @@ sequential arms looked half-decent on the mean and catastrophic on the min.
 environment-identical (image `v20260807`, jax 0.11.0, matching vocab, pools
 and corpus-cache hashes). Throughput ~3.06 trajectories/min per worker, flat
 in concurrency. `pdp-gpu` TERMINATED and preserved.
+
+---
+
+## Barrier: V2 language micro-world — the pivot to developmental state (2026-08-17)
+
+**Nothing above is revised.** The static-ordering failures stand exactly as
+recorded: block-sequential curricula destroy capability (0.383 vs 0.987), and
+pairwise transfer does **not** compose into useful orderings (effect/noise
+−0.15 with retention restored). Those results are what motivated this layer,
+and they remain the reason the ordering programme was abandoned.
+
+### The progression, stated plainly
+
+    static ordering failed
+      -> developmental-state hypothesis
+      -> history-dependent future learnability   [CONFIRMED]
+      -> state-conditioned data value            [SUPPORTED]
+      -> prediction of that conditionality       [FAILED]
+      -> adaptive training                       [not licensed]
+
+### Confirmed
+
+**Training history produces a large, selective difference in future
+learnability.** Fresh confirmatory seeds, frozen criteria. Target capability
+`B` at `t=0`: source arm **0.1322 ± 0.0149** against both controls at
+**0.0156** — exactly the chance floor. Negative-control capability `C` shows
+nothing (AULC advantage +0.0395 against +0.5265 on `B`), and `C` is genuinely
+learnable, so the specificity test is not vacuous.
+
+**Not memorised content.** With **zero shared entity tokens** between source
+and target, the effect is fully retained (111%).
+
+**Exploratory scale persistence.** Survives a 32× parameter increase
+(786k → 25.2M), 3 seeds, original setup. Exploratory, not promoted.
+
+### Falsified and inconclusive — kept visible
+
+* **The pre-registered mechanism was falsified.** An off-distribution
+  induction-style probe failed its confirmatory gate (selectivity 0.76 against
+  a ≥2.0 requirement). A striking single-seed preflight transient did not
+  reproduce anywhere.
+* **Causal mediation is INCONCLUSIVE, not falsified.** The retrieval-head
+  ablation produced no interaction, but it also failed to reduce the capability
+  at all (zero-shot `B` 0.139 → 0.161), because the capability is redundant
+  across heads. Necessity was never tested at adequate strength. **Top-k head
+  ablation is a demonstrably inadequate intervention in this substrate.**
+* **State-aware data selection FAILED against global-best.** Leave-one-state-out
+  over 12 complete states: regret 0.0473 against global-best's 0.0207. It beats
+  random, so it learned the data main effect and not the conditionality.
+  **Adaptive scheduling is not licensed.**
+
+### Supported, with corrected magnitudes
+
+**State × Data interaction.** Balanced 48-cell matrix, 12 states measured on
+every corpus. Interaction share 0.381 (mean objective) and 0.464 (min);
+2–3 distinct argmax corpora across states; 42–56 sign reversals. **The identity
+of the best next corpus depends on incoming state.** Correction on the record:
+a first pass reported interaction 0.479 as the largest component; restricted to
+complete states it is 0.381 and *second* to the state main effect (0.553).
+
+**Retrieval state marker, narrowed.** Distinguishes the source arm from the
+value-rebinding control prospectively on fresh seeds (+0.1267, permutation
+p = 0.0002). **It does not cleanly separate the source arm from background out
+of sample (p = 0.387)** — a comparison that had not been run until audit.
+A marker, not a mediator.
+
+**Temporal changepoint — exploratory only.** Held-out model comparison finds a
+changepoint better than linear (RMSE 0.0171 vs 0.0331) with a break at step
+270 ± 8. This models *acquired competence*, not future learnability, and the
+two can dissociate.
+
+### Active at the time of writing
+
+* **Prospective hidden futures** — do states matched on present observables
+  diverge under identical future training? Pairs frozen from current-state
+  observables before outcomes exist.
+* **True temporal replay** — dense checkpoints across the 150–450 window with
+  identical continuations, measuring `V(S_t, B)` rather than a competence proxy.
+
+### The honest summary
+
+> Training-data value is conditional on model state. We cannot yet read that
+> state well enough to exploit the conditionality.
+
+That is a specific technical bottleneck — **state inference**, not phenomenon —
+and it is where the programme continues.

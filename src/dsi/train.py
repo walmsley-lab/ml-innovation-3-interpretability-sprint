@@ -154,6 +154,7 @@ def train_phase(
     *,
     eval_at: tuple[int, ...] = (),
     eval_fn=None,
+    sampler=None,
 ) -> tuple[TrainState, list[dict]]:
     """Train one phase, evaluating at the requested step counts.
 
@@ -164,11 +165,18 @@ def train_phase(
             position within ``eval_at``. The index selects the evaluation
             key, so evaluation draws are fixed by the spec rather than by
             when training happens to reach them.
+        sampler: Called as ``sampler(key, family, task, batch_size)`` and
+            returning a mapping with a ``"tokens"`` entry. Defaults to the W/P
+            :func:`dsi.data.sample_batch`. Injecting it is what lets the V2
+            micro-world reuse this loop unchanged — ``task`` need only supply
+            ``seq_len`` and ``answer_target_index``, which both
+            ``TaskConfig`` and ``MicroConfig`` do.
 
     Returns:
         The updated state, and one record per evaluation point carrying the
         step, tokens into the phase, and cumulative tokens seen.
     """
+    draw = sample_batch if sampler is None else sampler
     optimizer = _optimizer(train_config)
     n_steps = phase_steps(phase, task, train_config)
     tokens_per_step = train_config.batch_size * task.seq_len
@@ -192,7 +200,7 @@ def train_phase(
 
     for step_in_phase in range(1, n_steps + 1):
         batch_key = jax.random.fold_in(data_key, step_in_phase)
-        batch = sample_batch(batch_key, phase.family, task, train_config.batch_size)
+        batch = draw(batch_key, phase.family, task, train_config.batch_size)
         state, _ = _step(
             state, batch["tokens"], optimizer, task.answer_target_index, train_config.loss_positions
         )

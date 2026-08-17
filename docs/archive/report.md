@@ -92,6 +92,69 @@ This promotes the component/state-space response to **leading hypothesis**. It
 does not establish prospective relational structure: the evidence is a LOPO
 advantage at n=12, and that metric was shown to invert at this scale.
 
+## V2 language micro-world — the confirmed finding (2026-08-17)
+
+A second experimental layer, in a language micro-world under ordinary
+next-token prediction rather than an answer-position objective. Full design in
+[docs/experiments/v2_bridge_design.md](docs/experiments/v2_bridge_design.md);
+frozen amendments in
+[v2_1_spec.md](docs/experiments/v2_1_spec.md) (`f92f5831bece0d91`); live record
+in [campaign_2026_08_17.md](docs/experiments/campaign_2026_08_17.md); claim
+status in [CLAIMS.md](CLAIMS.md).
+
+**Training history produces a large, selective advantage in future
+learnability.** Confirmatory, fresh seeds 100–105, frozen criteria:
+
+| capability | A | A′ | BG |
+|---|---|---|---|
+| **B** (`BIND`) at `t=0` | **0.1322 ± 0.0149** | 0.0156 ± 0.0087 | 0.0156 ± 0.0051 |
+| **C** (`FACT`) at `t=0` | 0.0176 ± 0.0025 | 0.0146 ± 0.0044 | 0.0130 ± 0.0063 |
+
+Chance is 0.0156; both controls sit on it exactly for B. AULC A−A′ = **+0.5265**
+on B (effect/noise +1.75) against **+0.0395** on C (+0.36) — thirteen times
+smaller on the control capability. The control is non-vacuous: the background
+arm reaches `FACT` 0.410 against a frozen 0.30 competence gate.
+
+`A` and `A′` are matched by construction on unigram, bigram and positional
+statistics, on entity recurrence, and on distinct entities per document, all
+verified against a same-stream null. They differ in one property: whether a
+recurring entity keeps its value.
+
+**It is not memorised content.** With **zero shared entity tokens** between
+source and target (disjoint sub-pools, verified), the head start is fully
+retained — 0.1567 ± 0.0334 disjoint against 0.1431 ± 0.0157 shared, 111%, while
+disjoint controls stay at chance.
+
+**It persists across a 32× capacity increase** (exploratory, seeds 0–2): A at
+`t=0` = 0.126 (786k params), 0.157 (6.3M), 0.097 (25.2M), with A′ and BG at
+chance at every scale.
+
+### The mechanistic hypothesis was falsified
+
+The pre-registered mediator — an off-distribution prefix-matching score `M`,
+measured on random repeated-token sequences so it could not be a function of
+the corpus it explains — **failed its confirmatory gate**: amplitude 1.63 and
+selectivity 0.76 against a ≥2.0 requirement. The compound G1 gate therefore
+FAILS, even though two of its four criteria passed strongly.
+
+A striking single-seed transient in preflight (`M` 0.0284 → 0.1100 → 0.0370 on
+A, with A′ and BG flat) **did not reproduce** — not on fresh confirmatory
+seeds, and not at any of three scales, where at 1× the *background* arm showed
+the largest peak. The `A_peak` statistic used to chase it is biased toward
+noisier arms, which is how that happened.
+
+**The phenomenon is more robust than our explanation for it.** That is the
+honest state of the result, and the falsification is reported as a property of
+the methodology rather than a failed branch: the apparatus was built to be able
+to kill its own hypothesis, and it did.
+
+### What remains open
+
+Breadth (does the effect extend beyond shared computation), the identity of the
+actual mediator, whether data value is state-conditional, and whether internal
+telemetry can predict it. Each has a running experiment and a frozen criterion;
+none is claimed.
+
 ## Current state
 
 * Frozen and unrun: the WikiText k=8 protocol — 7 usable families after
