@@ -204,6 +204,43 @@ recorded, and it has since caught two substantive drifts: the inflated
 distinct-argmax count in X2c (incomplete states counted as reversals) and the
 untested A-vs-BG comparison in A5c. **Run it before quoting any number.**
 
+### Freeze-record integrity, audited 2026-08-17
+
+`tests/test_repo_invariants.py` verifies every `artifacts/*.sha256` against the
+document it names. **Four records verify; five do not:**
+
+| record | verifies |
+|---|---|
+| `dose_response_plan.sha256` | yes |
+| `e4b_prototype_protocol.sha256` | yes |
+| `p1_interpretation_branches.sha256` | yes |
+| `p1_stopping_rule.sha256` | yes |
+| `downstream_protocols.sha256` | **no** |
+| `p1_analysis_plan.sha256` | **no** |
+| `p1_frozen_pairs.sha256` | **no** |
+| `tournament_protocol.sha256` | **no** |
+| `v2_1_spec.sha256` | **no** |
+
+The five failures already failed at the commit that introduced the record, so
+this is not later tampering: those documents were rewritten during the
+doc-consolidation commit *after* their digests had been recorded, and the
+pre-consolidation bytes were never committed. **The frozen text is therefore
+not recoverable from this repository, and those five digests cannot be
+verified by a third party.**
+
+The digests are deliberately **not** recomputed. Recomputing would produce a
+record that verifies while evidencing nothing, which is worse than a record
+that visibly fails. What survives is the weaker, true statement: the analysis
+and selection decisions were fixed before the corresponding outcomes were
+evaluated, as the commit order shows, but byte-level verification is available
+only for the four records above.
+
+Digests quoted in `README.md` and elsewhere for the five affected documents
+should be read as freeze-time records, not as checkable digests of the current
+files. Every freeze recorded after this audit verifies, and
+`test_the_unverifiable_legacy_set_does_not_grow` fails if that stops being
+true.
+
 ## Rules for this ledger
 
 * A claim never moves on a trend. It moves when its frozen criterion is
