@@ -4,32 +4,30 @@
 
 ## Abstract
 
-Prior training changes what a model is *ready* to learn next. In a controlled
-language-model environment, a source curriculum $A$ produces a large, selective
-advantage in acquiring a later capability, while a control matched on every
-low-order statistic and a background stream remain at chance. The advantage is
-not memorized content — it survives zero shared entity tokens — and it is not
-target competence: on a target composed with a fixed derangement, where
-zero-shot transfer is blocked by construction and confirmed blocked at or below
-chance, the source arm still learns dramatically faster. This supports a
-**developmental readiness** interpretation rather than direct answer transfer.
-Readiness has a
-consequence for data: measuring $V(S,D)$, the value of corpus $D$ from incoming
-state $S$, we find a State×Data interaction with genuine ordering reversals.
+Prior training changes what a model is ready to learn next. In a controlled
+language-model environment, a source curriculum produces a large, selective
+advantage in acquiring a later capability, while matched controls remain near
+chance. The effect survives zero shared entity tokens and persists when the
+target is composed with a fixed derangement that blocks direct zero-shot answer
+transfer: source-trained models begin at chance yet subsequently learn
+substantially faster. We call this **developmental readiness**.
 
-Two pre-registered experiments then asked whether these differences hide behind
-present behavior, and **neither detected reliable residual divergence**. States
-matched on a modest behavioral vector showed no excess divergence under an
-identical future (71 frozen pairs against a 376-pair null, the better-powered
-test) and no reliable differential preference between futures (16 frozen pairs,
-interaction CI spanning zero at chance sign agreement). The honest reading
-narrows our starting hypothesis: readiness can be invisible to a single
-capability measure without being deeply hidden from behavior in general. A
-pre-registered mechanistic hypothesis failed, a prospective search detected no
-localized transition in future learnability, and gradient geometry that cleanly
-identifies training history did not resolve as a predictor of conditional data
-value. History leaves consequential structure; reading it well enough to act on
-remains open.
+We then measure $V(S,D)$, the value of future corpus $D$ from incoming model
+state $S$, and find State×Data interaction with corpus-ranking reversals across
+measured states. However, the stronger hypothesis that consequential
+developmental differences remain hidden from present behavior does not survive
+testing. In two prospectively specified experiments, behavior-matched states
+showed neither excess divergence under an identical future nor reliable
+differential preference between alternative futures. Internal gradient geometry
+clearly encoded training history, but did not reliably predict conditional data
+value, and a prospective temporal replay detected no localized transition in
+future learnability.
+
+The resulting picture is narrower than our starting hypothesis: simple target
+competence can miss consequential readiness, while richer behavioral
+measurements capture more future-relevant variation than expected. Training
+history matters; identifying measurements sufficient to forecast its future
+consequences remains open.
 
 ## 1. Introduction
 
