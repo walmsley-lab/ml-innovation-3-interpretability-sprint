@@ -77,10 +77,15 @@ adaptive pretraining.
   can move the capability. Top-k head ablation demonstrably cannot.
 * **Can behaviourally matched models have different futures?** Prospective test
   with pairs frozen from present observables, pending.
-* **When does the relevant state emerge?** A changepoint at ~270 steps is
-  established for *acquired competence* (held-out RMSE 0.0171 vs 0.0331
-  linear); whether **future learnability** changes at the same moment is being
-  measured by dense replay.
+* **When does the relevant state emerge?** Not detectably localized. A dense
+  prospective replay — 48 checkpoints across source steps 150–450, each given an
+  identical future continuation — found **no localized change in future
+  learnability**: a linear description wins on held-out fit by only 5.8%
+  (pre-declared as not distinguishable), and learnability correlates with
+  training step at r = −0.199. An earlier changepoint result described only
+  *acquired competence*, and at the 250-step sampling resolution available all
+  that can be said is that competence rises somewhere within the first 250
+  steps.
 * **How far does the effect generalize?** The developmental radius — targets
   ordered by distance from the source — is not yet mapped.
 * **Can state be read well enough to predict conditional data value?** The open

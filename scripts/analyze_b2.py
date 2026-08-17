@@ -56,7 +56,10 @@ def main() -> int:
             p1 = [x for x in d["trace"] if x["phase"] == 1]
             if len(p1) < 3:
                 continue
-            key = "BINDT" if "BINDT" in str(d.get("target_family", "")) else "BIND"
+            # Telemetry records the target stream under "target" (added when the
+            # earlier hardcoded-BIND bug was fixed); fall back for older units.
+            key = "target" if "target" in p1[0] else (
+                "BINDT" if "BINDT" in str(d.get("target_family", "")) else "BIND")
             acc = [x[key]["accuracy"] for x in p1]
             rows.append({
                 "arm": d["arm"], "seed": d["seed"], "root": root.name,

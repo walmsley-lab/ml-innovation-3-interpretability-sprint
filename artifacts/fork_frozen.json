@@ -1,0 +1,92 @@
+{
+ "corpora": [
+  "BIND",
+  "BINDT"
+ ],
+ "n_pairs": 16,
+ "selection_rule": "16 lowest present-state matching distances from the frozen P1 pair list; no outcome consulted",
+ "pairs": [
+  [
+   "BG__seed502",
+   "BG__seed701"
+  ],
+  [
+   "BG__seed501",
+   "BG__seed703"
+  ],
+  [
+   "BG__seed500",
+   "BG__seed704"
+  ],
+  [
+   "A_prime__seed703",
+   "A_prime__seed707"
+  ],
+  [
+   "A_prime__seed700",
+   "A_prime__seed957"
+  ],
+  [
+   "A_prime__seed711",
+   "A_prime__seed958"
+  ],
+  [
+   "BG__seed502",
+   "BG__seed702"
+  ],
+  [
+   "A_prime__seed951",
+   "A_prime__seed957"
+  ],
+  [
+   "A_prime__seed700",
+   "A_prime__seed951"
+  ],
+  [
+   "BG__seed701",
+   "BG__seed702"
+  ],
+  [
+   "A_prime__seed953",
+   "A_prime__seed957"
+  ],
+  [
+   "A_prime__seed704",
+   "A_prime__seed707"
+  ],
+  [
+   "A_prime__seed703",
+   "A_prime__seed704"
+  ],
+  [
+   "A_prime__seed500",
+   "A_prime__seed501"
+  ],
+  [
+   "A_prime__seed700",
+   "A_prime__seed953"
+  ],
+  [
+   "A__seed706",
+   "A__seed951"
+  ]
+ ],
+ "matching_distance": {
+  "BG__seed502|BG__seed701": 0.006358903746791156,
+  "BG__seed501|BG__seed703": 0.008181110275188863,
+  "BG__seed500|BG__seed704": 0.009314981438429237,
+  "A_prime__seed703|A_prime__seed707": 0.011673131856852592,
+  "A_prime__seed700|A_prime__seed957": 0.0177716869751684,
+  "A_prime__seed711|A_prime__seed958": 0.02042313542308216,
+  "BG__seed502|BG__seed702": 0.03073633625386807,
+  "A_prime__seed951|A_prime__seed957": 0.03073633625386807,
+  "A_prime__seed700|A_prime__seed951": 0.03073633625386807,
+  "BG__seed701|BG__seed702": 0.03073633625386807,
+  "A_prime__seed953|A_prime__seed957": 0.03073633625386818,
+  "A_prime__seed704|A_prime__seed707": 0.03073633625386818,
+  "A_prime__seed703|A_prime__seed704": 0.03073633625386818,
+  "A_prime__seed500|A_prime__seed501": 0.03073633625386818,
+  "A_prime__seed700|A_prime__seed953": 0.03073633625386818,
+  "A__seed706|A__seed951": 0.047282722199623706
+ }
+}

@@ -84,7 +84,20 @@ steps. Expected well under one V(S,D) matrix.
 
 ---
 
-# Protocol B — temporal replay of the ~270-step window
+# Protocol B — temporal replay of the early-training window
+
+> **OUTCOME (recorded after the fact; the protocol below is unaltered).**
+> Protocol B ran as frozen and returned a **clean negative**: no localized
+> change in `V(S_t,B)` across 150–450. Linear won on held-out fit by 5.8%,
+> inside the protocol's own "not distinguishable" band, and learnability
+> correlated with step at r = −0.199.
+>
+> It also invalidated the premise of its own window. `T1`'s break at "270 ± 8"
+> was fitted to traces sampled every **250 steps**, so the location was
+> interpolated between the first two samples and the ±8 measured fold agreement
+> on that interpolation, not precision. Zero-shot competence was already ~0.13
+> by step 150 and flat after, so the rise completed *before* the window opened.
+> Per §B.4 the window was **not** re-centred.
 
 ## B.0 What this tests, and what it does not
 

@@ -46,3 +46,9 @@ application_default_credentials.json
 gha-creds-*.json
 *.credentials
 .gcloud/
+
+# Run outputs stay ignored, but FREEZE RECORDS are the audit trail and must be
+# tracked: hashes and pair lists are what make "frozen before outcomes" checkable
+# by anyone other than us.
+!artifacts/*.sha256
+!artifacts/*frozen*.json

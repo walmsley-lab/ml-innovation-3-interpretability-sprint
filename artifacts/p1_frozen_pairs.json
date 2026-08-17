@@ -1,0 +1,657 @@
+{
+ "epsilon": 0.3,
+ "rule": "absolute cap, stricter of the two frozen conditions",
+ "n_pairs": 71,
+ "pairs": [
+  [
+   "A__seed500",
+   "A__seed503"
+  ],
+  [
+   "A__seed500",
+   "A__seed505"
+  ],
+  [
+   "A__seed500",
+   "A__seed702"
+  ],
+  [
+   "A__seed500",
+   "A__seed957"
+  ],
+  [
+   "A__seed500",
+   "A__seed961"
+  ],
+  [
+   "A__seed502",
+   "A__seed952"
+  ],
+  [
+   "A__seed503",
+   "A__seed702"
+  ],
+  [
+   "A__seed503",
+   "A__seed955"
+  ],
+  [
+   "A__seed503",
+   "A__seed957"
+  ],
+  [
+   "A__seed503",
+   "A__seed961"
+  ],
+  [
+   "A__seed505",
+   "A__seed702"
+  ],
+  [
+   "A__seed505",
+   "A__seed961"
+  ],
+  [
+   "A__seed701",
+   "A__seed950"
+  ],
+  [
+   "A__seed701",
+   "A__seed954"
+  ],
+  [
+   "A__seed702",
+   "A__seed955"
+  ],
+  [
+   "A__seed702",
+   "A__seed961"
+  ],
+  [
+   "A__seed705",
+   "A__seed707"
+  ],
+  [
+   "A__seed705",
+   "A__seed962"
+  ],
+  [
+   "A__seed706",
+   "A__seed710"
+  ],
+  [
+   "A__seed706",
+   "A__seed951"
+  ],
+  [
+   "A__seed706",
+   "A__seed965"
+  ],
+  [
+   "A__seed707",
+   "A__seed962"
+  ],
+  [
+   "A__seed708",
+   "A__seed709"
+  ],
+  [
+   "A__seed708",
+   "A__seed953"
+  ],
+  [
+   "A__seed709",
+   "A__seed953"
+  ],
+  [
+   "A__seed710",
+   "A__seed951"
+  ],
+  [
+   "A__seed710",
+   "A__seed965"
+  ],
+  [
+   "A__seed950",
+   "A__seed954"
+  ],
+  [
+   "A__seed951",
+   "A__seed965"
+  ],
+  [
+   "A__seed955",
+   "A__seed961"
+  ],
+  [
+   "A__seed957",
+   "A__seed961"
+  ],
+  [
+   "A_prime__seed500",
+   "A_prime__seed501"
+  ],
+  [
+   "A_prime__seed500",
+   "A_prime__seed709"
+  ],
+  [
+   "A_prime__seed501",
+   "A_prime__seed709"
+  ],
+  [
+   "A_prime__seed502",
+   "A_prime__seed504"
+  ],
+  [
+   "A_prime__seed700",
+   "A_prime__seed951"
+  ],
+  [
+   "A_prime__seed700",
+   "A_prime__seed953"
+  ],
+  [
+   "A_prime__seed700",
+   "A_prime__seed957"
+  ],
+  [
+   "A_prime__seed701",
+   "A_prime__seed711"
+  ],
+  [
+   "A_prime__seed701",
+   "A_prime__seed954"
+  ],
+  [
+   "A_prime__seed701",
+   "A_prime__seed958"
+  ],
+  [
+   "A_prime__seed702",
+   "A_prime__seed709"
+  ],
+  [
+   "A_prime__seed703",
+   "A_prime__seed704"
+  ],
+  [
+   "A_prime__seed703",
+   "A_prime__seed707"
+  ],
+  [
+   "A_prime__seed703",
+   "A_prime__seed952"
+  ],
+  [
+   "A_prime__seed703",
+   "A_prime__seed959"
+  ],
+  [
+   "A_prime__seed704",
+   "A_prime__seed707"
+  ],
+  [
+   "A_prime__seed704",
+   "A_prime__seed952"
+  ],
+  [
+   "A_prime__seed704",
+   "A_prime__seed959"
+  ],
+  [
+   "A_prime__seed707",
+   "A_prime__seed952"
+  ],
+  [
+   "A_prime__seed707",
+   "A_prime__seed959"
+  ],
+  [
+   "A_prime__seed711",
+   "A_prime__seed954"
+  ],
+  [
+   "A_prime__seed711",
+   "A_prime__seed958"
+  ],
+  [
+   "A_prime__seed951",
+   "A_prime__seed953"
+  ],
+  [
+   "A_prime__seed951",
+   "A_prime__seed957"
+  ],
+  [
+   "A_prime__seed952",
+   "A_prime__seed959"
+  ],
+  [
+   "A_prime__seed953",
+   "A_prime__seed957"
+  ],
+  [
+   "A_prime__seed954",
+   "A_prime__seed958"
+  ],
+  [
+   "BG__seed500",
+   "BG__seed704"
+  ],
+  [
+   "BG__seed501",
+   "BG__seed504"
+  ],
+  [
+   "BG__seed501",
+   "BG__seed505"
+  ],
+  [
+   "BG__seed501",
+   "BG__seed703"
+  ],
+  [
+   "BG__seed502",
+   "BG__seed503"
+  ],
+  [
+   "BG__seed502",
+   "BG__seed701"
+  ],
+  [
+   "BG__seed502",
+   "BG__seed702"
+  ],
+  [
+   "BG__seed503",
+   "BG__seed701"
+  ],
+  [
+   "BG__seed503",
+   "BG__seed702"
+  ],
+  [
+   "BG__seed504",
+   "BG__seed505"
+  ],
+  [
+   "BG__seed504",
+   "BG__seed703"
+  ],
+  [
+   "BG__seed505",
+   "BG__seed703"
+  ],
+  [
+   "BG__seed701",
+   "BG__seed702"
+  ]
+ ],
+ "matching_keys": [
+  "zsB_acc",
+  "zsB_loss",
+  "zsC_acc",
+  "zsC_loss"
+ ],
+ "distances": {
+  "A__seed500|A__seed503": 0.21515435377707692,
+  "A__seed500|A__seed505": 0.22679645695555117,
+  "A__seed500|A__seed702": 0.21902873114649557,
+  "A__seed500|A__seed957": 0.2652227013526529,
+  "A__seed500|A__seed961": 0.12071151590616513,
+  "A__seed502|A__seed952": 0.22917189335681343,
+  "A__seed503|A__seed702": 0.14020205644616945,
+  "A__seed503|A__seed955": 0.2349434233810298,
+  "A__seed503|A__seed957": 0.26814384600572083,
+  "A__seed503|A__seed961": 0.1229453450154725,
+  "A__seed505|A__seed702": 0.27662702628481317,
+  "A__seed505|A__seed961": 0.2458906900309451,
+  "A__seed701|A__seed950": 0.1228165627313007,
+  "A__seed701|A__seed954": 0.22503666650429688,
+  "A__seed702|A__seed955": 0.1536816812693408,
+  "A__seed702|A__seed961": 0.1711095664998683,
+  "A__seed705|A__seed707": 0.19586022912056533,
+  "A__seed705|A__seed962": 0.1229453450154726,
+  "A__seed706|A__seed710": 0.18441801752320885,
+  "A__seed706|A__seed951": 0.047282722199623706,
+  "A__seed706|A__seed965": 0.09220900876160454,
+  "A__seed707|A__seed962": 0.18441801752320874,
+  "A__seed708|A__seed709": 0.21515435377707703,
+  "A__seed708|A__seed953": 0.18220215038770837,
+  "A__seed709|A__seed953": 0.07768632728728364,
+  "A__seed710|A__seed951": 0.15368168126934068,
+  "A__seed710|A__seed965": 0.09220900876160432,
+  "A__seed950|A__seed954": 0.1229453450154725,
+  "A__seed951|A__seed965": 0.12014163373316067,
+  "A__seed955|A__seed961": 0.22322232754482252,
+  "A__seed957|A__seed961": 0.2798649418419281,
+  "A_prime__seed500|A_prime__seed501": 0.03073633625386818,
+  "A_prime__seed500|A_prime__seed709": 0.2458906900309452,
+  "A_prime__seed501|A_prime__seed709": 0.21515435377707703,
+  "A_prime__seed502|A_prime__seed504": 0.1229453450154725,
+  "A_prime__seed700|A_prime__seed951": 0.03073633625386807,
+  "A_prime__seed700|A_prime__seed953": 0.03073633625386818,
+  "A_prime__seed700|A_prime__seed957": 0.0177716869751684,
+  "A_prime__seed701|A_prime__seed711": 0.15368168126934068,
+  "A_prime__seed701|A_prime__seed954": 0.09220900876160443,
+  "A_prime__seed701|A_prime__seed958": 0.15368168126934068,
+  "A_prime__seed702|A_prime__seed709": 0.09220900876160443,
+  "A_prime__seed703|A_prime__seed704": 0.03073633625386818,
+  "A_prime__seed703|A_prime__seed707": 0.011673131856852592,
+  "A_prime__seed703|A_prime__seed952": 0.06147267250773625,
+  "A_prime__seed703|A_prime__seed959": 0.18441801752320897,
+  "A_prime__seed704|A_prime__seed707": 0.03073633625386818,
+  "A_prime__seed704|A_prime__seed952": 0.09220900876160443,
+  "A_prime__seed704|A_prime__seed959": 0.1536816812693408,
+  "A_prime__seed707|A_prime__seed952": 0.06147267250773625,
+  "A_prime__seed707|A_prime__seed959": 0.18441801752320897,
+  "A_prime__seed711|A_prime__seed954": 0.06147267250773625,
+  "A_prime__seed711|A_prime__seed958": 0.02042313542308216,
+  "A_prime__seed951|A_prime__seed953": 0.06147267250773625,
+  "A_prime__seed951|A_prime__seed957": 0.03073633625386807,
+  "A_prime__seed952|A_prime__seed959": 0.2458906900309452,
+  "A_prime__seed953|A_prime__seed957": 0.03073633625386818,
+  "A_prime__seed954|A_prime__seed958": 0.06147267250773625,
+  "BG__seed500|BG__seed704": 0.009314981438429237,
+  "BG__seed501|BG__seed504": 0.1229453450154726,
+  "BG__seed501|BG__seed505": 0.15368168126934068,
+  "BG__seed501|BG__seed703": 0.008181110275188863,
+  "BG__seed502|BG__seed503": 0.1229453450154726,
+  "BG__seed502|BG__seed701": 0.006358903746791156,
+  "BG__seed502|BG__seed702": 0.03073633625386807,
+  "BG__seed503|BG__seed701": 0.1229453450154726,
+  "BG__seed503|BG__seed702": 0.15368168126934068,
+  "BG__seed504|BG__seed505": 0.2766270262848133,
+  "BG__seed504|BG__seed703": 0.1229453450154726,
+  "BG__seed505|BG__seed703": 0.15368168126934068,
+  "BG__seed701|BG__seed702": 0.03073633625386807
+ },
+ "run_order_seed": 20260817,
+ "run_order": [
+  [
+   "BG__seed501",
+   "BG__seed703"
+  ],
+  [
+   "A__seed708",
+   "A__seed953"
+  ],
+  [
+   "A__seed705",
+   "A__seed962"
+  ],
+  [
+   "A__seed708",
+   "A__seed709"
+  ],
+  [
+   "BG__seed502",
+   "BG__seed702"
+  ],
+  [
+   "A__seed710",
+   "A__seed965"
+  ],
+  [
+   "A_prime__seed500",
+   "A_prime__seed709"
+  ],
+  [
+   "A__seed950",
+   "A__seed954"
+  ],
+  [
+   "A_prime__seed711",
+   "A_prime__seed954"
+  ],
+  [
+   "A_prime__seed953",
+   "A_prime__seed957"
+  ],
+  [
+   "A__seed500",
+   "A__seed702"
+  ],
+  [
+   "BG__seed500",
+   "BG__seed704"
+  ],
+  [
+   "BG__seed504",
+   "BG__seed703"
+  ],
+  [
+   "A__seed707",
+   "A__seed962"
+  ],
+  [
+   "A_prime__seed704",
+   "A_prime__seed707"
+  ],
+  [
+   "A__seed702",
+   "A__seed961"
+  ],
+  [
+   "A__seed505",
+   "A__seed961"
+  ],
+  [
+   "A__seed706",
+   "A__seed965"
+  ],
+  [
+   "A__seed701",
+   "A__seed950"
+  ],
+  [
+   "A_prime__seed701",
+   "A_prime__seed954"
+  ],
+  [
+   "A_prime__seed703",
+   "A_prime__seed952"
+  ],
+  [
+   "A__seed706",
+   "A__seed951"
+  ],
+  [
+   "A__seed701",
+   "A__seed954"
+  ],
+  [
+   "A_prime__seed711",
+   "A_prime__seed958"
+  ],
+  [
+   "A_prime__seed951",
+   "A_prime__seed957"
+  ],
+  [
+   "BG__seed501",
+   "BG__seed504"
+  ],
+  [
+   "A__seed500",
+   "A__seed957"
+  ],
+  [
+   "A_prime__seed700",
+   "A_prime__seed951"
+  ],
+  [
+   "A__seed709",
+   "A__seed953"
+  ],
+  [
+   "A_prime__seed703",
+   "A_prime__seed704"
+  ],
+  [
+   "A__seed500",
+   "A__seed505"
+  ],
+  [
+   "A_prime__seed951",
+   "A_prime__seed953"
+  ],
+  [
+   "BG__seed502",
+   "BG__seed503"
+  ],
+  [
+   "BG__seed503",
+   "BG__seed702"
+  ],
+  [
+   "BG__seed505",
+   "BG__seed703"
+  ],
+  [
+   "A_prime__seed502",
+   "A_prime__seed504"
+  ],
+  [
+   "A_prime__seed700",
+   "A_prime__seed957"
+  ],
+  [
+   "A_prime__seed707",
+   "A_prime__seed952"
+  ],
+  [
+   "BG__seed504",
+   "BG__seed505"
+  ],
+  [
+   "A__seed702",
+   "A__seed955"
+  ],
+  [
+   "A__seed500",
+   "A__seed503"
+  ],
+  [
+   "A_prime__seed707",
+   "A_prime__seed959"
+  ],
+  [
+   "A_prime__seed704",
+   "A_prime__seed959"
+  ],
+  [
+   "A_prime__seed701",
+   "A_prime__seed711"
+  ],
+  [
+   "A_prime__seed703",
+   "A_prime__seed959"
+  ],
+  [
+   "A__seed503",
+   "A__seed702"
+  ],
+  [
+   "A_prime__seed500",
+   "A_prime__seed501"
+  ],
+  [
+   "A__seed957",
+   "A__seed961"
+  ],
+  [
+   "BG__seed502",
+   "BG__seed701"
+  ],
+  [
+   "BG__seed501",
+   "BG__seed505"
+  ],
+  [
+   "BG__seed701",
+   "BG__seed702"
+  ],
+  [
+   "A__seed955",
+   "A__seed961"
+  ],
+  [
+   "A__seed951",
+   "A__seed965"
+  ],
+  [
+   "A_prime__seed700",
+   "A_prime__seed953"
+  ],
+  [
+   "A_prime__seed501",
+   "A_prime__seed709"
+  ],
+  [
+   "A__seed503",
+   "A__seed961"
+  ],
+  [
+   "A__seed505",
+   "A__seed702"
+  ],
+  [
+   "A_prime__seed952",
+   "A_prime__seed959"
+  ],
+  [
+   "A__seed503",
+   "A__seed957"
+  ],
+  [
+   "A_prime__seed704",
+   "A_prime__seed952"
+  ],
+  [
+   "A_prime__seed702",
+   "A_prime__seed709"
+  ],
+  [
+   "A_prime__seed701",
+   "A_prime__seed958"
+  ],
+  [
+   "A_prime__seed954",
+   "A_prime__seed958"
+  ],
+  [
+   "A__seed706",
+   "A__seed710"
+  ],
+  [
+   "A__seed710",
+   "A__seed951"
+  ],
+  [
+   "A__seed705",
+   "A__seed707"
+  ],
+  [
+   "BG__seed503",
+   "BG__seed701"
+  ],
+  [
+   "A__seed502",
+   "A__seed952"
+  ],
+  [
+   "A__seed503",
+   "A__seed955"
+  ],
+  [
+   "A_prime__seed703",
+   "A_prime__seed707"
+  ],
+  [
+   "A__seed500",
+   "A__seed961"
+  ]
+ ]
+}
