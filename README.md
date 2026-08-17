@@ -57,7 +57,7 @@ Kept visible, because the failures are informative and several are load-bearing.
 
 Two further results — the causal mediation test recorded as *inconclusive
 rather than negative*, and an earlier substrate that could not host a
-behaviour-matched test — are in [RESULTS.md](RESULTS.md).
+behavior-matched test — are in [RESULTS.md](RESULTS.md).
 
 ## Why does it matter?
 
@@ -79,7 +79,7 @@ adaptive pretraining.
 
 * **Is the state causal?** Requires an intervention that first demonstrates it
   can move the capability. Top-k head ablation demonstrably cannot.
-* **Can behaviourally matched models have different futures?** Prospective test
+* **Can behaviorally matched models have different futures?** Prospective test
   with pairs frozen from present observables, pending.
 * **When does the relevant state emerge?** Not detectably localized. A dense
   prospective replay — 48 checkpoints across source steps 150–450, each given an

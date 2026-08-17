@@ -8,7 +8,7 @@ With Apart Research
 
 ## Abstract
 
-Behavioral evidence alone may not fully characterize a digital mind. Two models with the same architecture—and potentially similar present behavior—can arrive there through different training histories, leaving latent differences that only become visible under future experience. We test this possibility in a controlled language-model training environment by measuring how prior training changes subsequent learnability. A source curriculum $A$ produces a large, selective advantage on a later binding task $B$, while matched control $A'$ and background training remain near chance at the start of $B$ training. The effect persists when source and target use disjoint entity identities, is absent on a learnable negative-control task, and survives a 32× model-capacity increase in exploratory runs. Our preregistered induction-style mechanistic hypothesis fails confirmatory testing. We then measure the value $V(S,D)$ of training on corpus $D$ from incoming model state $S$, finding strong State×Data interaction and ordering reversals: future experience has different value depending on the state produced by prior experience. However, current telemetry fails to predict that conditional value well enough to beat a global-best baseline. The result is a methodological foothold for studying hidden developmental state: history leaves consequential structure, but reading that structure remains an open problem.
+Behavioral evidence alone may not fully characterize a digital mind. Two models with the same architecture—and potentially similar present behavior—can arrive there through different training histories, leaving latent differences that only become visible under future experience. We test this possibility in a controlled language-model training environment by measuring how prior training changes subsequent learnability. A source curriculum $A$ produces a large, selective advantage on a later binding task $B$, while matched control $A'$ and background training remain near chance at the start of $B$ training. The effect persists when source and target use disjoint entity identities, is absent on a learnable negative-control task, and survives a 32× model-capacity increase in exploratory runs. Our pre-registered induction-style mechanistic hypothesis fails confirmatory testing. We then measure the value $V(S,D)$ of training on corpus $D$ from incoming model state $S$, finding strong State×Data interaction and ordering reversals: future experience has different value depending on the state produced by prior experience. However, current telemetry fails to predict that conditional value well enough to beat a global-best baseline. The result is a methodological foothold for studying hidden developmental state: history leaves consequential structure, but reading that structure remains an open problem.
 
 ## 1. Introduction
 
@@ -202,7 +202,7 @@ zero-shot.
 
 The second column is the more mechanistic one. Getting the exact binding
 right is hard; **restricting the answer to values that appear in the context**
-is the retrieval behaviour itself, and it separates the histories much more
+is the retrieval behavior itself, and it separates the histories much more
 sharply than exact accuracy does.
 
 A single illustrative prompt, chosen as the first of the sample (not for
@@ -400,7 +400,7 @@ promote it.** Under the pre-specified `min` objective the point estimate favours
 the gradient readout (regret 0.0017 against the state-blind global-best rule's
 0.0027; top-1 9/13 against 7/13), which is what the frozen gate asked. We record
 that as the formal outcome and do not retroactively claim that uncertainty
-separation was prespecified — it was not. We nonetheless treat the result as
+separation was pre-specified — it was not. We nonetheless treat the result as
 scientifically unresolved, for four reasons stated together: the advantage is
 0.0010 in absolute terms; the `min` objective had already been documented, prior
 to this experiment, as sitting near the chance floor; a bootstrap over the 13

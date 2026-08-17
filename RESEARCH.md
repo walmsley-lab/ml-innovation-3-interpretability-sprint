@@ -37,7 +37,7 @@ identity and may be substantially lossy.
 Under this framing `T_ij` is a derived, local, scalar projection of `F`, and
 three things follow that the fixed-graph framing cannot express: a scalar
 summary can cancel the signal it summarizes; a transfer effect may be
-state-dependent, `T_ij(z)`; and order effects are the ordinary behaviour of a
+state-dependent, `T_ij(z)`; and order effects are the ordinary behavior of a
 non-commuting transition operator rather than an anomaly.
 
 **What has since been earned.** The state-dependence is no longer a conjecture.
@@ -65,7 +65,7 @@ record.
 | A5 | developmental radius — how far does it generalize | open (`B₂`, target-distance ladder) |
 | A6a | some internal measurement distinguishes history-conditioned states | **marker replicated** prospectively (p = 0.0002 vs the matched control; not separated from background, p = 0.387) |
 | A6b | internal state predicts **conditional corpus value** — which `D` is best from this `S` | **falsified with current telemetry** — loses to a state-blind baseline |
-| A7 | behaviourally matched models have different futures | **pending prospective test** |
+| A7 | behaviorally matched models have different futures | **pending prospective test** |
 | A8 | when the relevant state emerges | **no localized change detected** in the tested window; not resolved at finer resolution |
 | A9 | the state is causal | **inconclusive** — the intervention had no efficacy |
 | B1 | corpus properties that produce the state | not started |
@@ -132,7 +132,7 @@ gates that have since resolved differently — are archived at
 
 | question | experiment | status |
 |---|---|---|
-| Can behaviourally matched models have different futures? | pairs frozen from present observables, identical fresh continuation | running; stopping rule frozen at `01c89adc9b66b9b6` |
+| Can behaviorally matched models have different futures? | pairs frozen from present observables, identical fresh continuation | running; stopping rule frozen at `01c89adc9b66b9b6` |
 | Does *future learnability* change locally during early training? | dense checkpoints across 150–450, identical continuations, `V(S_t,B)` | **complete — no localized change found** |
 
 ### Next, in priority order
