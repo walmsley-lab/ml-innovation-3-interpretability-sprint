@@ -34,3 +34,15 @@ data/hidden_ground_truth/
 
 # OS
 .DS_Store
+
+# credentials — broadened for a public research repo
+.env.*
+*.key
+*.p12
+*.pfx
+credentials*.json
+service-account*.json
+application_default_credentials.json
+gha-creds-*.json
+*.credentials
+.gcloud/

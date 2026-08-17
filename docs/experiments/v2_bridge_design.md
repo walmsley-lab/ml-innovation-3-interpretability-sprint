@@ -412,7 +412,7 @@ cannot.
 - ~0.3 TFLOP/optimizer step at batch 64; ~20k steps/run.
 - **This is the first experiment in the project that should not run on CPU.**
   The C3 workers are calibrated for `d64/l4/seq32`; this substrate is roughly
-  two orders of magnitude more FLOPs per step. Target `pdp-gpu`
+  two orders of magnitude more FLOPs per step. Target `<gpu-worker>`
   (`g2-standard-4`, L4, currently TERMINATED, disk preserved) at ~$0.85/hr.
 - ~20–30 min/full run at concurrency 4; V2-b runs are phase-2 only. Whole
   programme ≈ **20–25 GPU-hours ≈ $20–25** if every gate passes, and

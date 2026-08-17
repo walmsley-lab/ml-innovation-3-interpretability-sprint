@@ -3,9 +3,15 @@
 # Units are content-named by (state, corpus) so cross-machine merge is safe:
 # a duplicate is byte-identical work, not a conflict.
 set -u
-GC=/home/patrickwalmsley/google-cloud-sdk/bin/gcloud
-ZONE=us-west1-a
-VMS="dsi-cpu-bench dsi-cpu-w2 dsi-w3 pdp-gpu"
+# All environment-specific values are overridable; nothing local is hardcoded.
+GC="${DSI_GCLOUD:-$(command -v gcloud || echo gcloud)}"
+ZONE="${DSI_ZONE:-us-west1-a}"
+VMS="${DSI_WORKERS:-}"
+if [ -z "$VMS" ]; then
+  echo "set DSI_WORKERS to a space-separated list of worker names, e.g." >&2
+  echo "  DSI_WORKERS=\"worker-a worker-b\" DSI_ZONE=us-west1-a $0" >&2
+  exit 2
+fi
 DIRS="vsd_matrix mediator_validation mediator_discovery b2_factorial_h1 b2_factorial_h2 h23"
 for VM in $VMS; do
   for a in 1 2 3; do

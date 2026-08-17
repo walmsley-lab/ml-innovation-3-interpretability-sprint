@@ -1,7 +1,16 @@
-# STATUS
+# Barrier log (detailed historical record)
+
+Per-barrier records, preserved verbatim from the former `STATUS.md`. Summary
+status for every claim is in [RESULTS.md](../../RESULTS.md); this file exists
+so the canonical document does not duplicate it.
+
+---
+
+
+
 
 > **Resuming from another machine or session?** Start with
-> [HANDOFF.md](HANDOFF.md): what is running, how to restore state, what is
+> [HANDOFF.md](docs/archive/HANDOFF.md): what is running, how to restore state, what is
 > established, what has been controlled for, and where it can go next.
 
 ## Research objective

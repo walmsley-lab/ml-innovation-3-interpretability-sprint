@@ -73,8 +73,8 @@ Key frozen objects, all hashed before the runs they govern:
 
 | worker | shards | tmux session |
 |---|---|---|
-| `dsi-cpu-bench` | 0–7 | `ovl` |
-| `dsi-cpu-w2` | 8–14 | `ovl` |
+| `<worker-a>` | 0–7 | `ovl` |
+| `<worker-b>` | 8–14 | `ovl` |
 
 Both are `c3-standard-22` in `us-west1-a` and verified environment-identical.
 Per-unit outputs are idempotent and atomically written, so re-running a shard
@@ -82,7 +82,7 @@ is safe and finished units are never recomputed.
 
 ```bash
 # progress
-gcloud compute ssh dsi-cpu-bench --zone us-west1-a --ssh-flag="-o ConnectTimeout=15" \
+gcloud compute ssh <worker-a> --zone us-west1-a --ssh-flag="-o ConnectTimeout=15" \
   --command 'ls ~/work/artifacts/layer2_overlap/units | wc -l'
 
 # pull results from both workers and merge locally
@@ -103,7 +103,7 @@ cd ml-innovation-3-interpretability-sprint
 uv venv && uv pip install -e ".[dev]"
 
 # artifacts are gitignored; restore them from GCS
-gcloud storage rsync -r gs://pdp-sprint-1786756378-legacy-archive/dsi-artifacts artifacts
+gcloud storage rsync -r gs://<ARTIFACT_BUCKET>/dsi-artifacts artifacts
 
 # the WikiText corpus is re-downloadable; the corpus cache in
 # artifacts/corpus_v2/cache is what the runners actually use
@@ -114,7 +114,7 @@ SSH to the workers is intermittently flaky under load — retry with
 dead VM. Verify with `gcloud compute instances list` before concluding
 anything is wrong.
 
-**Cost note:** both C3 workers bill ~$1/hr each while running. `pdp-gpu` is
+**Cost note:** both C3 workers bill ~$1/hr each while running. `<gpu-worker>` is
 TERMINATED and its disk must be preserved.
 
 ## 3. What is established

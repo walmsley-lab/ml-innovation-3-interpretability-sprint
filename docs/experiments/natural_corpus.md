@@ -553,7 +553,7 @@ only, so that the family proposal is frozen before any outcome is visible.
 ## 20. H3 result (frozen)
 
 36 treatment units over 12 directed pairs x 3 seeds, against 12 common
-controls, run on `dsi-cpu-bench`. The complementary design was re-run in the
+controls, run on `<worker-a>`. The complementary design was re-run in the
 **same environment** as the comparator, because the original matrix ran
 locally under a different jax version and OS; the local matrix is retained
 as a cross-environment check, never as the comparator.
