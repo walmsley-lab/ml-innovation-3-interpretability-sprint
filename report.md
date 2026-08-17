@@ -422,7 +422,7 @@ than we expected.
 
 - **Code repository:** https://github.com/walmsley-lab/ml-innovation-3-interpretability-sprint
 - **Data:** synthetic corpora are generated deterministically from the code and recorded seeds/configurations.
-- **Reproducibility:** frozen protocols, analysis plans, pair selections, and hashes are version-controlled. The repository tracks protocol documents under `docs/experiments/` with their SHA-256 digests and the selection artifacts they govern — including the P1 stopping rule, the 71-pair list and matching distances, the analysis plan, interpretation branches, and the fork pair/corpus selections. Each digest was recorded before the outcomes it governs existed, so the ordering of specification and result is checkable by a third party rather than asserted. `scripts/audit_claims.py` recomputes every headline figure from raw units.
+- **Reproducibility:** experimental protocols, analysis plans, configurations, and selected frozen artifacts are version-controlled in the repository. The code and recorded seeds support reproduction of the main experiments and analyses. For prospective experiments, key analysis and selection decisions were frozen before evaluating the corresponding outcomes.
 - **Licensing:** source code is released under the **Apache License 2.0**; this report and other written/figure content are released under **Creative Commons Attribution 4.0 International (CC BY 4.0)**.
 
 ## Author Contributions
