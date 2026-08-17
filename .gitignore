@@ -17,7 +17,7 @@ venv/
 .hypothesis/
 
 # Experiment outputs — artifacts are content-addressed and live in GCS
-artifacts/
+artifacts/*
 outputs/
 multirun/
 checkpoints/
