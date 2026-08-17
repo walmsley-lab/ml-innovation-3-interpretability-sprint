@@ -17,11 +17,13 @@ consequence for data: measuring $V(S,D)$, the value of corpus $D$ from incoming
 state $S$, we find a State×Data interaction with genuine ordering reversals.
 
 Two pre-registered experiments then asked whether these differences hide behind
-present behavior, and **both are null**. States matched on a modest behavioral
-vector neither diverge under an identical future (71 frozen pairs against a
-376-pair null) nor prefer different futures (16 frozen pairs, interaction CI
-spanning zero at chance sign agreement). The honest reading inverts our starting
-hypothesis: behavior captured more future-relevant variation than we expected. A
+present behavior, and **neither detected reliable residual divergence**. States
+matched on a modest behavioral vector showed no excess divergence under an
+identical future (71 frozen pairs against a 376-pair null, the better-powered
+test) and no reliable differential preference between futures (16 frozen pairs,
+interaction CI spanning zero at chance sign agreement). The honest reading
+narrows our starting hypothesis: readiness can be invisible to a single
+capability measure without being deeply hidden from behavior in general. A
 pre-registered mechanistic hypothesis failed, a prospective search detected no
 localized transition in future learnability, and gradient geometry that cleanly
 identifies training history did not resolve as a predictor of conditional data
@@ -324,36 +326,39 @@ post hoc, and the prospective what-next tournament **remains gated and unrun**.
 ## 5. Discussion and Limitations
 
 We began by asking whether training order could be reduced to a static
-curriculum relation. It cannot. The experiments point to a state-dependent
-picture: past data changes the learner, and therefore changes the value of
-future data. That is why $V(S,D)$ exists as an object, and it is the shift the
-results force rather than assume.
+curriculum relation. Our experiments pushed us beyond one: past data changes the
+learner, and therefore changes the value of future data. That is why $V(S,D)$
+exists as an object here, and it is a shift the results forced rather than one
+we assumed.
 
-**The central synthesis is about what behavior does and does not capture.**
-Simple target competence badly underestimates readiness: on $B_2$ the source
-model performs at or below chance zero-shot — it can do nothing — and
-nonetheless learns the capability far faster than either control, even across
-disjoint content. Judging that model by what it can currently do would miss the
+**The central synthesis is about which measurements capture what.** A single
+capability score badly underestimates readiness: on $B_2$ the source model
+performs at or below chance zero-shot — it can do nothing — and nonetheless
+acquires the capability far faster than either control, even across disjoint
+content. Judging that model by what it can currently do would miss the
 difference entirely. Yet the *richer* behavioral vector we matched on —
-zero-shot accuracy and loss across two capabilities — captured more
-future-relevant variation than we expected. Two pre-registered experiments, one
-adequately powered at 71 pairs against a 376-pair null, both found nothing.
-These observations are consistent and jointly more informative than either
-alone: readiness is real and consequential, and it is largely *legible* — not in
-a single competence score, but in a modest multi-capability profile. Our
-starting hypothesis was that behavior hides developmental state. In this setting
-it mostly does not.
+zero-shot accuracy and loss across two capabilities — was enough that neither
+prospective test detected reliable residual divergence. These carry different
+weight: P1 is well powered, with 71 frozen pairs against a 376-pair null, and is
+the stronger of the two; the Fork, at 16 pairs, is a smaller test whose interval
+is correspondingly wide and which mainly fails to add evidence rather than
+subtracting it. The formulation we can defend is narrow: **developmental
+readiness can be invisible to a single capability measure without being deeply
+hidden from behavior in general.**
 
-This matters for digital-minds methodology and for training. If two systems with
-similar present behavior respond differently to the same future experience, a
-behavioral snapshot is not a complete characterization — so future plasticity may
-itself be an informative property of model identity, without establishing
-consciousness, welfare, or stable preferences. Practically, a system could
-inspect a checkpoint, predict which candidate data has greatest marginal value,
-train on it, and observe the result. We do **not** demonstrate that controller.
-The trajectory this work traces — static curriculum → state-conditioned value →
-predictive state readout → adaptive control — is complete only through its
-second stage.
+This reframes the digital-minds question from *does behavior hide developmental
+state?* to **which present measurements are sufficient to forecast future
+plasticity?** Our results do not show that behaviorally similar systems harbour
+hidden future divergence; they show that in this setting a modest
+multi-capability profile was already sufficient to account for it, while a
+single competence score was not. The same distinction bites on the internal
+side: gradient geometry cleanly identifies which history produced a state, and
+that is **history recognition, not prediction of future consequences** — a
+representation can classify the past perfectly and still forecast conditional
+data value at chance. The trajectory this work traces — static curriculum →
+state-conditioned value → predictive state readout → adaptive control — is
+therefore complete only through its first two stages. We do not demonstrate a
+controller, and we do not claim a readout.
 
 **Limitations.** "Developmental state" is operational, not uniquely identified:
 nothing here establishes a low-dimensional latent coordinate, a discrete stage,
@@ -365,11 +370,13 @@ synthetic environment is what makes the controls possible and is also the
 clearest gap between this setting and the phenomena the digital-minds framing
 cares about. Breadth remains unresolved: disjoint identities rule out content
 memorization, but the effect may still be specific to a related computational
-family. Scale evidence is exploratory, mechanism is unresolved, prediction
-failed, and $V(S,D)$ continuations reset optimizer state, measuring information
-in weights rather than full training state. Finally, the P2 assay saturates —
-all 48 continuations reach ceiling — leaving little headroom to distinguish
-"very ready" from "extremely ready."
+family. Scale evidence is exploratory, mechanism is unresolved, prediction was
+not achieved, and $V(S,D)$ continuations reset optimizer state, measuring
+information in weights rather than full training state. Finally, the P2 assay
+saturates — all 48 continuations reach ceiling on the target — which leaves
+little headroom to distinguish "very ready" from "extremely ready." That is an
+**assay limitation**: it bounds what P2 could have detected, and it is not
+evidence that no temporal structure exists.
 
 ### Dual-Use and Ethical Considerations
 
