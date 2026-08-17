@@ -52,13 +52,17 @@ def fig1_vsd(out: Path):
     # Naming the split (12/13 vs 1/13) rather than "2 distinct outcomes":
     # the latter is true but reads as balanced, when in fact one corpus
     # dominates globally and a single state supplies the reversal.
-    import collections as _c
-    tally = _c.Counter(best)
-    split = "; ".join(f"{corp[j]} best in {n}/{len(states)}"
-                      for j, n in tally.most_common())
+    # The 12/13-vs-1/13 split lives in the caption; a title that recites it
+    # competes with the figure for the reader's attention.
     ax.set_title("Future data value depends on incoming state\n"
-                 f"Row-centered $V(S,D)$; corpus rankings reverse across states\n"
-                 f"{split}", fontsize=9.5, loc="left")
+                 "Row-centered $V(S,D)$; corpus rankings reverse across states",
+                 fontsize=9.5, loc="left")
+    # Separate the arm blocks, so a reader can see that the single reversal
+    # sits in BG rather than scanning row labels to find it.
+    arms = [s.split("__")[0] for s in states]
+    for i in range(1, len(arms)):
+        if arms[i] != arms[i - 1]:
+            ax.axhline(i - 0.5, color="white", lw=2.5)
     fig.colorbar(im, ax=ax, fraction=0.045,
                  label="value relative to that state's own mean")
     ax.set_xlabel("★ = best corpus for that state")

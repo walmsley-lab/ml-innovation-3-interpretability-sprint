@@ -115,7 +115,7 @@ def fig3_boundaries(out: Path):
                 ha="center", fontsize=7.5, color="0.35")
     ax.set_xticks(x); ax.set_xticklabels(labels)
     ax.set_ylim(0, 0.40); ax.set_ylabel("future divergence  |Δ| between pair")
-    ax.set_title("(a) P1: matched pairs do not diverge", fontsize=9, loc="left")
+    ax.set_title("(a) P1: no excess divergence\nafter behavioral matching", fontsize=9, loc="left")
     ax.legend(fontsize=7, frameon=False)
 
     # (b) Fork -- interaction estimate against zero
@@ -129,8 +129,7 @@ def fig3_boundaries(out: Path):
     ax.set_yticks(y); ax.set_yticklabels(["all 16 pairs", "stable subset"], fontsize=8)
     ax.set_xlabel("State × Data interaction (95% CI)")
     ax.set_ylim(-0.6, 1.6)
-    ax.set_title("(b) Fork: no preference reversal\n8/16 sign agreement = chance",
-                 fontsize=9, loc="left")
+    ax.set_title("(b) Fork: no reliable differential\nfuture preference", fontsize=9, loc="left")
 
     # (c) P2 -- temporal replay
     ax = axes[2]
@@ -152,12 +151,12 @@ def fig3_boundaries(out: Path):
         xs = np.linspace(t.min(), t.max(), 50)
         ax.plot(xs, fit(xs), "-", lw=1.6, color="#c44e52")
         ax.axhline(v.max(), ls="--", lw=0.9, color="0.6")
-        ax.text(t.max(), v.max(), " ceiling", fontsize=7, color="0.45", va="bottom",
-                ha="right")
+        ax.text(t.max(), v.max(), " saturation", fontsize=7, color="0.45",
+                va="bottom", ha="right")
     ax.set_ylim(0, 1.0)
     ax.set_xlabel("source step of checkpoint")
     ax.set_ylabel("$V(S_t,B)$")
-    ax.set_title("(c) P2: no localized window\nlinear best by 5.8%", fontsize=9, loc="left")
+    ax.set_title("(c) P2: no localized change detected\nin the tested window", fontsize=9, loc="left")
 
     # (d) the readout/selector failure against the state-blind baseline
     ax = axes[3]
@@ -170,10 +169,10 @@ def fig3_boundaries(out: Path):
     ax.set_xticks(np.arange(3)); ax.set_xticklabels(names, fontsize=7.5)
     ax.set_ylabel("mean regret  (lower is better)")
     ax.set_ylim(0, 0.092)
-    ax.set_title("(d) Readout: loses to the\nstate-blind baseline", fontsize=9, loc="left")
+    ax.set_title("(d) State-aware selection: loses\nto the state-blind baseline", fontsize=9, loc="left")
 
-    fig.suptitle("What bounds the claim: four pre-registered negative and "
-                 "boundary results", fontsize=11, x=0.005, ha="left")
+    fig.suptitle("What bounds the claim: four negative and boundary results",
+                 fontsize=11, x=0.005, ha="left")
     fig.tight_layout(rect=(0, 0, 1, 0.95))
     fig.savefig(out, bbox_inches="tight", dpi=200)
     plt.close(fig)
