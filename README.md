@@ -1,18 +1,17 @@
 # Developmental System Identification for Pretraining
 
-## What is the question?
+## What is our concern and why does it matter?
 
-Does what a model has already been trained on change **what it is able to learn
-next** and if so, can that be measured well enough to act on?
+We investigate how a models past training regime shifts **what it is able to learn next**.
+We then attempt to measured these shifts for visibility and ultimately, control.
 
-The question goes beyond if curriculum order matters and instead focuses on if training
-history leaves a model in a *developmental state* that determines the value of
-subsequent data and if that state of that training development be read from the model itself.
+We go beyond the curriculum order or even word order of the pre-training data ultimately investigating model weight change.
+Our goal is to understand *developmental state* and how it determines the value of subsequent training.
 
-This work is crucial to ai alignment because it addresses the possibility that a models training
-non additional or newer data could unexpectedly shift the underlying behavior of a model.
-Imagine an overnight fine tune or generalizing a newly added skill could illicit 
-obscured latent and unqualified behavior.
+This work is crucial to ai alignment because it addresses the uncertainty inherent in a models training.
+Imagine if newer or augmentation data added to a model regeneration unexpectedly shifted the underlying behavior undetected.
+This could take place during an overnight fine tune or generalizing a newly added skill could 
+elicit obscured latent and unqualified behavior.
 
 ## What did we find?
 
