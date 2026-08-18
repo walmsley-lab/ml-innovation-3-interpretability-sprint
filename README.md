@@ -3,11 +3,16 @@
 ## What is the question?
 
 Does what a model has already been trained on change **what it is able to learn
-next** — and if so, can that be measured well enough to act on?
+next** and if so, can that be measured well enough to act on?
 
-Not "does curriculum order matter". The sharper question is whether training
+The question goes beyond if curriculum order matters and instead focuses on if training
 history leaves a model in a *developmental state* that determines the value of
-subsequent data, and whether that state can be read from the model itself.
+subsequent data and if that state of that training development be read from the model itself.
+
+This work is crucial to ai alignment because it addresses the possibility that a models training
+non additional or newer data could unexpectedly shift the underlying behavior of a model.
+Imagine an overnight fine tune or generalizing a newly added skill could illicit 
+obscured latent and unqualified behavior.
 
 ## What did we find?
 
