@@ -2,16 +2,29 @@
 
 ## What is our concern and why does it matter?
 
-We investigate how a models past training regime shifts **what it is able to learn next**.
-We then attempt to measured these shifts for visibility and ultimately, control.
+We investigate how a model's past training regime changes **what it is able to learn next and how subsequent training affects its behavior**.
 
-We go beyond the curriculum order or even word order of the pre-training data ultimately investigating model weight change.
-Our goal is to understand *developmental state* and how it determines the value of subsequent training.
+We then attempt to measure these shifts, first for visibility and ultimately for control.
 
-This work is crucial to ai alignment because it addresses the uncertainty inherent in a models training.
-Imagine if newer or augmentation data added to a model regeneration unexpectedly shifted the underlying behavior undetected.
-This could take place during an overnight fine tune or generalizing a newly added skill could 
-elicit obscured latent and unqualified behavior.
+Our concern evolves beyond curriculum order or the word order of pretraining data. Training continually changes a model's weights and internal representations. Those changes may alter how the model responds to the data it encounters later. The same new training data may therefore have different effects depending on the model that receives it and the path by which that model arrived at its current state.
+
+We refer to this evolving internal condition as the model's **developmental state**. Our goal is to understand how developmental state determines the value and effect of subsequent training.
+
+This matters for AI safety because model training contains an important source of uncertainty: **an intervention intended to produce one change may interact with the model's existing state and produce another.**
+
+Imagine adding new or corrective data during continued pretraining, fine-tuning, or model regeneration. The model may acquire the intended capability while also changing how it represents or uses previously learned information. A newly introduced skill might generalize in an unexpected way, reactivate a previously suppressed strategy, interfere with an existing behavior, or produce changes that ordinary endpoint evaluations fail to reveal.
+
+If these effects depend on training history, evaluating only the data being added and the model that comes out is insufficient. We also need to understand the state of the model **when the intervention occurs** and how that state changes the intervention's effect.
+
+Our longer-term aim is therefore to make developmental state observable and predictive:
+
+**training history → developmental state → response to new data → updated state**
+
+By measuring models throughout training, comparing different developmental histories, and experimentally intervening on both training data and internal representations, we hope to identify state variables that predict how a model will respond to future training.
+
+Ultimately, this could support a closed-loop approach in which unexpected developmental changes are detected and subsequent training is adjusted accordingly.
+
+The goal is to reduce uncertainty about **how a model's history shapes what future training will make it become**.
 
 ## What did we find?
 
